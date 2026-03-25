@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Valutazione Comparativa Software — AgID</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/css/bootstrap-italia.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      --sw-0: #0066cc; --sw-1: #008055; --sw-2: #cc6600;
+      --sw-3: #9900cc; --sw-4: #cc0055; --sw-5: #006666;
+      --sw-6: #886600; --sw-7: #003388;
+    }
+    body { background-color: #f2f7fc; }
+    .steppers-header { overflow-x: auto; }
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+    .criteria-group { border-left: 4px solid #0066cc; padding-left: 1rem; margin-bottom: 1.5rem; }
+    .rank-card { transition: transform .15s; }
+    .rank-card:hover { transform: translateY(-2px); }
+    .rank-1 { border-top: 4px solid #008055; }
+    .rank-2 { border-top: 4px solid #0066cc; }
+    .rank-3 { border-top: 4px solid #995c00; }
+    .rank-4,.rank-5,.rank-6,.rank-7,.rank-8 { border-top: 4px solid #aaa; }
+    .tco-row td:first-child { font-weight: 500; }
+    .req-row td { vertical-align: middle; }
+    .step-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #dee2e6; z-index: 200;
+      padding: .75rem 1.5rem;
+    }
+    .peso-input { width: 5.5rem; text-align: center; }
+    .results-table th { background: #0066cc; color: white; text-align: center; }
+    .results-table td { text-align: center; vertical-align: middle; }
+    .sw-tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-weight: 600; font-size: .8em; color: #fff; }
+    .table-scroll { overflow-x: auto; }
+    .alert-inline-clean {
+      background-image: none !important;
+      padding-left: 1rem !important;
+    }
+    .alert-inline-clean::before { display: none !important; content: none !important; }
+    select.form-select-sm { min-width: 90px; }
+    .btn-remove-sw { opacity: .6; }
+    .btn-remove-sw:hover { opacity: 1; }
+    /* Floating label BSI: spazio per l'etichetta in tutti gli step e nelle card */
+    .step-panel .form-group,
+    #prodotti-container .form-group {
+      position: relative;
+      padding-top: 1.4rem;
+      margin-bottom: .75rem;
+    }
+    .step-panel .form-group label.active,
+    #prodotti-container .form-group label.active {
+      position: absolute; top: 0; left: 0;
+      font-size: .75rem; line-height: 1.2;
+      transform: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    }
+    #prodotti-container .card-header { border-bottom: 1px solid rgba(0,0,0,.08); }
+    /* clearance per la barra fixed in basso (~60px) */
+    #main-content { padding-bottom: 6rem; }
+    /* Landing page */
+    #landing-page { display: block; }
+    #wizard-content { display: none; }
+    #landing-page.d-none { display: none !important; }
+    #wizard-content.d-block { display: block !important; }
+    .landing-hero { background: linear-gradient(135deg, #0066cc, #004d99); color: #fff; border-radius: .5rem; padding: 2.5rem 2rem; margin-bottom: 2rem; }
+    .landing-hero h1 { font-size: 1.75rem; font-weight: 700; }
+    .landing-hero .lead { opacity: .9; }
+    .landing-step-num { width: 2rem; height: 2rem; border-radius: 50%; background: #0066cc; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+    /* Modal soluzione */
+    #sw-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1050; overflow-y: auto; padding: 2rem 1rem; }
+    #sw-modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    #sw-modal-box { background: #fff; border-radius: .5rem; width: 100%; max-width: 860px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+    #sw-modal-box .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; }
+    #sw-modal-box .modal-body { padding: 1.25rem; max-height: 80vh; overflow-y: auto; }
+    #sw-modal-box .modal-body .form-group { position: relative; padding-top: 1.5rem; margin-bottom: 1rem; }
+    #sw-modal-box .modal-body .form-group label.active { position: absolute; top: 0; left: 0; font-size: .75rem; transform: none; line-height: 1.2; }
+    #sw-modal-box .modal-footer { padding: .75rem 1.25rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: .5rem; }
+    /* Popup publiccode */
+    #pc-popup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1200; align-items: center; justify-content: center; padding: 1rem; }
+    #pc-popup-overlay.open { display: flex; }
+    /* Inner tabs (step 2 e step 3) */
+    .inner-tab-bar { display: flex; border-bottom: 2px solid #dee2e6; gap: 0; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .inner-tab-btn { padding: .5rem 1.1rem; border: none; background: none; border-bottom: 3px solid transparent; margin-bottom: -2px; font-weight: 500; color: #495057; cursor: pointer; font-size: .875rem; transition: color .15s; white-space: nowrap; }
+    .inner-tab-btn.active { color: #0066cc; border-bottom-color: #0066cc; }
+    .inner-tab-btn:hover:not(.active) { background: #f2f7fc; color: #0066cc; }
+    .inner-tab-pane { display: none; }
+    .inner-tab-pane.active { display: block; }
+    /* Nascondi spinner nei campi numerici */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+    /* Celle read-only cliccabili */
+    .rv-cell { cursor: pointer; transition: background .12s; }
+    .rv-cell:hover { background: #e8f1fb !important; }
+    .rv-cell-val { font-size: .85em; }
+    .topsis-scatter-card { border: 1px solid #d9e2ec; border-radius: .5rem; background: #fff; }
+    .topsis-scatter-svg { width: 100%; height: auto; display: block; }
+    .topsis-scatter-grid { stroke: #d9e2ec; stroke-width: 1; }
+    .topsis-scatter-axis { stroke: #5c6f82; stroke-width: 1.5; }
+    .topsis-scatter-label { fill: #17324d; font-size: 12px; font-weight: 600; }
+    .topsis-scatter-tick { fill: #5c6f82; font-size: 11px; }
+    .topsis-scatter-note { fill: #5c6f82; font-size: 11px; }
+    .topsis-scatter-point { stroke: #fff; stroke-width: 2; }
+    .topsis-scatter-rank { fill: #17324d; font-size: 11px; font-weight: 700; }
+    .topsis-scatter-legend { display: flex; flex-wrap: wrap; gap: .75rem 1rem; }
+    .topsis-scatter-legend span { display: inline-flex; align-items: center; gap: .35rem; font-size: .875rem; color: #17324d; }
+    .topsis-scatter-dot { width: .8rem; height: .8rem; border-radius: 50%; display: inline-block; }
+    .it-footer-small-prints,
+    .it-footer-small-prints .it-footer-small-prints-list,
+    .it-footer-small-prints .list-inline-item,
+    .it-footer-small-prints a {
+      color: #fff !important;
+    }
+    @media print {
+      .steppers, .step-nav, .it-header-wrapper, footer, #wizard-info-bar { display: none !important; }
+      .step-panel { display: none !important; }
+      #step-3 { display: block !important; }
+      .inner-tab-bar { display: none !important; }
+      .inner-tab-pane { display: block !important; }
+      body { background: white; }
+      #print-appendix { display: block !important; }
+      .pa-section { page-break-before: always; margin-top: 2rem; }
+      .pa-section h3 { font-size: 1rem; font-weight: 700; border-bottom: 2px solid #333; padding-bottom: .25rem; margin-bottom: .75rem; }
+      .pa-section table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+      .pa-section th, .pa-section td { border: 1px solid #999; padding: 3px 6px; }
+      .pa-section th { background: #e8e8e8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pa-val-si  { color: #008055; font-weight: 700; }
+      .pa-val-no  { color: #cc334d; font-weight: 700; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<div class="it-header-wrapper">
+  <div class="it-header-slim-wrapper">
+    <div class="container-xxl">
+      <div class="row"><div class="col-12">
+        <div class="it-header-slim-wrapper-content">
+          <div class="d-none d-lg-flex align-items-center gap-3">
+            <a class="navbar-brand" href="https://www.agid.gov.it">AgID</a>
+            <span class="text-white-50" aria-hidden="true">·</span>
+            <a class="navbar-brand" href="https://innovazione.gov.it">Dipartimento per la Trasformazione Digitale</a>
+          </div>
+          <div class="nav-mobile">
+            <nav aria-label="Navigazione accessoria">
+              <a class="it-opener d-lg-none" data-bs-toggle="collapse" href="#menuSlim" role="button" aria-expanded="false" aria-controls="menuSlim">
+                <span>AgID</span>
+                <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-expand"></use></svg>
+              </a>
+              <div class="link-list-wrapper collapse" id="menuSlim">
+                <ul class="link-list">
+                  <li><a class="list-item" href="https://developers.italia.it">Developers Italia</a></li>
+                  <li><a class="list-item" href="https://designers.italia.it">Designers Italia</a></li>
+                </ul>
+              </div>
+            </nav>
+          </div>
+          <div class="it-header-slim-right-zone">
+            <a href="about.html" class="text-white small me-3">Informazioni</a>
+            <span class="text-white small">Art. 68-69 CAD</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="it-header-center-wrapper">
+    <div class="container-xxl"><div class="row"><div class="col-12">
+      <div class="it-header-center-content-wrapper">
+        <div class="it-brand-wrapper">
+          <a href="#" aria-label="Valutazione Comparativa Software — home">
+            <svg class="icon icon-xl icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-software"></use></svg>
+            <div class="it-brand-text">
+              <div class="it-brand-title">Valutazione Comparativa</div>
+              <div class="it-brand-tagline d-none d-md-block">Acquisizione e Riuso di Software per la PA</div>
+            </div>
+          </a>
+        </div>
+        <div class="it-right-zone">
+          <nav class="navbar navbar-expand-lg" aria-label="Navigazione principale">
+            <ul class="navbar-nav">
+              <li class="nav-item"><a class="nav-link text-white fw-bold" href="#">Strumento</a></li>
+              <li class="nav-item"><a class="nav-link text-white" href="about.html">Informazioni</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div></div></div>
+  </div>
+</div>
+<!-- Barra informativa wizard (visibile solo quando il wizard è attivo) -->
+<div id="wizard-info-bar" style="display:none;background:#e8f1fb;border-bottom:1px solid #c0d8f5">
+  <div class="container-xxl">
+    <div class="d-flex flex-wrap align-items-center gap-2 py-2" style="font-size:.85rem">
+      <svg class="icon icon-sm flex-shrink-0" aria-hidden="true" style="color:#0066cc"><use href="svg/sprites.svg#it-info-circle"></use></svg>
+      <span>Valutazione comparativa ai sensi degli <strong>artt. 68-69 CAD</strong> — tutti i dati rimangono nel browser.</span>
+      <span class="ms-auto d-flex gap-3 flex-wrap">
+        <a href="about.html" class="text-primary small">Come funziona il metodo</a>
+        <a href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa" target="_blank" rel="noopener" class="text-primary small">GitHub</a>
+        <span class="text-muted small">v3.0 beta</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Popup publiccode one-shot -->
+<div id="pc-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="pc-popup-title">
+  <div style="background:#fff;border-radius:.5rem;width:100%;max-width:560px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div style="padding:1rem 1.25rem;border-bottom:1px solid #dee2e6;display:flex;align-items:center;justify-content:space-between">
+      <h2 class="h5 mb-0" id="pc-popup-title">
+        <svg class="icon icon-sm me-2" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>
+        Inizializza con publiccode.yml
+      </h2>
+      <button class="btn btn-link p-0" onclick="closePcPopup()" aria-label="Chiudi">
+        <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-close"></use></svg>
+      </button>
+    </div>
+    <div style="padding:1.25rem">
+      <p class="small text-muted mb-3">Inserisci l'URL diretto al file <code>publiccode.yml</code> raw del repository. I dati vengono importati una sola volta e non vengono sincronizzati automaticamente.</p>
+      <div class="form-group" style="position:relative;padding-top:1.25rem;margin-bottom:1rem">
+        <label class="active" for="pc-popup-url" style="position:absolute;top:0;left:0;font-size:.72rem">URL publiccode.yml</label>
+        <input type="url" class="form-control" id="pc-popup-url"
+          placeholder="https://raw.githubusercontent.com/org/repo/main/publiccode.yml" />
+      </div>
+      <div id="pc-popup-msg"></div>
+    </div>
+    <div style="padding:.75rem 1.25rem;border-top:1px solid #dee2e6;display:flex;justify-content:flex-end;gap:.5rem">
+      <button class="btn btn-outline-secondary btn-sm" onclick="closePcPopup()">Annulla</button>
+      <button class="btn btn-primary btn-sm" id="pc-popup-fetch-btn" onclick="fetchPublicCode()">
+        <svg class="icon icon-sm me-1 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>
+        Recupera e importa
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal scheda soluzione (fuori dal main per z-index) -->
+<div id="sw-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sw-modal-title">
+  <div id="sw-modal-box">
+    <div class="modal-header">
+      <h2 class="h5 mb-0" id="sw-modal-title">Scheda soluzione</h2>
+      <button class="btn btn-link p-0" onclick="closeSwModal()" aria-label="Chiudi">
+        <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-close"></use></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="sw-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="saveSwModal()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<main id="main-content" class="container-xxl mt-4 mb-5">
+
+  <!-- ═══ LANDING PAGE ═══ -->
+  <div id="landing-page">
+    <div class="landing-hero">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1>Valutazione Comparativa Tecnica ed Economica</h1>
+          <p class="lead mb-3">Strumento per la valutazione comparativa di software a riuso o open source ai sensi degli <strong>artt. 68 e 69 del CAD</strong>. Guida la PA nella scelta tra soluzioni esistenti con un metodo strutturato e documentato.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-light fw-semibold" id="landing-start-btn" type="button" onclick="showWizard()">
+              <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-arrow-right"></use></svg>
+              Inizia nuova valutazione
+            </button>
+            <label for="import-json-landing" class="btn btn-outline-light mb-0" style="cursor:pointer">
+              <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-upload"></use></svg>
+              Carica sessione JSON
+            </label>
+            <input type="file" id="import-json-landing" accept=".json" class="d-none" />
+          </div>
+        </div>
+        <div class="col-md-4 d-none d-md-block text-end">
+          <svg class="icon" style="width:6rem;height:6rem;opacity:.35" aria-hidden="true"><use href="svg/sprites.svg#it-chart-line"></use></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h6 fw-bold mb-3">Come funziona</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">1</div><small>Inserisci le informazioni della PA e della valutazione</small></div>
+              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">2</div><small>Definisci i requisiti funzionali e non funzionali con i pesi</small></div>
+              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">3</div><small>Aggiungi le soluzioni, compila criteri, TCO e copertura requisiti (anche da publiccode.yml)</small></div>
+              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">4</div><small>Assegna i pesi ai criteri e ottieni la classifica TOPSIS con esportazione JSON</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h6 fw-bold mb-3">Cosa serve</h3>
+            <ul class="small ps-3">
+              <li class="mb-1">Elenco delle soluzioni software da confrontare (con link a sito e repository)</li>
+              <li class="mb-1">Requisiti funzionali e non funzionali dell'ente</li>
+              <li class="mb-1">Dati tecnici delle soluzioni (interoperabilità, sicurezza, accessibilità…)</li>
+              <li class="mb-1">Voci di costo per il calcolo del TCO (Total Cost of Ownership)</li>
+              <li class="mb-1">Pesi da assegnare ai criteri di valutazione</li>
+            </ul>
+            <p class="small text-muted mb-0"><svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-locked"></use></svg>Tutti i dati rimangono nel browser — nessun dato inviato a server esterni.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h6 fw-bold mb-3">Normativa di riferimento</h3>
+            <ul class="small ps-3">
+              <li class="mb-2"><a href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/" target="_blank" rel="noopener">Linee Guida acquisizione e riuso software (AgID)</a></li>
+              <li class="mb-2"><a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68" target="_blank" rel="noopener">Art. 68 CAD — Analisi comparativa delle soluzioni</a></li>
+              <li class="mb-2"><a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art69" target="_blank" rel="noopener">Art. 69 CAD — Riuso delle soluzioni</a></li>
+              <li class="mb-2"><a href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Developers Italia — Riuso del software</a></li>
+            </ul>
+            <p class="small text-muted mb-0">Versione 3.0 beta — <a href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa" target="_blank" rel="noopener">Repository GitHub</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ═══ WIZARD ═══ -->
+  <div id="wizard-content">
+
+  <!-- STEPPER -->
+  <div class="steppers mb-4">
+    <div class="steppers-header">
+      <ul id="steppers-list">
+        <li class="active" data-step="0">Informazioni<span class="visually-hidden"> (attivo)</span></li>
+        <li data-step="1">Requisiti</li>
+        <li data-step="2">Soluzioni</li>
+        <li data-step="3">TOPSIS</li>
+      </ul>
+      <span class="steppers-index" aria-hidden="true" id="step-index">1/4</span>
+    </div>
+  </div>
+
+  <!-- ══ STEP 0: INFORMAZIONI ══ -->
+  <div class="step-panel active" id="step-0">
+    <h2 class="h4 mb-3">Informazioni sulla valutazione</h2>
+    <div class="row">
+      <div class="col-md-7">
+        <div class="form-group">
+          <label class="active" for="meta-pa">Pubblica Amministrazione compilatrice *</label>
+          <input type="text" class="form-control" id="meta-pa" placeholder="Es. Comune di Roma" />
+        </div>
+        <div class="form-group">
+          <label class="active" for="meta-data">Data della valutazione *</label>
+          <input type="date" class="form-control" id="meta-data" />
+        </div>
+        <div class="form-group">
+          <label class="active" for="meta-oggetto">Oggetto della valutazione</label>
+          <input type="text" class="form-control" id="meta-oggetto" placeholder="Es. Sistema di gestione documentale" />
+        </div>
+        <div class="form-group">
+          <label class="active" for="meta-categoria">Categoria software</label>
+          <select class="form-select" id="meta-categoria">
+            <option value="">— Seleziona —</option>
+            <option value="gestione-progetti">Gestione progetti</option>
+            <option value="comunicazione">Comunicazione</option>
+            <option value="ufficio-contabilita">Ufficio e contabilità</option>
+            <option value="sviluppo-software">Sviluppo software</option>
+            <option value="scientifico-ingegneria">Applicazioni scientifiche e di ingegneria</option>
+            <option value="multimedia">Multimedia</option>
+            <option value="sicurezza">Sicurezza</option>
+            <option value="ludicizzazione">Ludicizzazione</option>
+            <option value="altro">Altro</option>
+          </select>
+          <small class="form-text text-muted">Usata per pre-impostare i pesi nello step TOPSIS.</small>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="callout callout-primary mb-3">
+          <div class="callout-inner">
+            <div class="callout-title"><svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg><span class="visually-hidden">Nota</span><span class="text">Import / Export</span></div>
+            <p class="small">Carica una sessione salvata in precedenza. L'esportazione JSON è disponibile in qualsiasi momento dalla barra in basso.</p>
+            <div class="d-flex flex-column gap-2">
+              <label for="import-json" class="btn btn-outline-primary btn-sm mb-0" style="cursor:pointer">
+                <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-upload"></use></svg>
+                Carica sessione salvata (JSON)
+              </label>
+              <input type="file" id="import-json" accept=".json" class="d-none" />
+              <button class="btn btn-outline-secondary btn-sm" id="copy-permalink-btn">
+                <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-link"></use></svg>
+                Copia permalink
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 1: REQUISITI ══ -->
+  <div class="step-panel" id="step-1">
+    <h2 class="h4 mb-3">Requisiti funzionali e non funzionali</h2>
+    <p class="text-muted">Definisci i requisiti <strong>prima</strong> di inserire le soluzioni. La copertura di ciascuna soluzione si compila nella scheda della soluzione (step Soluzioni). La somma dei pesi dovrebbe essere 100.</p>
+    <div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
+      <button class="btn btn-outline-primary btn-sm" id="add-req-fn">
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-plus-circle"></use></svg>
+        Requisito funzionale
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" id="add-req-nfn">
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-plus-circle"></use></svg>
+        Requisito non funzionale
+      </button>
+      <button class="btn btn-outline-secondary btn-sm ms-auto" id="equalize-pesi-btn" title="Distribuisce il peso 100 in parti uguali tra tutti i requisiti">
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-exchange-circle"></use></svg>
+        Pesi uniformi
+      </button>
+    </div>
+    <div class="table-scroll">
+      <table class="table table-hover table-sm" id="req-table">
+        <thead id="req-thead"></thead>
+        <tbody id="req-tbody"></tbody>
+      </table>
+    </div>
+    <div id="req-peso-warning" class="alert alert-warning d-none mt-2" role="alert">
+      <svg class="icon icon-sm me-2" aria-hidden="true"><use href="svg/sprites.svg#it-warning-circle"></use></svg>
+      La somma dei pesi è <strong id="req-peso-tot">0</strong> — dovrebbe essere 100. La valutazione verrà normalizzata automaticamente.
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: SOLUZIONI ══ -->
+  <div class="step-panel" id="step-2">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h2 class="h4 mb-0">Soluzioni da valutare</h2>
+      <button class="btn btn-outline-primary btn-sm" id="add-sw-btn">
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-plus-circle"></use></svg>
+        Aggiungi soluzione
+      </button>
+    </div>
+
+    <div class="inner-tab-bar" id="sol-tab-bar">
+      <button class="inner-tab-btn active" onclick="switchSolTab(this,'sol-anagrafica')">Anagrafica</button>
+      <button class="inner-tab-btn" onclick="switchSolTab(this,'sol-requisiti')">Requisiti</button>
+      <button class="inner-tab-btn" onclick="switchSolTab(this,'sol-criteri')">Criteri</button>
+      <button class="inner-tab-btn" onclick="switchSolTab(this,'sol-tco')">TCO</button>
+    </div>
+
+    <!-- Tab: Anagrafica -->
+    <div class="inner-tab-pane active" id="sol-anagrafica">
+      <p class="text-muted small">Massimo 8 soluzioni. Almeno 2 per il calcolo TOPSIS. Usa "Inizializza con publiccode.yml" per importare i dati automaticamente.</p>
+      <div class="row" id="prodotti-container"></div>
+    </div>
+
+    <!-- Tab: Rivedi requisiti -->
+    <div class="inner-tab-pane" id="sol-requisiti">
+      <p class="text-muted small mb-2">Copertura dei requisiti per ciascuna soluzione. <strong>Clicca su un valore</strong> per aprire la scheda e modificarlo.</p>
+      <div class="table-scroll" id="rv-req-container"></div>
+    </div>
+
+    <!-- Tab: Rivedi criteri -->
+    <div class="inner-tab-pane" id="sol-criteri">
+      <p class="text-muted small mb-2">Valori dei criteri tecnici per ciascuna soluzione. <strong>Clicca su un valore</strong> per aprire la scheda e modificarlo.</p>
+      <div class="callout callout-warning mb-3"><div class="callout-inner"><div class="callout-title"><svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-warning-circle"></use></svg><span class="visually-hidden">Attenzione</span><span class="text">Criteri obbligatori</span></div><p class="mb-0 small">I criteri con <strong>*</strong> sono obbligatori per legge.</p></div></div>
+      <div id="rv-cri-container"></div>
+    </div>
+
+    <!-- Tab: Rivedi TCO -->
+    <div class="inner-tab-pane" id="sol-tco">
+      <div class="row mb-3 align-items-end">
+        <div class="col-md-8">
+          <p class="text-muted small mb-0">Voci di costo per ciascuna soluzione (art. 68 c. 1-bis CAD). <strong>Clicca su un valore</strong> per aprire la scheda e modificarlo.</p>
+        </div>
+        <div class="col-md-4 d-flex gap-3 justify-content-end">
+          <div class="form-group mb-0" style="min-width:100px">
+            <label class="active" for="tco-durata" style="position:static;font-size:.75rem;display:block;margin-bottom:.25rem">Durata (anni)</label>
+            <input type="number" class="form-control form-control-sm" id="tco-durata" value="5" min="1" max="20" style="width:80px" />
+          </div>
+          <div class="form-group mb-0" style="min-width:100px">
+            <label class="active" for="tco-npa" style="position:static;font-size:.75rem;display:block;margin-bottom:.25rem">N° PA</label>
+            <input type="number" class="form-control form-control-sm" id="tco-npa" value="1" min="1" style="width:80px" />
+          </div>
+        </div>
+      </div>
+      <div class="table-scroll" id="rv-tco-container"></div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: TOPSIS ══ -->
+  <div class="step-panel" id="step-3">
+    <h2 class="h4 mb-3">TOPSIS — Calcolo e Risultati</h2>
+
+    <div class="inner-tab-bar" id="topsis-tab-bar">
+      <button class="inner-tab-btn active" onclick="switchTopsisTab(this,'topsis-pesi')">Pesi</button>
+      <button class="inner-tab-btn" onclick="switchTopsisTab(this,'topsis-risultati')">Risultati</button>
+    </div>
+
+    <!-- Tab: Pesi -->
+    <div class="inner-tab-pane active" id="topsis-pesi">
+      <p class="text-muted small">Inserire i pesi (0–1) per ciascun criterio. TCO è sempre 1 (obbligatorio per legge).</p>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <div class="input-group input-group-sm">
+            <select class="form-select" id="pesi-macro">
+              <option value="">— Preset macro-categoria —</option>
+              <option value="gestione-progetti">Gestione progetti</option>
+              <option value="comunicazione">Comunicazione</option>
+              <option value="ufficio-contabilita">Ufficio e contabilità</option>
+              <option value="sviluppo-software">Sviluppo software</option>
+              <option value="scientifico-ingegneria">Applicazioni scientifiche e di ingegneria</option>
+              <option value="multimedia">Multimedia</option>
+              <option value="sicurezza">Sicurezza</option>
+              <option value="ludicizzazione">Ludicizzazione</option>
+              <option value="altro">Altro</option>
+            </select>
+            <button class="btn btn-outline-primary" id="applica-pesi-preset">Applica</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table table-hover table-sm" id="pesi-table">
+          <thead><tr class="table-primary">
+            <th scope="col">Criterio</th>
+            <th scope="col">Peso (0–1)</th>
+            <th scope="col">Note</th>
+          </tr></thead>
+          <tbody id="pesi-tbody"></tbody>
+        </table>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-primary" id="calcola-btn">
+          <svg class="icon icon-sm me-2 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-chart-line"></use></svg>
+          Calcola classifica TOPSIS
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab: Risultati -->
+    <div class="inner-tab-pane" id="topsis-risultati">
+      <div id="risultati-meta" class="mb-3 text-muted small"></div>
+      <div class="row mb-4" id="risultati-cards"></div>
+      <div id="topsis-scatter-container" class="mb-4"></div>
+      <h3 class="h5 mb-2">Dettaglio punteggi per criterio</h3>
+      <div class="table-scroll mb-4">
+        <table class="table results-table table-bordered table-sm" id="risultati-detail-table"></table>
+      </div>
+      <details class="mb-4">
+        <summary class="fw-semibold" style="cursor:pointer;user-select:none">▶ Dati intermedi TOPSIS (normalizzazione, pesi, distanze)</summary>
+        <div class="table-scroll mt-2">
+          <table class="table table-sm results-table" id="topsis-table"></table>
+        </div>
+      </details>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" id="export-json-btn">
+          <svg class="icon icon-sm me-2 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-download"></use></svg>
+          Esporta JSON
+        </button>
+        <button class="btn btn-outline-primary" id="print-btn">
+          <svg class="icon icon-sm me-2" aria-hidden="true"><use href="svg/sprites.svg#it-print"></use></svg>
+          Stampa / Salva PDF
+        </button>
+        <button class="btn btn-outline-secondary" id="reset-btn">
+          <svg class="icon icon-sm me-2" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>
+          Nuova valutazione
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Appendice di stampa – visibile solo in @media print -->
+  <div id="print-appendix" aria-hidden="true" style="display:none"></div>
+
+  </div><!-- /wizard-content -->
+
+  <!-- Navigazione wizard (sticky) -->
+  <div class="step-nav" id="step-nav-bar" style="display:none">
+    <div class="d-flex justify-content-between align-items-center gap-2">
+      <button class="btn btn-outline-primary steppers-btn-prev" id="prev-btn" type="button" onclick="handlePrevStep()" disabled>
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-chevron-left"></use></svg>
+        <span class="d-none d-sm-inline">Indietro</span>
+      </button>
+      <span class="text-muted small d-none d-md-block flex-grow-1 text-center" id="step-label"></span>
+      <button class="btn btn-outline-secondary btn-sm" id="export-json-nav" type="button" title="Esporta JSON (salva progresso)">
+        <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-download"></use></svg>
+        <span class="d-none d-sm-inline">Esporta JSON</span>
+      </button>
+      <button class="btn btn-primary steppers-btn-next" id="next-btn" type="button" onclick="handleNextStep()">
+        <span class="d-none d-sm-inline">Avanti</span>
+        <svg class="icon icon-sm ms-1 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-chevron-right"></use></svg>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ═══════════════════════ FOOTER ═══════════════════════ -->
+<footer class="it-footer">
+  <div class="it-footer-main">
+    <div class="container">
+      <section class="pb-4">
+        <div class="row clearfix"><div class="col-sm-12">
+          <div class="it-brand-wrapper">
+            <a href="https://innovazione.gov.it/dipartimento/">
+              <div class="it-brand-text"><h2>Dipartimento per la Trasformazione Digitale</h2><h3>Presidenza del Consiglio dei Ministri</h3></div>
+            </a>
+          </div>
+        </div></div>
+      </section>
+      <section class="pt-2">
+        <div class="row">
+          <div class="col-lg-4 col-sm-6 pb-3">
+            <h4>Strumento</h4>
+            <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
+              <li><a class="list-item" href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa">Repository GitHub</a></li>
+              <li><a class="list-item" href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/">Linee guida acquisizione e riuso</a></li>
+            </ul></div>
+          </div>
+          <div class="col-lg-4 col-sm-6 pb-3">
+            <h4>Normativa</h4>
+            <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
+              <li><a class="list-item" href="https://docs.italia.it/italia/piano-triennale-ict/codice-amministrazione-digitale-docs/">Art. 68-69 CAD</a></li>
+              <li><a class="list-item" href="https://docs.italia.it/italia/piano-triennale-ict/lg-modellointeroperabilita-docs/">Modello di Interoperabilità PA</a></li>
+            </ul></div>
+          </div>
+          <div class="col-lg-4 col-sm-6 pb-3">
+            <h4>Licenza</h4>
+            <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
+              <li><a class="list-item" href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL-3.0-only</a></li>
+              <li><a class="list-item" href="https://developers.italia.it">Developers Italia</a></li>
+            </ul></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="it-footer-small-prints clearfix">
+    <div class="container">
+      <ul class="it-footer-small-prints-list list-inline mb-0 d-flex flex-column flex-md-row">
+        <li class="list-inline-item">Versione 3.0 beta — CCROS Valutazione Comparativa</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/js/bootstrap-italia.bundle.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  VALUTAZIONE COMPARATIVA — Engine
+//  Tutto client-side · nessun dato inviato a server
+// ═══════════════════════════════════════════════════════════
+
+// ── Costanti ────────────────────────────────────────────────
+const SW_MAX = 8;
+const SW_MIN = 2;   // usato solo per il warning all'avvio calcolo
+const SW_DEL_MIN = 1; // minimo per la cancellazione (una sola soluzione è OK)
+const SW_LETTERS = ['A','B','C','D','E','F','G','H'];
+const SW_COLORS  = ['#0066cc','#008055','#cc6600','#9900cc','#cc0055','#006666','#886600','#003388'];
+const MEDALS     = ['🥇','🥈','🥉','4°','5°','6°','7°','8°'];
+const RANK_COLORS= ['#008055','#0066cc','#995c00','#888','#888','#888','#888','#888'];
+
+const STEP_LABELS = [
+  'Informazioni generali',
+  'Requisiti funzionali e non funzionali',
+  'Soluzioni da valutare',
+  'TOPSIS — Pesi e Risultati',
+];
+const TOTAL_STEPS = 4;
+
+const PESI_PRESET = {
+  'gestione-progetti':      [1,1,1,1,0.7,0,0.5,0.7,0.6,0,0,0.8],
+  'comunicazione':          [1,1,1,1,0.5,0,0.6,0,0,0,0,0.8],
+  'ufficio-contabilita':    [1,1,1,1,0.8,0,0.5,0.8,0.6,0,0,0.8],
+  'sviluppo-software':      [1,1,1,1,0,0,0.6,0,0,0,0,0.8],
+  'scientifico-ingegneria': [1,1,1,1,0.7,0,1,0.6,0,0,0,0.8],
+  'multimedia':             [1,1,1,1,0.7,0,0.5,0.7,0.6,0,0,0.8],
+  'sicurezza':              [1,1,1,1,0.8,0,0.7,0.8,0.6,0,0,0.8],
+  'ludicizzazione':         [1,1,1,1,0.5,0,0.6,0,0,0,0,0.8],
+  'altro':                  [1,1,1,1,0.7,0,0.6,0,0,0,0,0.8],
+};
+
+const PESI_DEF = [
+  { id: 'tco',            label: 'TCO',                    def: 1,   note: 'Obbligatorio — Art. 68 CAD', fixed: true },
+  { id: 'interoperabilita', label: 'Interoperabilità',   def: 0.7, note: '' },
+  { id: 'protezione_dati',  label: 'Protezione dati',    def: 0.6, note: '' },
+  { id: 'sicurezza',        label: 'Sicurezza',          def: 0.8, note: '' },
+  { id: 'accessibilita',    label: 'Accessibilità',      def: 0,   note: '' },
+  { id: 'copertura_req',    label: 'Copertura requisiti',def: 0,   note: 'Compilare lo step Requisiti' },
+  { id: 'manutentore',      label: 'Manutentore',        def: 0,   note: '' },
+  { id: 'supporto',         label: 'Supporto',           def: 0,   note: '' },
+  { id: 'dipendenze',       label: 'Dipendenze',         def: 0,   note: 'Criterio costo (meno = meglio)' },
+  { id: 'competenze_pa',    label: 'Competenze PA',      def: 0,   note: '' },
+  { id: 'numero_pa',        label: 'Numero PA',          def: 0,   note: '' },
+  { id: 'vitalita',         label: 'Vitalità',           def: 0.8, note: '' },
+];
+
+const COST_CRITERIA = new Set(['tco','dipendenze']);
+
+const CRITERI_DEF = {
+  interoperabilita: {
+    label: 'Interoperabilità *', obbligatorio: true, tipo: 'sinon',
+    items: [
+      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true },
+      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true },
+      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true },
+      { id:'i4', testo:"Interoperabilità con gli ecosistemi della PA di interesse", obbligatorio:false },
+    ]
+  },
+  protezione_dati: {
+    label: 'Protezione dati personali *', obbligatorio: true, tipo: 'sinon',
+    items: [
+      { id:'p1', testo:"Utilizzo di tecniche di anonimizzazione/pseudonimizzazione", obbligatorio:true },
+      { id:'p2', testo:"Utilizzo di crittografia per immagazzinamento, trasferimento e processamento dei dati", obbligatorio:true },
+      { id:'p3', testo:"Possibilità di cancellazione definitiva dei dati", obbligatorio:true },
+    ]
+  },
+  sicurezza: {
+    label: 'Sicurezza *', obbligatorio: true, tipo: 'sinon',
+    items: [
+      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true },
+      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true },
+    ]
+  },
+  accessibilita: {
+    label: 'Accessibilità *', obbligatorio: true, tipo: 'radio',
+    items: [
+      { id:'a0', testo:"Il software NON è conforme alle Linee guida sull'accessibilità", valore:0 },
+      { id:'a1', testo:"Il software è PARZIALMENTE conforme alle Linee guida sull'accessibilità", valore:1 },
+      { id:'a2', testo:"Il software è DEL TUTTO conforme alle Linee guida sull'accessibilità", valore:2 },
+    ]
+  },
+  manutentore: {
+    label: 'Manutentore', obbligatorio: false, tipo: 'radio',
+    items: [
+      { id:'m0', testo:"Assenza di manutentori esterni", valore:0 },
+      { id:'m1', testo:"Presenza di manutentori esterni nel mercato", valore:1 },
+      { id:'m2', testo:"Presenza di manutentori esterni in-house o nella PA", valore:2 },
+    ]
+  },
+  supporto: {
+    label: 'Supporto', obbligatorio: false, tipo: 'sinon_nonec',
+    items: [
+      { id:'su1', testo:"Presenza di accordi con terzi per supporto di installazione/personalizzazione" },
+      { id:'su2', testo:"Presenza di soggetti in grado di fornire supporto (non nec. = non necessario)" },
+    ]
+  },
+  dipendenze:   { label: 'Dipendenze',   obbligatorio: false, tipo: 'numero_dipendenze' },
+  competenze_pa:{ label: 'Competenze PA',obbligatorio: false, tipo: 'radio',
+    items: [
+      { id:'c0', testo:"Le risorse PA NON hanno alcuna competenza", valore:0 },
+      { id:'c1', testo:"Le risorse PA hanno competenza LIMITATA", valore:1 },
+      { id:'c2', testo:"Le risorse PA hanno competenza ECCELLENTE", valore:2 },
+    ]
+  },
+  numero_pa:    { label: 'Numero PA',    obbligatorio: false, tipo: 'numero_pa' },
+  vitalita:     { label: 'Vitalità',     obbligatorio: false, tipo: 'vitalita' },
+};
+
+const TCO_VOCI = [
+  { id:'sviluppo',     label:"Costi di sviluppo dell'intero software",         gruppo:'CAPEX' },
+  { id:'integrazione', label:"Integrazione con i propri sistemi",               gruppo:'CAPEX' },
+  { id:'hardware',     label:"Hardware (server, periferiche, apparati rete)",   gruppo:'CAPEX' },
+  { id:'consegna',     label:"Costi di consegna e assicurazione",               gruppo:'CAPEX' },
+  { id:'adeguamento',  label:"Adeguamento alle specifiche e verifica conformità",gruppo:'CAPEX' },
+  { id:'formazione',   label:"Formazione del personale",                        gruppo:'OPEX' },
+  { id:'licenze',      label:"Licenze software (se presenti)",                  gruppo:'OPEX' },
+  { id:'assistenza',   label:"Assistenza tecnica e manutenzione",               gruppo:'OPEX' },
+  { id:'cloud',        label:"Servizi cloud / hosting / connettività",          gruppo:'OPEX' },
+  { id:'gestione',     label:"Gestione e supporto operativo",                   gruppo:'OPEX' },
+  { id:'migrazione',   label:"Migrazione dati e dismissione sistemi legacy",    gruppo:'ALTRO' },
+  { id:'sicurezza_c',  label:"Costi di sicurezza e compliance",                 gruppo:'ALTRO' },
+];
+
+// ── Helpers ──────────────────────────────────────────────────
+const nSw = () => state.prodotti.length;
+const range = () => Array.from({ length: nSw() }, (_, i) => i);
+const swColor = i => SW_COLORS[i % SW_COLORS.length];
+const swLetter = i => SW_LETTERS[i] || String(i+1);
+const swName = i => state.prodotti[i]?.nome || `Software ${swLetter(i)}`;
+const fmtEur = v => '€ ' + (Math.round(v)||0).toLocaleString('it-IT');
+
+function makeSwArr(def = '') { return Array.from({ length: nSw() }, () => def); }
+function extendSwArr(arr, def = '') {
+  while (arr.length < nSw()) arr.push(typeof def === 'function' ? def() : def);
+  return arr;
+}
+function shrinkSwArr(arr, idx) { arr.splice(idx, 1); return arr; }
+
+// ── Stato ────────────────────────────────────────────────────
+let state = buildInitialState();
+
+function buildInitialState() {
+  return {
+    meta: { pa:'', data: new Date().toISOString().slice(0,10), oggetto:'', categoria:'' },
+    prodotti: [
+      { nome:'Software A', titolarita:'', maintainer:'', sito:'', repo:'' },
+      { nome:'Software B', titolarita:'', maintainer:'', sito:'', repo:'' },
+    ],
+    requisiti: [],
+    criteri: buildCriteriState(2),
+    tco: {
+      durata: 5, npa: 1,
+      voci: Object.fromEntries(TCO_VOCI.map(v => [v.id, [0,0]])),
+    },
+    pesi: Object.fromEntries(PESI_DEF.map(p => [p.id, p.def])),
+    _reqCnt: 0,
+  };
+}
+
+function buildCriteriState(n) {
+  const zeros = () => Array(n).fill(0);
+  const empty = () => Array(n).fill('');
+  return {
+    interoperabilita: { items: { i1:empty(), i2:empty(), i3:empty(), i4:empty() } },
+    protezione_dati:  { items: { p1:empty(), p2:empty(), p3:empty() } },
+    sicurezza:        { items: { s1:empty(), s2:empty() } },
+    accessibilita:    { scelta: zeros() },
+    manutentore:      { scelta: zeros() },
+    supporto:         { items: { su1:empty(), su2:empty() } },
+    dipendenze:       { proprietario: zeros(), opensource: zeros() },
+    competenze_pa:    { scelta: zeros() },
+    numero_pa:        { utilizzano: zeros(), interessate: zeros() },
+    vitalita:         { giorni: zeros(), commit: zeros(), contributi: zeros(), release: zeros() },
+  };
+}
+
+// ── Gestione soluzioni (add/remove) ─────────────────────────
+function addSoftware() {
+  if (nSw() >= SW_MAX) { alert(`Massimo ${SW_MAX} soluzioni.`); return; }
+  const idx = nSw();
+  state.prodotti.push({ nome:`Software ${swLetter(idx)}`, titolarita:'', maintainer:'', sito:'', repo:'' });
+  // Estendi tutti gli array criteri
+  Object.values(state.criteri.interoperabilita.items).forEach(a => a.push(''));
+  Object.values(state.criteri.protezione_dati.items).forEach(a => a.push(''));
+  Object.values(state.criteri.sicurezza.items).forEach(a => a.push(''));
+  state.criteri.accessibilita.scelta.push(0);
+  state.criteri.manutentore.scelta.push(0);
+  Object.values(state.criteri.supporto.items).forEach(a => a.push(''));
+  state.criteri.dipendenze.proprietario.push(0);
+  state.criteri.dipendenze.opensource.push(0);
+  state.criteri.competenze_pa.scelta.push(0);
+  state.criteri.numero_pa.utilizzano.push(0);
+  state.criteri.numero_pa.interessate.push(0);
+  state.criteri.vitalita.giorni.push(0);
+  state.criteri.vitalita.commit.push(0);
+  state.criteri.vitalita.contributi.push(0);
+  state.criteri.vitalita.release.push(0);
+  // TCO
+  Object.values(state.tco.voci).forEach(a => a.push(0));
+  // Requisiti
+  state.requisiti.forEach(r => { r.copertura.push(0); if(r.note_copertura) r.note_copertura.push(''); });
+  rerenderAll();
+}
+
+function removeSoftware(idx) {
+  if (nSw() <= SW_DEL_MIN) { alert(`Deve esserci almeno una soluzione.`); return; }
+  if (!confirm(`Rimuovere la soluzione "${swName(idx)}"? I dati inseriti per questa soluzione andranno persi.`)) return;
+  state.prodotti.splice(idx, 1);
+  Object.values(state.criteri.interoperabilita.items).forEach(a => a.splice(idx,1));
+  Object.values(state.criteri.protezione_dati.items).forEach(a => a.splice(idx,1));
+  Object.values(state.criteri.sicurezza.items).forEach(a => a.splice(idx,1));
+  state.criteri.accessibilita.scelta.splice(idx,1);
+  state.criteri.manutentore.scelta.splice(idx,1);
+  Object.values(state.criteri.supporto.items).forEach(a => a.splice(idx,1));
+  state.criteri.dipendenze.proprietario.splice(idx,1);
+  state.criteri.dipendenze.opensource.splice(idx,1);
+  state.criteri.competenze_pa.scelta.splice(idx,1);
+  state.criteri.numero_pa.utilizzano.splice(idx,1);
+  state.criteri.numero_pa.interessate.splice(idx,1);
+  state.criteri.vitalita.giorni.splice(idx,1);
+  state.criteri.vitalita.commit.splice(idx,1);
+  state.criteri.vitalita.contributi.splice(idx,1);
+  state.criteri.vitalita.release.splice(idx,1);
+  Object.values(state.tco.voci).forEach(a => a.splice(idx,1));
+  state.requisiti.forEach(r => { r.copertura.splice(idx,1); if(r.note_copertura) r.note_copertura.splice(idx,1); });
+  rerenderAll();
+}
+
+function rerenderAll() {
+  renderProdotti();
+  renderRequisiti();
+  renderCriteri();
+  renderTCO();
+}
+
+// ── Wizard ──────────────────────────────────────────────────
+let currentStep = 0;
+
+function goToStep(n) {
+  if (n < 0 || n >= TOTAL_STEPS) return;
+  for (let j = 0; j < TOTAL_STEPS; j++) {
+    const p = document.getElementById('step-' + j);
+    if (p) p.classList.toggle('active', j === n);
+  }
+  currentStep = n;
+  if (n === 2) renderSolReviewTabs();
+  updateStepperUI();
+  pushPermalink();
+  persistUIState();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepperUI() {
+  const items = document.querySelectorAll('#steppers-list li');
+  items.forEach((li, i) => {
+    li.classList.remove('active', 'confirmed');
+    li.querySelectorAll('.steppers-success').forEach(s => s.remove());
+    if (i < currentStep) {
+      li.classList.add('confirmed');
+      li.insertAdjacentHTML('beforeend', `<svg class="icon steppers-success" aria-hidden="true"><use href="svg/sprites.svg#it-check"></use></svg><span class="visually-hidden">Confermato</span>`);
+    } else if (i === currentStep) {
+      li.classList.add('active');
+    }
+  });
+  document.getElementById('step-index').textContent = `${currentStep+1}/${TOTAL_STEPS}`;
+  document.getElementById('step-label').textContent = STEP_LABELS[currentStep];
+  document.getElementById('prev-btn').disabled = currentStep === 0;
+  const nb = document.getElementById('next-btn');
+  const isLast = currentStep === TOTAL_STEPS - 1;
+  nb.style.display = isLast ? 'none' : '';
+  if (!isLast) {
+    nb.innerHTML = (currentStep === TOTAL_STEPS - 2 ? 'Calcola TOPSIS' : 'Avanti') +
+      ` <svg class="icon icon-sm ms-1 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-chevron-right"></use></svg>`;
+  }
+  document.getElementById('export-json-nav').style.display = isLast ? 'none' : '';
+}
+
+// ── Render: Prodotti ─────────────────────────────────────────
+function renderProdotti() {
+  const container = document.getElementById('prodotti-container');
+  container.innerHTML = '';
+  state.prodotti.forEach((p, i) => {
+    const canRemove = nSw() > SW_DEL_MIN;
+    const hasSito = p.sito?.startsWith('http');
+    const hasRepo = p.repo?.startsWith('http');
+    const hasInfo = p.titolarita || p.maintainer || hasSito || hasRepo;
+    container.innerHTML += `
+    <div class="col-xl-3 col-md-4 col-sm-6 mb-3">
+      <div class="card h-100" style="border-top:4px solid ${swColor(i)}">
+        <div class="card-body d-flex flex-column">
+          <!-- Nome -->
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="sw-tag flex-shrink-0" style="background:${swColor(i)}">${swLetter(i)}</span>
+            <input type="text" class="form-control form-control-sm fw-semibold" style="color:${swColor(i)}"
+              value="${escH(p.nome)}" placeholder="Nome software"
+              oninput="state.prodotti[${i}].nome=this.value;updateSwHeaders()" />
+          </div>
+          <!-- Info -->
+          <div class="flex-grow-1 mb-3">
+            ${hasInfo ? `
+              <div class="small text-muted d-flex flex-column gap-1">
+                ${p.titolarita ? `<span><svg class="icon icon-xs me-1" aria-hidden="true"><use href="svg/sprites.svg#it-pa"></use></svg>${escH(p.titolarita)}</span>` : ''}
+                ${p.maintainer ? `<span><svg class="icon icon-xs me-1" aria-hidden="true"><use href="svg/sprites.svg#it-user"></use></svg>${escH(p.maintainer)}</span>` : ''}
+              </div>
+              ${(hasSito || hasRepo) ? `<div class="d-flex gap-1 flex-wrap mt-2">
+                ${hasSito ? `<a href="${escH(p.sito)}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm py-0 px-2">
+                  <svg class="icon icon-xs me-1" aria-hidden="true"><use href="svg/sprites.svg#it-external-link"></use></svg>Sito</a>` : ''}
+                ${hasRepo ? `<a href="${escH(p.repo)}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                  <svg class="icon icon-xs me-1" aria-hidden="true"><use href="svg/sprites.svg#it-github"></use></svg>Repository</a>` : ''}
+              </div>` : ''}
+            ` : `<p class="small text-muted fst-italic mb-0">Nessuna informazione. Apri la scheda per compilare.</p>`}
+          </div>
+          <!-- Azioni -->
+          <div class="d-flex align-items-center justify-content-between border-top pt-2 mt-auto">
+            <button class="btn btn-primary btn-sm" onclick="openSwModal(${i})">
+              <svg class="icon icon-xs icon-white me-1" aria-hidden="true"><use href="svg/sprites.svg#it-pencil"></use></svg>Scheda
+            </button>
+            ${canRemove ? `<button class="btn btn-sm btn-remove-sw text-danger p-0 ms-2" onclick="removeSoftware(${i})" aria-label="Rimuovi ${escH(p.nome)}" title="Rimuovi">
+              <svg class="icon icon-sm" aria-hidden="true"><use href="svg/sprites.svg#it-delete"></use></svg>
+            </button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  updateSwHeaders();
+}
+
+// ── Inner tab switching ─────────────────────────────────────────
+function switchSolTab(btn, paneId) {
+  document.querySelectorAll('#sol-tab-bar .inner-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#step-2 .inner-tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+  // Render pigro: solo quando si apre la tab
+  if (paneId === 'sol-requisiti') renderRivediRequisiti();
+  if (paneId === 'sol-criteri')   renderRivediCriteri();
+  if (paneId === 'sol-tco')       renderRivediTCO();
+  syncUIState();
+}
+
+function switchTopsisTab(btn, paneId) {
+  document.querySelectorAll('#topsis-tab-bar .inner-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#step-3 .inner-tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+  if (paneId === 'topsis-risultati') computeAndRenderResults();
+  syncUIState();
+}
+
+// Chiamata da goToStep(2): aggiorna le tab di revisione già aperte
+function renderSolReviewTabs() {
+  renderProdotti();
+  const activePane = document.querySelector('#step-2 .inner-tab-pane.active');
+  if (!activePane) return;
+  if (activePane.id === 'sol-requisiti') renderRivediRequisiti();
+  if (activePane.id === 'sol-criteri')   renderRivediCriteri();
+  if (activePane.id === 'sol-tco')       renderRivediTCO();
+}
+
+// ── Rivedi Requisiti (read-only) ───────────────────────────────
+function renderRivediRequisiti() {
+  const c = document.getElementById('rv-req-container');
+  if (!state.requisiti.length) {
+    c.innerHTML = '<p class="text-muted small">Nessun requisito definito. Tornare allo step <strong>Requisiti</strong>.</p>'; return;
+  }
+  const hdrs = range().map(i => `<th class="text-center" style="color:${swColor(i)};min-width:110px" data-sw-header="${i}">${swName(i)}</th>`).join('');
+  const rows = state.requisiti.map(r => {
+    const cells = range().map(i => {
+      const v = r.copertura[i] ?? 0;
+      const col = v >= 80 ? '#008055' : v >= 50 ? '#995c00' : v > 0 ? '#cc334d' : '#aaa';
+      return `<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-req')" title="Clicca per modificare">
+        <span class="rv-cell-val fw-semibold" style="color:${col}">${v}%</span>
+      </td>`;
+    }).join('');
+    return `<tr>
+      <td><code class="small">${r.id}</code></td>
+      <td><span class="badge ${r.tipo==='fn'?'bg-primary':'bg-secondary'} small">${r.tipo==='fn'?'FN':'NFN'}</span></td>
+      <td class="small">${escH(r.descrizione||'—')}</td>
+      <td class="small text-end">${r.peso}%</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+  c.innerHTML = `<div class="table-scroll"><table class="table table-sm table-hover">
+    <thead><tr>
+      <th>ID</th><th>Tipo</th><th style="min-width:200px">Descrizione</th><th class="text-end">Peso</th>${hdrs}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── Rivedi Criteri (read-only) ─────────────────────────────────
+function renderRivediCriteri() {
+  const c = document.getElementById('rv-cri-container');
+  const hdrs = range().map(i => `<th class="text-center" style="color:${swColor(i)};min-width:110px" data-sw-header="${i}">${swName(i)}</th>`).join('');
+  let html = '';
+  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    let rows = '';
+    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const lbl = {si:'sì',no:'no',nonec:'non nec.','':'—'};
+      const colMap = {si:'#008055',no:'#cc334d',nonec:'#995c00','':'#aaa'};
+      rows = def.items.map(item => {
+        const cells = range().map(i => {
+          const v = (state.criteri[key].items[item.id]||[])[i]||'';
+          return `<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca per modificare">
+            <span class="rv-cell-val fw-semibold" style="color:${colMap[v]||'#aaa'}">${(lbl[v] ?? v) || '—'}</span></td>`;
+        }).join('');
+        return `<tr><td class="small ${item.obbligatorio?'fw-semibold':''}">${escH(item.testo)}</td>${cells}</tr>`;
+      }).join('');
+    } else if (def.tipo === 'radio') {
+      rows = def.items.map(item => {
+        const cells = range().map(i => {
+          const sel = state.criteri[key].scelta[i] === item.valore;
+          return `<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca per modificare">
+            ${sel?`<span class="fw-bold" style="color:#0066cc">✓</span>`:'<span class="text-muted">·</span>'}</td>`;
+        }).join('');
+        return `<tr><td class="small">${escH(item.testo)}</td>${cells}</tr>`;
+      }).join('');
+    } else if (def.tipo === 'numero_dipendenze') {
+      const cellsProp = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.dipendenze.proprietario[i]||0}</span></td>`).join('');
+      const cellsOpen = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.dipendenze.opensource[i]||0}</span></td>`).join('');
+      rows = `<tr><td class="small">Dipendenze <strong>proprietarie</strong></td>${cellsProp}</tr>
+              <tr><td class="small">Dipendenze <strong>open source</strong></td>${cellsOpen}</tr>`;
+    } else if (def.tipo === 'numero_pa') {
+      const cellsU = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.numero_pa.utilizzano[i]||0}</span></td>`).join('');
+      const cellsI = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.numero_pa.interessate[i]||0}</span></td>`).join('');
+      rows = `<tr><td class="small">PA che <strong>utilizzano</strong></td>${cellsU}</tr>
+              <tr><td class="small">PA <strong>interessate</strong></td>${cellsI}</tr>`;
+    } else if (def.tipo === 'vitalita') {
+      const vrows = [['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3a)'],['contributi','Contributori (3a)'],['release','Release (3a)']];
+      rows = vrows.map(([f,lbl])=>{
+        const cells = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.vitalita[f][i]||0}</span></td>`).join('');
+        return `<tr><td class="small">${lbl}</td>${cells}</tr>`;
+      }).join('');
+    }
+    html += `<div class="criteria-group mb-3">
+      <h3 class="h6 fw-semibold mb-2">${def.label}</h3>
+      <div class="table-scroll"><table class="table table-sm table-hover mb-0">
+        <thead><tr><th style="min-width:260px;width:50%">Criterio</th>${hdrs}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+  });
+  c.innerHTML = html;
+}
+
+// ── Rivedi TCO (read-only) ─────────────────────────────────────
+function renderRivediTCO() {
+  const c = document.getElementById('rv-tco-container');
+  const hdrs = range().map(i=>`<th class="text-center" style="color:${swColor(i)};min-width:120px" data-sw-header="${i}">${swName(i)}</th>`).join('');
+  let currentGruppo = '';
+  const rows = TCO_VOCI.map(v => {
+    let groupRow = '';
+    if (v.gruppo !== currentGruppo) {
+      currentGruppo = v.gruppo;
+      groupRow = `<tr class="table-light"><td colspan="${1+nSw()}"><strong>${v.gruppo}</strong></td></tr>`;
+    }
+    const vals = state.tco.voci[v.id] || Array(nSw()).fill(0);
+    const cells = range().map(i=>`<td class="text-end rv-cell" onclick="openSwModal(${i},'swm-tco')" title="Clicca per modificare">
+      <span class="rv-cell-val">${fmtEur(vals[i]||0)}</span></td>`).join('');
+    return groupRow + `<tr><td class="small">${escH(v.label)}</td>${cells}</tr>`;
+  }).join('');
+  const totRow = range().map(i=>{
+    const tot = TCO_VOCI.reduce((s,v)=>s+(+state.tco.voci[v.id]?.[i]||0),0);
+    return `<td class="text-end fw-bold">${fmtEur(tot)}</td>`;
+  }).join('');
+  c.innerHTML = `<div class="table-scroll"><table class="table table-sm table-bordered">
+    <thead><tr class="table-primary"><th style="min-width:200px">Voce di costo</th>${hdrs}</tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr class="table-dark fw-bold"><th>Totale TCO</th>${totRow}</tr></tfoot>
+  </table></div>`;
+}
+
+// ── Modal scheda soluzione ─────────────────────────────────────
+let _modalSwIdx = 0;
+const UI_STATE_KEY = 'valcomp-ui';
+const SNAPSHOT_KEY = 'valcomp-state-current';
+
+function getActivePaneId(selector) {
+  return document.querySelector(selector)?.id || '';
+}
+
+function getActiveSwPaneId() {
+  const pane = Array.from(document.querySelectorAll('#sw-modal-body .sw-modal-pane'))
+    .find(p => p.style.display !== 'none');
+  return pane?.id || 'swm-ana';
+}
+
+function getUIState() {
+  const swModalOpen = document.getElementById('sw-modal-overlay')?.classList.contains('open');
+  const pcPopupOpen = document.getElementById('pc-popup-overlay')?.classList.contains('open');
+  return {
+    wizardVisible: document.getElementById('wizard-content')?.classList.contains('d-block') || false,
+    solPane: getActivePaneId('#step-2 .inner-tab-pane.active') || 'sol-anagrafica',
+    topsisPane: getActivePaneId('#step-3 .inner-tab-pane.active') || 'topsis-pesi',
+    modal: swModalOpen ? {
+      swIdx: _modalSwIdx,
+      pane: getActiveSwPaneId(),
+      bodyScrollTop: document.getElementById('sw-modal-body')?.scrollTop || 0
+    } : null,
+    pcPopup: pcPopupOpen ? { swIdx: _pcSwIdx } : null,
+    scrollY: window.scrollY || 0
+  };
+}
+
+function persistUIState() {
+  try { sessionStorage.setItem(UI_STATE_KEY, JSON.stringify(getUIState())); } catch {}
+}
+
+function readPersistedUIState() {
+  try {
+    const raw = sessionStorage.getItem(UI_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function syncUIState() {
+  persistUIState();
+  pushPermalink();
+}
+
+function switchSwTab(btn, paneId) {
+  btn.closest('.sw-modal-tabs').querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#sw-modal-body .sw-modal-pane').forEach(p => { p.style.display = 'none'; });
+  btn.classList.add('active');
+  document.getElementById(paneId).style.display = 'block';
+  syncUIState();
+}
+
+function buildModalCriteriHTML(i) {
+  let html = '';
+  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    html += `<div class="mb-3 pb-3 border-bottom"><h6 class="fw-semibold mb-2">${def.label}</h6>`;
+    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const opts = def.tipo === 'sinon_nonec'
+        ? [['','—'],['si','sì'],['no','no'],['nonec','non nec.']]
+        : [['','—'],['si','sì'],['no','no']];
+      def.items.forEach(item => {
+        const v = (state.criteri[key].items[item.id] || [])[i] || '';
+        const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
+        html += `<div class="d-flex align-items-center gap-2 mb-2">
+          <select class="form-select form-select-sm flex-shrink-0" style="max-width:130px${col?`;border-color:${col};color:${col};font-weight:600`:''}"
+            onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;const c=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.borderColor=c;this.style.color=c;this.style.fontWeight=c?'600':''">
+            ${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}
+          </select>
+          <span class="small ${item.obbligatorio?'fw-semibold':''}">${item.url?`<a href="${item.url}" target="_blank" rel="noopener">`:''}${escH(item.testo)}${item.url?'</a>':''}</span>
+        </div>`;
+      });
+    } else if (def.tipo === 'radio') {
+      const selVal = state.criteri[key].scelta[i];
+      const opts = def.items.map(item =>
+        `<option value="${item.valore}"${selVal===item.valore?' selected':''}>${escH(item.testo)}</option>`
+      ).join('');
+      html += `<div class="d-flex align-items-center gap-2 mb-1">
+        <select class="form-select form-select-sm"
+          onchange="state.criteri['${key}'].scelta[${i}]=+this.value"
+          id="mcri-${key}-sel">
+          ${opts}
+        </select>
+      </div>`;
+    } else if (def.tipo === 'numero_dipendenze') {
+      html += `<div class="d-flex gap-4 flex-wrap mb-1">
+        <div><label class="small d-block mb-1">Dipendenze <strong>proprietarie</strong></label>
+          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
+            value="${state.criteri.dipendenze.proprietario[i]||0}"
+            oninput="state.criteri.dipendenze.proprietario[${i}]=+this.value||0" /></div>
+        <div><label class="small d-block mb-1">Dipendenze <strong>open source</strong></label>
+          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
+            value="${state.criteri.dipendenze.opensource[i]||0}"
+            oninput="state.criteri.dipendenze.opensource[${i}]=+this.value||0" /></div>
+      </div>
+      <small class="text-muted">2×proprietarie + open source — valori bassi = punteggio migliore.</small>`;
+    } else if (def.tipo === 'numero_pa') {
+      html += `<div class="d-flex gap-4 flex-wrap">
+        <div><label class="small d-block mb-1">PA che <strong>utilizzano</strong></label>
+          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
+            value="${state.criteri.numero_pa.utilizzano[i]||0}"
+            oninput="state.criteri.numero_pa.utilizzano[${i}]=+this.value||0" /></div>
+        <div><label class="small d-block mb-1">PA <strong>interessate</strong></label>
+          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
+            value="${state.criteri.numero_pa.interessate[i]||0}"
+            oninput="state.criteri.numero_pa.interessate[${i}]=+this.value||0" /></div>
+      </div>`;
+    } else if (def.tipo === 'vitalita') {
+      const rows = [['giorni',"Giorni dall'ultimo commit",'0.30'],['commit','Commit (3 anni)','0.40'],['contributi','Contributori (3 anni)','0.15'],['release','Release (3 anni)','0.15']];
+      html += `<div class="d-flex gap-3 flex-wrap">`;
+      rows.forEach(([f,lbl,w]) => {
+        html += `<div><label class="small d-block mb-1">${lbl} <span class="text-muted">(w=${w})</span></label>
+          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
+            value="${state.criteri.vitalita[f][i]||0}"
+            oninput="state.criteri.vitalita['${f}'][${i}]=+this.value||0" /></div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  });
+  return html;
+}
+
+function buildModalTCOHTML(i) {
+  const tot = TCO_VOCI.reduce((s,v)=>s+(+state.tco.voci[v.id]?.[i]||0),0);
+  let html = `<p class="small text-muted mb-2">Durata <strong>${state.tco.durata} anni</strong> · <strong>${state.tco.npa}</strong> PA — parametri modificabili nello step TCO.</p>`;
+  let currentGruppo = '';
+  TCO_VOCI.forEach(v => {
+    if (v.gruppo !== currentGruppo) {
+      currentGruppo = v.gruppo;
+      html += `<p class="fw-semibold small mb-1 mt-3 text-muted">${v.gruppo}</p>`;
+    }
+    const val = state.tco.voci[v.id]?.[i] || 0;
+    html += `<div class="d-flex align-items-center gap-2 mb-2">
+      <label class="small flex-grow-1">${escH(v.label)}</label>
+      <div class="input-group input-group-sm" style="max-width:170px">
+        <span class="input-group-text">€</span>
+        <input type="number" class="form-control" min="0" step="100" value="${val}"
+          oninput="state.tco.voci['${v.id}'][${i}]=+this.value||0;updateTCOTotals();updateModalTCOTotal(${i})" />
+      </div>
+    </div>`;
+  });
+  html += `<div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
+    <span>Totale TCO</span><span id="modal-tco-tot">${fmtEur(tot)}</span>
+  </div>`;
+  return html;
+}
+
+function updateModalTCOTotal(i) {
+  const el = document.getElementById('modal-tco-tot');
+  if (el) el.textContent = fmtEur(TCO_VOCI.reduce((s,v)=>s+(+state.tco.voci[v.id]?.[i]||0),0));
+}
+
+function buildModalReqHTML(i) {
+  if (!state.requisiti.length) {
+    return `<p class="text-muted small mb-0">Nessun requisito definito. Aggiungili nello step <strong>Requisiti</strong>.</p>`;
+  }
+  return `<div class="table-scroll">
+    <table class="table table-sm table-hover mb-0">
+      <thead><tr>
+        <th>ID</th><th>Tipo</th><th style="min-width:180px">Descrizione</th>
+        <th>Peso</th><th style="min-width:90px">Copertura (%)</th><th style="min-width:130px">Note</th>
+      </tr></thead>
+      <tbody>${state.requisiti.map(r => `<tr>
+        <td><code>${r.id}</code></td>
+        <td><span class="badge ${r.tipo==='fn'?'bg-primary':'bg-secondary'} small">${r.tipo==='fn'?'FN':'NFN'}</span></td>
+        <td class="small">${escH(r.descrizione||'')}</td>
+        <td class="small">${r.peso}%</td>
+        <td><input type="number" class="form-control form-control-sm" style="width:80px"
+          value="${r.copertura[i]||0}" min="0" max="100" step="1"
+          oninput="reqSetCop('${r.id}',${i},+this.value)" /></td>
+        <td><input type="text" class="form-control form-control-sm"
+          value="${escH(r.note_copertura?.[i]||'')}"
+          oninput="reqSetNoteCop('${r.id}',${i},this.value)" placeholder="Nota (opz.)" /></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function refreshModalReqSection(i) {
+  const el = document.getElementById('sw-modal-req-section');
+  if (el) el.innerHTML = buildModalReqHTML(i);
+}
+
+function openSwModal(i, initialPane) {
+  _modalSwIdx = i;
+  const p = state.prodotti[i];
+  const overlay = document.getElementById('sw-modal-overlay');
+  document.getElementById('sw-modal-title').innerHTML =
+    `<span class="sw-tag me-2" style="background:${swColor(i)}">${swLetter(i)}</span> ${escH(p.nome||'Soluzione')}`;
+
+  const reqBadge = state.requisiti.length
+    ? ` <span class="badge bg-secondary" style="font-size:.65em;vertical-align:middle">${state.requisiti.length}</span>` : '';
+  const pane = initialPane || 'swm-ana';
+  const tabActive = t => t === pane ? 'active' : '';
+  const paneVisible = id => id === pane ? '' : 'display:none';
+
+  document.getElementById('sw-modal-body').innerHTML = `
+    <ul class="nav nav-tabs sw-modal-tabs mb-3" role="tablist">
+      <li class="nav-item"><button type="button" class="nav-link ${tabActive('swm-ana')}" onclick="switchSwTab(this,'swm-ana')">Anagrafica</button></li>
+      <li class="nav-item"><button type="button" class="nav-link ${tabActive('swm-req')}" onclick="switchSwTab(this,'swm-req')">Requisiti${reqBadge}</button></li>
+      <li class="nav-item"><button type="button" class="nav-link ${tabActive('swm-cri')}" onclick="switchSwTab(this,'swm-cri')">Criteri</button></li>
+      <li class="nav-item"><button type="button" class="nav-link ${tabActive('swm-tco')}" onclick="switchSwTab(this,'swm-tco')">TCO</button></li>
+    </ul>
+
+    <div id="swm-ana" class="sw-modal-pane" style="${paneVisible('swm-ana')}">
+      <div class="mb-3">
+        <button class="btn btn-outline-primary btn-sm" onclick="openPcPopup(${i})">
+          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>Inizializza con publiccode.yml
+        </button>
+        ${p.publiccode ? `<span class="ms-2 small text-muted">Già inizializzato</span>` : ''}
+      </div>
+      <div id="pc-fetch-msg"></div>
+      ${[['nome','Nome software','text','Es. OpenCMS'],
+         ['titolarita','Titolarità (ente proprietario)','text','Es. Comune di Roma'],
+         ['maintainer','Maintainer','text','Es. Società SRL'],
+         ['sito','Sito di riferimento','url','https://'],
+         ['repo','Repository GitHub/GitLab','url','https://github.com/...']]
+        .map(([field,label,type,ph])=>`
+      <div class="form-group" style="position:relative;padding-top:1.25rem;margin-bottom:.75rem">
+        <label class="active" for="swm-${field}" style="position:absolute;top:0;left:0;font-size:.72rem;color:${field==='nome'?swColor(i):''}">${label}</label>
+        <input type="${type}" class="form-control form-control-sm" id="swm-${field}"
+          value="${escH(p[field]||'')}" placeholder="${ph}"
+          oninput="state.prodotti[${i}]['${field}']=this.value;if('${field}'==='nome'){document.getElementById('sw-modal-title').innerHTML='<span class=\\'sw-tag me-2\\' style=\\'background:${swColor(i)}\\'>${swLetter(i)}</span> '+this.value;updateSwHeaders()}" />
+      </div>`).join('')}
+    </div>
+
+    <div id="swm-req" class="sw-modal-pane" style="${paneVisible('swm-req')}">
+      <div id="sw-modal-req-section">${buildModalReqHTML(i)}</div>
+    </div>
+
+    <div id="swm-cri" class="sw-modal-pane" style="${paneVisible('swm-cri')}">
+      ${buildModalCriteriHTML(i)}
+    </div>
+
+    <div id="swm-tco" class="sw-modal-pane" style="${paneVisible('swm-tco')}">
+      ${buildModalTCOHTML(i)}
+    </div>`;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeSwModal(); }, { once: true });
+  syncUIState();
+}
+
+function refreshSwViews() {
+  renderProdotti();
+  renderRequisiti();
+  renderCriteri();
+  renderTCO();
+  renderRivediRequisiti();
+  renderRivediCriteri();
+  renderRivediTCO();
+  computeAndRenderResults();
+  schedulePL();
+}
+
+function saveSwModal() {
+  refreshSwViews();
+  closeSwModal(true);
+}
+
+function closeSwModal(skipRefresh) {
+  document.getElementById('sw-modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  if (!skipRefresh) renderProdotti(); // aggiorna almeno le card se si chiude senza salvataggio esplicito
+  syncUIState();
+}
+
+// ── Popup publiccode one-shot ─────────────────────────────────
+let _pcSwIdx = 0;
+
+function openPcPopup(i) {
+  _pcSwIdx = i;
+  const overlay = document.getElementById('pc-popup-overlay');
+  const inp = document.getElementById('pc-popup-url');
+  inp.value = state.prodotti[i].publiccode || '';
+  document.getElementById('pc-popup-msg').innerHTML = '';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  inp.focus();
+  syncUIState();
+}
+
+function closePcPopup() {
+  document.getElementById('pc-popup-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  syncUIState();
+}
+
+// ── Fuzzy match testo: true se str2 contiene >50% delle parole significative di str1
+function _fuzzyMatch(a, b) {
+  const stop = new Set(['il','lo','la','i','gli','le','di','a','da','in','con','su','per','tra','fra','e','o','un','una','uno','che','non','del','della','dei','degli','delle','al','alla','ai','agli','alle','dal','dalla','dai','dagli','dalle','nel','nella','nei','negli','nelle','sul','sulla','sui','sugli','sulle','è','sono','ha','hanno']);
+  const words = s => s.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
+  const wa = words(a); const wb = new Set(words(b));
+  if (!wa.length) return false;
+  const matches = wa.filter(w => wb.has(w)).length;
+  return matches / wa.length >= 0.4;
+}
+
+// ── Fetch publiccode.yml ───────────────────────────────────────
+async function fetchPublicCode() {
+  const i = _pcSwIdx;
+  const url = (document.getElementById('pc-popup-url')?.value || '').trim();
+  const msgEl = document.getElementById('pc-popup-msg');
+  if (!url) { msgEl.innerHTML = '<p class="text-danger small mb-0">Inserisci prima un URL valido.</p>'; return; }
+  const btn = document.getElementById('pc-popup-fetch-btn');
+  btn.disabled = true;
+  msgEl.innerHTML = '<p class="text-muted small mb-0">Recupero in corso…</p>';
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const pc = jsyaml.load(await res.text());
+    state.prodotti[i].publiccode = url;
+
+    // ── Anagrafica ──────────────────────────────────────────────
+    const lang = pc.description?.it ? 'it' : Object.keys(pc.description||{})[0] || 'en';
+    const desc = pc.description?.[lang] || {};
+    if (pc.name)       state.prodotti[i].nome      = pc.name;
+    if (pc.url)        state.prodotti[i].repo       = pc.url;
+    if (pc.landingURL) state.prodotti[i].sito       = pc.landingURL;
+    const contact = pc.maintenance?.contacts?.[0];
+    if (contact?.name) state.prodotti[i].maintainer = contact.name;
+    const owner = pc.legal?.mainCopyrightOwner || contact?.affiliation;
+    if (owner)         state.prodotti[i].titolarita = owner;
+
+    // ── Criteri — Dipendenze ────────────────────────────────────
+    const depOpen = (pc.dependsOn?.open        || []).length;
+    const depProp = (pc.dependsOn?.proprietary || []).length;
+    state.criteri.dipendenze.opensource[i]  = depOpen;
+    state.criteri.dipendenze.proprietario[i]= depProp;
+
+    // ── Criteri — Manutentore ───────────────────────────────────
+    const mType = pc.maintenance?.type;
+    const mMap = { internal:2, contract:2, community:1, none:0 };
+    if (mType && mMap[mType] !== undefined) state.criteri.manutentore.scelta[i] = mMap[mType];
+
+    // ── Criteri — Accessibilità ─────────────────────────────────
+    const accessible = pc.isAccessible ?? (desc.accessibilityGoals ? true : undefined);
+    if (accessible === true)  state.criteri.accessibilita.scelta[i] = 2;
+    else if (accessible === false) state.criteri.accessibilita.scelta[i] = 0;
+
+    // ── Criteri — Vitalità ──────────────────────────────────────
+    if (pc.releaseDate) {
+      const days = Math.round((Date.now() - new Date(pc.releaseDate).getTime()) / 86400000);
+      if (!isNaN(days)) state.criteri.vitalita.giorni[i] = days;
+    }
+
+    // ── Chiudi popup, riapri la scheda sul tab Anagrafica ────────
+    closePcPopup();
+    openSwModal(i, 'swm-ana');
+
+    // ── Features: UI interattiva di associazione ─────────────────
+    const features = desc.features || [];
+    if (features.length) {
+      _renderPcFeaturesUI(i, features);
+    } else {
+      const msgDiv = document.getElementById('pc-fetch-msg');
+      if (msgDiv) msgDiv.innerHTML = `<div class="alert alert-success alert-inline-clean py-2 px-3 mb-3" style="font-size:.82rem">
+        <strong>✓ Dati importati</strong> — nessuna funzionalità trovata in publiccode.yml.
+      </div>`;
+    }
+  } catch(e) {
+    msgEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem"><strong>Errore:</strong> ${escH(e.message)}<br><small>Verifica che l'URL sia il file raw e che CORS sia abilitato sul repository.</small></div>`;
+    btn.disabled = false;
+  }
+}
+
+// ── Render UI interattiva funzionalità publiccode ─────────────
+function _renderPcFeaturesUI(i, features) {
+  const msgDiv = document.getElementById('pc-fetch-msg');
+  if (!msgDiv) return;
+
+  const hasReqs = state.requisiti.length > 0;
+
+  const rows = features.map((feat, fi) => {
+    const matchIdx = hasReqs
+      ? state.requisiti.findIndex(r => _fuzzyMatch(feat, r.descrizione) || _fuzzyMatch(r.descrizione, feat))
+      : -1;
+    const defAction = matchIdx >= 0 ? 'mappa' : 'nuovo';
+
+    const reqOpts = state.requisiti.map((r, ri) =>
+      `<option value="${ri}"${ri === matchIdx ? ' selected' : ''}>${escH(r.id + ' — ' + (r.descrizione||'').substring(0,40))}</option>`
+    ).join('');
+
+    const detailHtml = defAction === 'mappa'
+      ? `<div class="d-flex gap-2 align-items-center flex-wrap">
+          <select class="form-select form-select-sm" id="pc-feat-req-${fi}" style="min-width:160px">${reqOpts}</select>
+          <div class="d-flex align-items-center gap-1">
+            <input type="number" class="form-control form-control-sm" id="pc-feat-cov-${fi}"
+              value="100" min="0" max="100" step="1" style="width:70px" title="Copertura %" />
+            <small class="text-muted text-nowrap">%</small>
+          </div>
+        </div>`
+      : defAction === 'nuovo'
+        ? `<span class="text-muted small">Nuovo requisito FN (copertura 100%)</span>`
+        : '';
+
+    return `<tr>
+      <td class="small py-2">${escH(feat)}</td>
+      <td class="py-2" style="min-width:150px">
+        <select class="form-select form-select-sm" id="pc-feat-action-${fi}" onchange="_pcFeatActionChange(${fi})">
+          <option value="ignora">Ignora</option>
+          <option value="nuovo"${defAction === 'nuovo' ? ' selected' : ''}>Nuovo requisito FN</option>
+          ${hasReqs ? `<option value="mappa"${defAction === 'mappa' ? ' selected' : ''}>Mappa su →</option>` : ''}
+        </select>
+      </td>
+      <td class="py-2" id="pc-feat-detail-${fi}" style="min-width:260px">${detailHtml}</td>
+    </tr>`;
+  }).join('');
+
+  msgDiv.innerHTML = `
+    <div class="card mb-3 border-primary">
+      <div class="card-header py-2 px-3 text-white" style="background:#0066cc;font-size:.85rem">
+        <strong>Funzionalità trovate in publiccode.yml</strong> — associa o ignora ciascuna voce
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr>
+            <th style="min-width:200px">Funzionalità</th>
+            <th style="min-width:150px">Azione</th>
+            <th>Dettaglio</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="card-footer py-2 px-3 d-flex gap-2">
+        <button class="btn btn-primary btn-sm" onclick="_applyPcFeatures(${i})">
+          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-check"></use></svg>Conferma
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('pc-fetch-msg').innerHTML=''">Annulla</button>
+      </div>
+    </div>`;
+}
+
+function _pcFeatActionChange(fi) {
+  const action = document.getElementById(`pc-feat-action-${fi}`)?.value;
+  const detail = document.getElementById(`pc-feat-detail-${fi}`);
+  if (!detail) return;
+  if (action === 'mappa' && state.requisiti.length) {
+    const reqOpts = state.requisiti.map((r, ri) =>
+      `<option value="${ri}">${escH(r.id + ' — ' + (r.descrizione||'').substring(0,40))}</option>`
+    ).join('');
+    detail.innerHTML = `<div class="d-flex gap-2 align-items-center flex-wrap">
+      <select class="form-select form-select-sm" id="pc-feat-req-${fi}" style="min-width:160px">${reqOpts}</select>
+      <div class="d-flex align-items-center gap-1">
+        <input type="number" class="form-control form-control-sm" id="pc-feat-cov-${fi}"
+          value="100" min="0" max="100" step="1" style="width:70px" title="Copertura %" />
+        <small class="text-muted text-nowrap">%</small>
+      </div>
+    </div>`;
+  } else if (action === 'nuovo') {
+    detail.innerHTML = `<span class="text-muted small">Nuovo requisito FN (copertura 100%)</span>`;
+  } else {
+    detail.innerHTML = '';
+  }
+}
+
+function appendPubliccodeTraceNote(req, swIdx, feat, coverage) {
+  if (!req) return;
+  if (!Array.isArray(req.note_copertura)) req.note_copertura = Array(nSw()).fill('');
+  const sourceUrl = state.prodotti[swIdx]?.publiccode || '';
+  const notePrefix = '[publiccode]';
+  const sourceText = sourceUrl ? ` da ${sourceUrl}` : '';
+  const trace = `${notePrefix} Mappato da "${feat}"${sourceText} (copertura ${coverage}%).`;
+  const existing = (req.note_copertura[swIdx] || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !line.startsWith(notePrefix));
+  existing.push(trace);
+  req.note_copertura[swIdx] = existing.join('\n');
+}
+
+function _applyPcFeatures(i) {
+  const msgDiv = document.getElementById('pc-fetch-msg');
+  if (!msgDiv) return;
+  const rows = msgDiv.querySelectorAll('tbody tr');
+  let mapped = 0, added = 0, ignored = 0;
+
+  rows.forEach((row, fi) => {
+    const actionSel = document.getElementById(`pc-feat-action-${fi}`);
+    if (!actionSel) return;
+    const action = actionSel.value;
+    if (action === 'ignora') { ignored++; return; }
+
+    const feat = row.querySelector('td')?.textContent?.trim() || '';
+
+    if (action === 'mappa') {
+      const reqIdx = parseInt(document.getElementById(`pc-feat-req-${fi}`)?.value ?? '-1');
+      const covEl = document.getElementById(`pc-feat-cov-${fi}`);
+      const cov = covEl ? Math.min(100, Math.max(0, parseInt(covEl.value) || 100)) : 100;
+      if (reqIdx >= 0 && reqIdx < state.requisiti.length) {
+        const req = state.requisiti[reqIdx];
+        req.copertura[i] = cov;
+        appendPubliccodeTraceNote(req, i, feat, cov);
+        mapped++;
+      }
+    } else if (action === 'nuovo') {
+      const id = 'fn' + (++state._reqCnt);
+      state.requisiti.push({
+        id, tipo: 'fn', descrizione: feat, peso: 1,
+        copertura: Array(nSw()).fill(0).map((_, k) => k === i ? 100 : 0),
+        note_copertura: Array(nSw()).fill('')
+      });
+      added++;
+    }
+  });
+
+  renderRequisiti();
+  refreshModalReqSection(i);
+
+  msgDiv.innerHTML = `<div class="alert alert-success alert-inline-clean py-2 px-3 mb-3" style="font-size:.82rem">
+    <strong>✓ Funzionalità elaborate:</strong> ${mapped} mappate su requisiti esistenti,
+    ${added} aggiunte come nuovi requisiti FN${ignored ? `, ${ignored} ignorate` : ''}.
+  </div>`;
+}
+
+function updateSwHeaders() {
+  // Aggiorna tutte le intestazioni con i nomi attuali
+  document.querySelectorAll('[data-sw-header]').forEach(el => {
+    const i = parseInt(el.dataset.swHeader);
+    el.textContent = swName(i);
+    el.style.color = swColor(i);
+  });
+}
+
+// ── Render: Requisiti ────────────────────────────────────────
+function renderRequisiti() {
+  const thead = document.getElementById('req-thead');
+  const tbody = document.getElementById('req-tbody');
+
+  thead.innerHTML = `<tr>
+    <th scope="col">ID</th>
+    <th scope="col">Tipo</th>
+    <th scope="col" style="min-width:240px">Descrizione</th>
+    <th scope="col">Peso (%)</th>
+    <th scope="col"><span class="visually-hidden">Azioni</span></th>
+  </tr>`;
+
+  if (!state.requisiti.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Nessun requisito. Aggiungine con i pulsanti sopra.</td></tr>`;
+    checkPesiReq(); return;
+  }
+
+  tbody.innerHTML = state.requisiti.map(r => `
+  <tr class="req-row">
+    <td><code>${r.id}</code></td>
+    <td><span class="badge ${r.tipo==='fn'?'bg-primary':'bg-secondary'} small">${r.tipo==='fn'?'FN':'NFN'}</span></td>
+    <td><input type="text" class="form-control form-control-sm" value="${escH(r.descrizione||'')}"
+      oninput="reqSet('${r.id}','descrizione',this.value)" placeholder="Descrizione" /></td>
+    <td><input type="number" class="form-control form-control-sm peso-input" value="${r.peso}"
+      min="0" max="100" step="0.1" oninput="reqSet('${r.id}','peso',+this.value);checkPesiReq()" /></td>
+    <td class="align-middle"><button class="btn btn-sm btn-outline-danger" onclick="removeReq('${r.id}')" aria-label="Rimuovi requisito">
+      <svg class="icon icon-sm" aria-hidden="true"><use href="svg/sprites.svg#it-delete"></use></svg>
+    </button></td>
+  </tr>`).join('');
+
+  checkPesiReq();
+}
+
+function addReq(tipo) {
+  const id = tipo + (++state._reqCnt);
+  state.requisiti.push({ id, tipo, descrizione:'', peso:1, copertura: Array(nSw()).fill(0), note_copertura: Array(nSw()).fill('') });
+  renderRequisiti();
+}
+function removeReq(id) { state.requisiti = state.requisiti.filter(r => r.id!==id); renderRequisiti(); }
+function reqSet(id, f, v) { const r=state.requisiti.find(r=>r.id===id); if(r) r[f]=v; }
+function reqSetCop(id, i, v) { const r=state.requisiti.find(r=>r.id===id); if(r) r.copertura[i]=v; }
+function reqSetNoteCop(id, i, v) { const r=state.requisiti.find(r=>r.id===id); if(r) { if(!r.note_copertura) r.note_copertura = Array(nSw()).fill(''); r.note_copertura[i]=v; } }
+
+function checkPesiReq() {
+  const tot = state.requisiti.reduce((s,r)=>s+(+r.peso||0),0);
+  const w = document.getElementById('req-peso-warning');
+  const t = document.getElementById('req-peso-tot');
+  if (state.requisiti.length && Math.abs(tot-100)>0.1) {
+    if(t) t.textContent=tot.toFixed(1);
+    w.classList.remove('d-none');
+  } else {
+    w.classList.add('d-none');
+  }
+}
+
+// ── Render: Criteri ──────────────────────────────────────────
+function renderCriteri() {
+  const container = document.getElementById('criteri-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    let inner = '';
+
+    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const opts = def.tipo === 'sinon_nonec'
+        ? [['','—'],['si','sì'],['no','no'],['nonec','non necessario']]
+        : [['','—'],['si','sì'],['no','no']];
+
+      inner = `<div class="table-scroll"><table class="table table-sm table-hover">
+        <thead><tr>
+          <th scope="col" style="min-width:300px;width:55%">Criterio</th>
+          ${range().map(i=>`<th scope="col" class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}
+        </tr></thead>
+        <tbody>${def.items.map(item => {
+          const cur = state.criteri[key].items[item.id] || Array(nSw()).fill('');
+          return `<tr>
+            <td class="small">${item.obbligatorio?'<strong>':''}${item.url?`<a href="${item.url}" target="_blank" rel="noopener">`:''}${escH(item.testo)}${item.url?'</a>':''}${item.obbligatorio?'</strong>':''}</td>
+            ${range().map(i => {
+              const v = cur[i]||'';
+              const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
+              return `<td><select class="form-select form-select-sm" style="${col?`border-color:${col};color:${col};font-weight:600`:''}"
+                onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;this.style.borderColor=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.color=this.style.borderColor;this.style.fontWeight=this.value?'600':''"
+              >${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}</select></td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+
+    } else if (def.tipo === 'radio') {
+      inner = `<div class="table-scroll"><table class="table table-sm">
+        <thead><tr>
+          <th scope="col" style="min-width:300px;width:55%">Opzione</th>
+          ${range().map(i=>`<th scope="col" class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}
+        </tr></thead>
+        <tbody>${def.items.map(item => `<tr>
+          <td class="small">${escH(item.testo)}</td>
+          ${range().map(i=>`<td class="text-center">
+            <input type="radio" name="${key}-sw${i}" value="${item.valore}"
+              ${state.criteri[key].scelta[i]===item.valore?'checked':''}
+              onchange="state.criteri['${key}'].scelta[${i}]=+this.value"
+              aria-label="${escH(item.testo)} — ${swName(i)}" /></td>`).join('')}
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+
+    } else if (def.tipo === 'numero_dipendenze') {
+      inner = `<div class="table-scroll"><table class="table table-sm">
+        <thead><tr><th style="min-width:300px;width:55%">Tipo</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
+        <tbody>
+          <tr><td class="small">Dipendenze da software <strong>proprietario</strong></td>
+            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
+              value="${state.criteri.dipendenze.proprietario[i]||0}"
+              oninput="state.criteri.dipendenze.proprietario[${i}]=+this.value||0" /></td>`).join('')}</tr>
+          <tr><td class="small">Dipendenze da software <strong>open source</strong></td>
+            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
+              value="${state.criteri.dipendenze.opensource[i]||0}"
+              oninput="state.criteri.dipendenze.opensource[${i}]=+this.value||0" /></td>`).join('')}</tr>
+        </tbody>
+      </table></div>
+      <small class="text-muted">Punteggio: 2×proprietario + opensource. Valori più bassi = punteggio migliore.</small>`;
+
+    } else if (def.tipo === 'numero_pa') {
+      inner = `<div class="table-scroll"><table class="table table-sm">
+        <thead><tr><th style="min-width:300px;width:55%">Voce</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
+        <tbody>
+          <tr><td class="small">PA che <strong>utilizzano</strong> il software</td>
+            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
+              value="${state.criteri.numero_pa.utilizzano[i]||0}"
+              oninput="state.criteri.numero_pa.utilizzano[${i}]=+this.value||0" /></td>`).join('')}</tr>
+          <tr><td class="small">PA <strong>interessate</strong> al software</td>
+            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
+              value="${state.criteri.numero_pa.interessate[i]||0}"
+              oninput="state.criteri.numero_pa.interessate[${i}]=+this.value||0" /></td>`).join('')}</tr>
+        </tbody>
+      </table></div>`;
+
+    } else if (def.tipo === 'vitalita') {
+      const rows = [
+        ['giorni',    "Giorni dall'ultimo commit",              '0.30'],
+        ['commit',    'Commit negli ultimi 3 anni',             '0.40'],
+        ['contributi','Contributori attivi negli ultimi 3 anni','0.15'],
+        ['release',   'Release negli ultimi 3 anni',           '0.15'],
+      ];
+      inner = `<div class="table-scroll"><table class="table table-sm">
+        <thead><tr><th style="min-width:240px;width:45%">Metrica (da GitHub/GitLab)</th><th style="width:60px">Peso</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(([field,label,peso]) => `<tr>
+          <td class="small">${label}</td><td><small>${peso}</small></td>
+          ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
+            value="${state.criteri.vitalita[field][i]||0}"
+            oninput="state.criteri.vitalita['${field}'][${i}]=+this.value||0" /></td>`).join('')}
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    }
+
+    container.innerHTML += `<div class="criteria-group mb-4">
+      <h3 class="h5">${def.label}</h3>${inner}
+    </div>`;
+  });
+}
+
+// ── Render: TCO ──────────────────────────────────────────────
+function renderTCO() {
+  const thead = document.getElementById('tco-thead');
+  const tbody = document.getElementById('tco-tbody');
+  const tfoot = document.getElementById('tco-tfoot');
+  if (!thead || !tbody || !tfoot) return;
+
+  thead.innerHTML = `<tr class="table-primary">
+    <th scope="col" style="min-width:200px">Voce di costo</th>
+    ${range().map(i=>`<th scope="col" data-sw-header="${i}" style="color:${swColor(i)};min-width:120px">${swName(i)} (€)</th>`).join('')}
+  </tr>`;
+
+  let currentGruppo = '';
+  tbody.innerHTML = TCO_VOCI.map(v => {
+    let groupRow = '';
+    if (v.gruppo !== currentGruppo) {
+      currentGruppo = v.gruppo;
+      groupRow = `<tr class="table-light"><td colspan="${1+nSw()}"><strong>${v.gruppo}</strong></td></tr>`;
+    }
+    const vals = state.tco.voci[v.id] || Array(nSw()).fill(0);
+    return groupRow + `<tr class="tco-row">
+      <td class="small">${escH(v.label)}</td>
+      ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" min="0" step="100"
+        value="${vals[i]||0}" style="width:120px"
+        oninput="state.tco.voci['${v.id}'][${i}]=+this.value||0;updateTCOTotals()" /></td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  tfoot.innerHTML = `<tr class="table-dark fw-bold">
+    <th scope="row">TOTALE TCO</th>
+    ${range().map(i=>`<td id="tco-tot-${i}">${fmtEur(0)}</td>`).join('')}
+  </tr>`;
+
+  updateTCOTotals();
+}
+
+function updateTCOTotals() {
+  range().forEach(i => {
+    const tot = TCO_VOCI.reduce((s,v) => s+(+state.tco.voci[v.id]?.[i]||0), 0);
+    const el = document.getElementById(`tco-tot-${i}`);
+    if (el) el.textContent = fmtEur(tot);
+  });
+}
+
+function syncMacroCategoriaPreset() {
+  const presetSelect = document.getElementById('pesi-macro');
+  if (presetSelect) presetSelect.value = state.meta?.categoria || '';
+}
+
+// ── Render: Pesi ─────────────────────────────────────────────
+function renderPesi() {
+  const tbody = document.getElementById('pesi-tbody');
+  syncMacroCategoriaPreset();
+  tbody.innerHTML = PESI_DEF.map(p => `<tr>
+    <td><strong>${p.label}</strong></td>
+    <td><input type="number" class="form-control form-control-sm peso-input"
+      min="0" max="1" step="0.05" value="${state.pesi[p.id]??p.def}"
+      ${p.fixed?'readonly title="Obbligatorio per legge"':''}
+      oninput="state.pesi['${p.id}']=+this.value||0" /></td>
+    <td><small class="text-muted">${p.note}</small></td>
+  </tr>`).join('');
+}
+
+// ── Scoring ──────────────────────────────────────────────────
+function computeScores() {
+  const n = nSw();
+  const s = Object.fromEntries(PESI_DEF.map(p => [p.id, Array(n).fill(0)]));
+
+  // TCO
+  range().forEach(i => { s.tco[i] = TCO_VOCI.reduce((t,v)=>t+(+state.tco.voci[v.id]?.[i]||0),0); });
+
+  // Interoperabilità, protezione_dati, sicurezza — COUNTIF("si") solo
+  ['interoperabilita','protezione_dati','sicurezza'].forEach(k => {
+    range().forEach(i => {
+      s[k][i] = Object.values(state.criteri[k].items).filter(a=>a[i]==='si').length;
+    });
+  });
+
+  // Accessibilità, manutentore, competenze_pa — radio 0/1/2
+  ['accessibilita','manutentore','competenze_pa'].forEach(k => {
+    range().forEach(i => { s[k][i] = state.criteri[k].scelta[i]||0; });
+  });
+
+  // Copertura requisiti — media pesata
+  if (state.requisiti.length) {
+    const totPeso = state.requisiti.reduce((t,r)=>t+(+r.peso||0),0);
+    if (totPeso>0) range().forEach(i => {
+      s.copertura_req[i] = state.requisiti.reduce((t,r)=>t+(+r.peso||0)*(+r.copertura[i]||0)/100,0)/totPeso;
+    });
+  }
+
+  // Supporto — COUNTIF("si") + IF(nonec → 3)
+  range().forEach(i => {
+    const items = Object.values(state.criteri.supporto.items);
+    if (items.some(a=>a[i]==='nonec')) { s.supporto[i]=3; return; }
+    s.supporto[i] = items.filter(a=>a[i]==='si').length;
+  });
+
+  // Dipendenze — criterio costo
+  range().forEach(i => {
+    s.dipendenze[i] = 2*(state.criteri.dipendenze.proprietario[i]||0)
+                    +   (state.criteri.dipendenze.opensource[i]||0);
+  });
+
+  // Numero PA
+  range().forEach(i => {
+    s.numero_pa[i] = (state.criteri.numero_pa.utilizzano[i]||0)
+                   + (state.criteri.numero_pa.interessate[i]||0);
+  });
+
+  // Vitalità
+  range().forEach(i => {
+    const g=state.criteri.vitalita.giorni[i]||0, c=state.criteri.vitalita.commit[i]||0,
+          co=state.criteri.vitalita.contributi[i]||0, r=state.criteri.vitalita.release[i]||0;
+    if (!c) { s.vitalita[i]=0; return; }
+    const base = c*0.4 + co*0.15 + r*0.15;
+    s.vitalita[i] = g<=365 ? base+(365-g)*0.3 : base;
+  });
+
+  return s;
+}
+
+// ── TOPSIS ──────────────────────────────────────────────────
+function computeTOPSIS(scores, pesi) {
+  const ids = PESI_DEF.map(p=>p.id);
+  const n   = nSw();
+  const mat = ids.map(id => scores[id]);  // [criterio][software]
+
+  // Normalizzazione euclidea
+  const norm = mat.map(row => {
+    const d = Math.sqrt(row.reduce((s,v)=>s+v*v,0));
+    return d===0 ? Array(n).fill(0) : row.map(v=>v/d);
+  });
+
+  // Pesatura
+  const wgt = norm.map((row,ci) => row.map(v => v*(pesi[ids[ci]]||0)));
+
+  // Ideale A+ e anti-ideale A-
+  const aP = wgt.map((row,ci) => COST_CRITERIA.has(ids[ci]) ? Math.min(...row) : Math.max(...row));
+  const aM = wgt.map((row,ci) => COST_CRITERIA.has(ids[ci]) ? Math.max(...row) : Math.min(...row));
+
+  // Distanze
+  const dP = Array.from({length:n}, (_,i) => Math.sqrt(wgt.reduce((s,row,ci)=>s+Math.pow(row[i]-aP[ci],2),0)));
+  const dM = Array.from({length:n}, (_,i) => Math.sqrt(wgt.reduce((s,row,ci)=>s+Math.pow(row[i]-aM[ci],2),0)));
+
+  // Closeness
+  const ci = Array.from({length:n}, (_,i) => (dP[i]+dM[i])===0 ? 0 : dM[i]/(dP[i]+dM[i]));
+
+  return { mat, norm, wgt, aP, aM, dP, dM, ci, ids };
+}
+
+function buildTopsisScatterHTML(ranking, dP, dM, ci) {
+  const points = range().map(i => ({
+    idx: i,
+    name: swName(i),
+    dP: dP[i],
+    dM: dM[i],
+    ci: ci[i],
+    rank: ranking.findIndex(r => r.idx === i) + 1
+  }));
+  if (!points.length) return '';
+
+  const minX = Math.min(...points.map(p => p.dM));
+  const maxX = Math.max(...points.map(p => p.dM));
+  const minY = Math.min(...points.map(p => p.dP));
+  const maxY = Math.max(...points.map(p => p.dP));
+  const dx = maxX - minX || 1;
+  const dy = maxY - minY || 1;
+  const padX = dx * 0.15 || 0.1;
+  const padY = dy * 0.15 || 0.1;
+  const domX = [Math.max(0, minX - padX), maxX + padX];
+  const domY = [Math.max(0, minY - padY), maxY + padY];
+
+  const w = 760, h = 400;
+  const m = { top: 28, right: 22, bottom: 56, left: 68 };
+  const pw = w - m.left - m.right;
+  const ph = h - m.top - m.bottom;
+  const xPos = v => m.left + ((v - domX[0]) / (domX[1] - domX[0] || 1)) * pw;
+  const yPos = v => h - m.bottom - ((v - domY[0]) / (domY[1] - domY[0] || 1)) * ph;
+  const ticks = 5;
+  const fmt = v => Number(v).toFixed(3);
+
+  const xGrid = Array.from({ length: ticks }, (_, k) => {
+    const value = domX[0] + ((domX[1] - domX[0]) * k / (ticks - 1));
+    const x = xPos(value);
+    return `
+      <line class="topsis-scatter-grid" x1="${x}" y1="${m.top}" x2="${x}" y2="${h - m.bottom}"></line>
+      <text class="topsis-scatter-tick" x="${x}" y="${h - m.bottom + 20}" text-anchor="middle">${fmt(value)}</text>`;
+  }).join('');
+
+  const yGrid = Array.from({ length: ticks }, (_, k) => {
+    const value = domY[0] + ((domY[1] - domY[0]) * k / (ticks - 1));
+    const y = yPos(value);
+    return `
+      <line class="topsis-scatter-grid" x1="${m.left}" y1="${y}" x2="${w - m.right}" y2="${y}"></line>
+      <text class="topsis-scatter-tick" x="${m.left - 10}" y="${y + 4}" text-anchor="end">${fmt(value)}</text>`;
+  }).join('');
+
+  const pointEls = points.map(p => {
+    const x = xPos(p.dM);
+    const y = yPos(p.dP);
+    return `
+      <circle class="topsis-scatter-point" cx="${x}" cy="${y}" r="10" fill="${swColor(p.idx)}"></circle>
+      <text class="topsis-scatter-rank" x="${x}" y="${y + 4}" text-anchor="middle">${p.rank}</text>
+      <text class="topsis-scatter-tick" x="${x + 14}" y="${y - 10}">${escH(p.name)}</text>`;
+  }).join('');
+
+  const legend = ranking.map(r => `
+    <span><i class="topsis-scatter-dot" style="background:${swColor(r.idx)}"></i>${r.idx + 1}. ${escH(swName(r.idx))} (${(ci[r.idx] * 100).toFixed(1)}%)</span>
+  `).join('');
+
+  return `
+    <div class="topsis-scatter-card p-3">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+          <h3 class="h5 mb-1">Dispersione soluzioni TOPSIS</h3>
+          <p class="text-muted small mb-0">Ogni soluzione è un punto: più a destra significa più lontana dall'anti-ideale (meglio), più in basso significa più vicina all'ideale (meglio).</p>
+        </div>
+        <div class="text-muted small">Assi: X = D<sup>-</sup> meglio alto, Y = D<sup>+</sup> meglio basso</div>
+      </div>
+      <svg class="topsis-scatter-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="Grafico di dispersione delle soluzioni TOPSIS: asse orizzontale D meno (distanza dall'anti-ideale, più alto è meglio), asse verticale D più (distanza dall'ideale, più basso è meglio)">
+        ${xGrid}
+        ${yGrid}
+        <line class="topsis-scatter-axis" x1="${m.left}" y1="${h - m.bottom}" x2="${w - m.right}" y2="${h - m.bottom}"></line>
+        <line class="topsis-scatter-axis" x1="${m.left}" y1="${h - m.bottom}" x2="${m.left}" y2="${m.top}"></line>
+        <text class="topsis-scatter-label" x="${m.left + pw / 2}" y="${h - 14}" text-anchor="middle">Distanza dall'anti-ideale (D-)</text>
+        <text class="topsis-scatter-label" x="18" y="${m.top + ph / 2}" text-anchor="middle" transform="rotate(-90 18 ${m.top + ph / 2})">Distanza dall'ideale (D+)</text>
+        <text class="topsis-scatter-note" x="${w - m.right}" y="${m.top - 8}" text-anchor="end">Area migliore: destra e in basso</text>
+        ${pointEls}
+      </svg>
+      <div class="topsis-scatter-legend mt-3">${legend}</div>
+    </div>`;
+}
+
+// ── Render: Risultati ────────────────────────────────────────
+function computeAndRenderResults() {
+  const scores = computeScores();
+  const t = computeTOPSIS(scores, state.pesi);
+  const { ci, dP, dM, ids } = t;
+
+  const ranking = range().map(i=>({idx:i,ci:ci[i]})).sort((a,b)=>b.ci-a.ci);
+
+  // Meta
+  document.getElementById('risultati-meta').innerHTML =
+    `<strong>PA:</strong> ${escH(state.meta.pa)||'—'} &nbsp;|&nbsp; ` +
+    `<strong>Data:</strong> ${escH(state.meta.data)||'—'} &nbsp;|&nbsp; ` +
+    `<strong>Oggetto:</strong> ${escH(state.meta.oggetto)||'—'}`;
+
+  // Cards
+  document.getElementById('risultati-cards').innerHTML = ranking.map((r,rank) => `
+  <div class="col-xl-3 col-md-4 col-sm-6 mb-3">
+    <div class="card rank-card rank-${rank+1} h-100">
+      <div class="card-body text-center">
+        <div style="font-size:2rem">${typeof MEDALS[rank]==='string'&&MEDALS[rank].length>2?MEDALS[rank]+'<span style="font-size:1.2rem">posto</span>':MEDALS[rank]}</div>
+        <span class="badge mt-1" style="background:${RANK_COLORS[rank]}">${rank+1}° posto</span>
+        <h3 class="h5 mt-2" style="color:${swColor(r.idx)}">${escH(swName(r.idx))}</h3>
+        <div class="display-6 fw-bold my-2" style="color:${RANK_COLORS[rank]}">${(r.ci*100).toFixed(1)}%</div>
+        <p class="text-muted small mb-1">C<sub>i</sub> = ${r.ci.toFixed(4)}</p>
+        <p class="text-muted small mb-1">D⁺ = ${dP[r.idx].toFixed(4)}</p>
+        <p class="text-muted small mb-2">D⁻ = ${dM[r.idx].toFixed(4)}</p>
+        ${state.prodotti[r.idx].sito
+          ? `<a href="${escH(state.prodotti[r.idx].sito)}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Sito ufficiale</a>`
+          : ''}
+      </div>
+    </div>
+  </div>`).join('');
+
+  document.getElementById('topsis-scatter-container').innerHTML = buildTopsisScatterHTML(ranking, dP, dM, ci);
+
+  // Tabella dettaglio
+  document.getElementById('risultati-detail-table').innerHTML = `
+  <thead><tr>
+    <th scope="col">Criterio</th>
+    <th scope="col">Peso</th>
+    ${range().map(i=>`<th scope="col" style="background:${swColor(i)}">${escH(swName(i))}</th>`).join('')}
+  </tr></thead>
+  <tbody>${ids.map(id => {
+    const pd = PESI_DEF.find(p=>p.id===id);
+    const isCost = COST_CRITERIA.has(id);
+    const row = scores[id];
+    const best = isCost ? Math.min(...row) : Math.max(...row);
+    return `<tr>
+      <td>${pd.label}${isCost?' <small class="text-muted">(costo)</small>':''}</td>
+      <td><strong>${state.pesi[id]}</strong></td>
+      ${row.map(v => {
+        const isBest = v===best;
+        const fmt = id==='tco' ? fmtEur(v) : id==='copertura_req' ? (v*100).toFixed(1)+'%' : (Number.isInteger(v)?v:v.toFixed(2));
+        return `<td ${isBest?'style="font-weight:700;color:#008055"':''}>${fmt}${isBest?' ✓':''}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('')}</tbody>`;
+
+  // TOPSIS intermedi
+  document.getElementById('topsis-table').innerHTML = `
+  <thead><tr>
+    <th>Criterio</th><th>Peso</th>
+    ${range().map(i=>`<th style="background:${swColor(i)}">${escH(swName(i))} norm.</th>`).join('')}
+    ${range().map(i=>`<th style="background:${swColor(i)}">${escH(swName(i))} pesato</th>`).join('')}
+    <th>A⁺</th><th>A⁻</th>
+  </tr></thead>
+  <tbody>${ids.map((id,ci2) => {
+    const pd = PESI_DEF.find(p=>p.id===id);
+    return `<tr>
+      <td>${pd.label}</td><td>${state.pesi[id]}</td>
+      ${range().map(i=>`<td>${t.norm[ci2][i].toFixed(4)}</td>`).join('')}
+      ${range().map(i=>`<td>${t.wgt[ci2][i].toFixed(4)}</td>`).join('')}
+      <td><strong>${t.aP[ci2].toFixed(4)}</strong></td>
+      <td><strong>${t.aM[ci2].toFixed(4)}</strong></td>
+    </tr>`;
+  }).join('')}</tbody>
+  <tfoot>
+    <tr class="table-secondary">
+      <td colspan="2"><strong>Distanze</strong></td>
+      ${range().map(i=>`<td colspan="2"><strong>D⁺=${dP[i].toFixed(4)}<br>D⁻=${dM[i].toFixed(4)}</strong></td>`).join('')}
+      <td colspan="2"></td>
+    </tr>
+    <tr class="table-primary">
+      <td colspan="2"><strong>C<sub>i</sub> TOPSIS</strong></td>
+      ${ci.map(v=>`<td colspan="2"><strong>${v.toFixed(4)} (${(v*100).toFixed(1)}%)</strong></td>`).join('')}
+      <td colspan="2"></td>
+    </tr>
+  </tfoot>`;
+}
+
+// ── Export JSON ──────────────────────────────────────────────
+function exportJSON() {
+  const snapshot = JSON.parse(JSON.stringify(state));
+  // Rimuovi campo interno non significativo per l'interscambio
+  delete snapshot._reqCnt;
+
+  const envelope = {
+    "$schema": "https://raw.githubusercontent.com/teamdigitale/devita-ccros-valcomp-software-pa/main/docs/schema/valutazione-comparativa-v1.0.json",
+    "tipo": "valutazione-comparativa-software",
+    "versione_schema": "1.0",
+    "riferimento_normativo": [
+      { "codice": "CAD-68", "testo": "Art. 68 CAD — Analisi comparativa delle soluzioni" },
+      { "codice": "CAD-69", "testo": "Art. 69 CAD — Riuso delle soluzioni" }
+    ],
+    "generato_da": {
+      "strumento": "CCROS Valutazione Comparativa",
+      "versione": "3.0 beta",
+      "url": "https://github.com/teamdigitale/devita-ccros-valcomp-software-pa"
+    },
+    "generato_il": new Date().toISOString(),
+    "valutazione": snapshot,
+  };
+
+  const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `valcomp-${(state.meta.pa||'bozza').replace(/\W+/g,'-')}-${state.meta.data||new Date().toISOString().slice(0,10)}.json`,
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Landing page ─────────────────────────────────────────────
+function showWizard() {
+  document.getElementById('landing-page').classList.add('d-none');
+  document.getElementById('wizard-content').classList.add('d-block');
+  document.getElementById('step-nav-bar').style.display = '';
+  document.getElementById('wizard-info-bar').style.display = '';
+  syncUIState();
+}
+function handleNextStep() {
+  if (currentStep === TOTAL_STEPS - 2) {
+    computeAndRenderResults();
+    goToStep(currentStep + 1);
+    const btn = document.querySelector('#topsis-tab-bar .inner-tab-btn:last-child');
+    if (btn) switchTopsisTab(btn, 'topsis-risultati');
+    return;
+  }
+  goToStep(currentStep + 1);
+}
+
+function handlePrevStep() {
+  goToStep(currentStep - 1);
+}
+
+document.getElementById('pc-popup-overlay').addEventListener('click', e => { if (e.target.id === 'pc-popup-overlay') closePcPopup(); });
+document.getElementById('pc-popup-url').addEventListener('keydown', e => { if (e.key === 'Enter') fetchPublicCode(); });
+
+// Import dalla landing (stessa logica, poi mostra wizard)
+document.getElementById('import-json-landing').addEventListener('change', e => {
+  document.getElementById('import-json').files; // noop
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      const imported = (parsed.tipo === 'valutazione-comparativa-software' && parsed.valutazione)
+        ? parsed.valutazione : parsed;
+      if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2)
+        throw new Error('Campo "prodotti" mancante o con meno di 2 soluzioni.');
+      state = imported;
+      state._reqCnt = state._reqCnt || Math.max(0, ...(state.requisiti||[]).map(r=>parseInt(r.id.replace(/\D/g,''))||0));
+      document.getElementById('meta-pa').value     = state.meta?.pa     || '';
+      document.getElementById('meta-data').value   = state.meta?.data   || '';
+      document.getElementById('meta-oggetto').value= state.meta?.oggetto|| '';
+      document.getElementById('meta-categoria').value=state.meta?.categoria||'';
+      rerenderAll(); renderPesi(); goToStep(0);
+      showWizard();
+    } catch(err) { alert('❌ Errore nel file JSON:\n' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ── Import JSON ──────────────────────────────────────────────
+document.getElementById('import-json').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      // Supporta sia il formato envelope (v1.0+) sia il vecchio formato grezzo
+      const imported = (parsed.tipo === 'valutazione-comparativa-software' && parsed.valutazione)
+        ? parsed.valutazione
+        : parsed;
+      // Valida struttura minima
+      if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2) {
+        throw new Error('File non valido: campo "prodotti" mancante o con meno di 2 soluzioni.');
+      }
+      state = imported;
+      // Ripristina _reqCnt (può essere assente nel formato envelope)
+      state._reqCnt = state._reqCnt
+        || Math.max(0, ...(state.requisiti||[]).map(r => parseInt(r.id.replace(/\D/g,''))||0));
+      // Reinizializza UI
+      document.getElementById('meta-pa').value    = state.meta?.pa    || '';
+      document.getElementById('meta-data').value  = state.meta?.data  || '';
+      document.getElementById('meta-oggetto').value= state.meta?.oggetto||'';
+      document.getElementById('meta-categoria').value=state.meta?.categoria||'';
+      rerenderAll();
+      renderPesi();
+      goToStep(0);
+      showWizard();
+      alert('✅ Sessione caricata correttamente.');
+    } catch(err) {
+      alert('❌ Errore nel file JSON:\n' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ── Helpers HTML ─────────────────────────────────────────────
+function escH(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Event listeners ──────────────────────────────────────────
+document.getElementById('calcola-btn').addEventListener('click', () => {
+  computeAndRenderResults();
+  const btn = document.querySelector('#topsis-tab-bar .inner-tab-btn:last-child');
+  if (btn) switchTopsisTab(btn, 'topsis-risultati');
+});
+
+document.getElementById('add-sw-btn').addEventListener('click', addSoftware);
+document.getElementById('add-req-fn').addEventListener('click', () => addReq('fn'));
+document.getElementById('add-req-nfn').addEventListener('click', () => addReq('nfn'));
+document.getElementById('equalize-pesi-btn').addEventListener('click', () => {
+  const n = state.requisiti.length;
+  if (!n) return;
+  const base  = Math.floor(100 / n * 100) / 100;           // 2 decimali, tronca
+  const extra = Math.round((100 - base * n) * 100);        // centesimi di resto da distribuire
+  state.requisiti.forEach((r, i) => {
+    r.peso = +(base + (i < extra ? 0.01 : 0)).toFixed(2);
+  });
+  renderRequisiti();
+});
+
+document.getElementById('applica-pesi-preset').addEventListener('click', () => {
+  const cat = document.getElementById('pesi-macro').value;
+  if (!cat || !PESI_PRESET[cat]) { alert('Seleziona una macro-categoria.'); return; }
+  state.meta.categoria = cat;
+  const metaCategoria = document.getElementById('meta-categoria');
+  if (metaCategoria) metaCategoria.value = cat;
+  PESI_PRESET[cat].forEach((v,i) => { state.pesi[PESI_DEF[i].id] = v; });
+  renderPesi();
+});
+
+document.getElementById('export-json-btn').addEventListener('click', exportJSON);
+document.getElementById('export-json-nav').addEventListener('click', exportJSON);
+document.getElementById('print-btn').addEventListener('click', () => { buildPrintAppendix(); window.print(); });
+
+// ── Appendice di stampa ───────────────────────────────────────
+function buildPrintAppendix() {
+  const el = document.getElementById('print-appendix');
+  const sw = range();
+  const hdrs = sw.map(i => `<th style="min-width:90px">${escH(swName(i))}</th>`).join('');
+
+  // ── A. Soluzioni ──
+  const aSec = `<div class="pa-section">
+    <h3>A. Soluzioni valutate</h3>
+    <table><thead><tr><th>Campo</th>${hdrs}</tr></thead><tbody>
+    ${[['Nome','nome'],['Titolarità','titolarita'],['Maintainer','maintainer'],['Sito','sito'],['Repository','repo']]
+      .map(([lbl,f]) => `<tr><td><strong>${lbl}</strong></td>${sw.map(i=>`<td>${escH(state.prodotti[i]?.[f]||'—')}</td>`).join('')}</tr>`)
+      .join('')}
+    </tbody></table></div>`;
+
+  // ── B. Requisiti ──
+  let bSec = '';
+  if (state.requisiti.length) {
+    const rRows = state.requisiti.map(r => `<tr>
+      <td><code>${r.id}</code></td>
+      <td>${r.tipo==='fn'?'FN':'NFN'}</td>
+      <td>${escH(r.descrizione||'')}</td>
+      <td>${r.peso}%</td>
+      ${sw.map(i => {
+        const cop = r.copertura[i]??0;
+        const nota = r.note_copertura?.[i]||'';
+        return `<td>${cop}%${nota?`<br><small>${escH(nota)}</small>`:''}`;
+      }).join('')}
+    </tr>`).join('');
+    bSec = `<div class="pa-section">
+      <h3>B. Requisiti funzionali e non funzionali</h3>
+      <table><thead><tr><th>ID</th><th>Tipo</th><th>Descrizione</th><th>Peso</th>${hdrs}</tr></thead>
+      <tbody>${rRows}</tbody></table></div>`;
+  }
+
+  // ── C. Criteri tecnici ──
+  let cSec = '<div class="pa-section"><h3>C. Criteri di valutazione tecnica</h3>';
+  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    cSec += `<p style="margin:.5rem 0 .2rem;font-weight:700">${def.label}</p>`;
+    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const valLabel = {si:'sì', no:'no', nonec:'non nec.', '':'—'};
+      const valClass = {si:'pa-val-si', no:'pa-val-no', nonec:'', '':''};
+      cSec += `<table><thead><tr><th>Criterio</th>${hdrs}</tr></thead><tbody>`;
+      def.items.forEach(item => {
+        const cur = state.criteri[key].items[item.id] || sw.map(()=>'');
+        cSec += `<tr><td>${escH(item.testo)}</td>${sw.map(i=>{
+          const v = cur[i]||'';
+          return `<td class="${valClass[v]||''}">${valLabel[v]??v}</td>`;
+        }).join('')}</tr>`;
+      });
+      cSec += '</tbody></table>';
+    } else if (def.tipo === 'radio') {
+      cSec += `<table><thead><tr><th>Opzione</th>${hdrs}</tr></thead><tbody>`;
+      def.items.forEach(item => {
+        cSec += `<tr><td>${escH(item.testo)}</td>${sw.map(i=>{
+          const sel = state.criteri[key].scelta[i] === item.valore;
+          return `<td>${sel?'<strong>✓</strong>':''}</td>`;
+        }).join('')}</tr>`;
+      });
+      cSec += '</tbody></table>';
+    } else if (def.tipo === 'numero_dipendenze') {
+      cSec += `<table><thead><tr><th>Tipo</th>${hdrs}</tr></thead><tbody>
+        <tr><td>Dipendenze proprietarie</td>${sw.map(i=>`<td>${state.criteri.dipendenze.proprietario[i]||0}</td>`).join('')}</tr>
+        <tr><td>Dipendenze open source</td>${sw.map(i=>`<td>${state.criteri.dipendenze.opensource[i]||0}</td>`).join('')}</tr>
+      </tbody></table>`;
+    } else if (def.tipo === 'numero_pa') {
+      cSec += `<table><thead><tr><th>Voce</th>${hdrs}</tr></thead><tbody>
+        <tr><td>PA che utilizzano</td>${sw.map(i=>`<td>${state.criteri.numero_pa.utilizzano[i]||0}</td>`).join('')}</tr>
+        <tr><td>PA interessate</td>${sw.map(i=>`<td>${state.criteri.numero_pa.interessate[i]||0}</td>`).join('')}</tr>
+      </tbody></table>`;
+    } else if (def.tipo === 'vitalita') {
+      const rows=[['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3 anni)'],['contributi','Contributori (3 anni)'],['release','Release (3 anni)']];
+      cSec += `<table><thead><tr><th>Metrica</th>${hdrs}</tr></thead><tbody>`;
+      rows.forEach(([f,lbl])=>{
+        cSec += `<tr><td>${lbl}</td>${sw.map(i=>`<td>${state.criteri.vitalita[f][i]||0}</td>`).join('')}</tr>`;
+      });
+      cSec += '</tbody></table>';
+    }
+  });
+  cSec += '</div>';
+
+  // ── D. TCO ──
+  const durationLabel = `Durata ${state.tco.durata} anni, ${state.tco.npa} PA`;
+  let dSec = `<div class="pa-section"><h3>D. Costi — TCO (${durationLabel})</h3>
+    <table><thead><tr><th>Voce</th>${hdrs}</tr></thead><tbody>`;
+  let currentGruppo = '';
+  TCO_VOCI.forEach(v => {
+    if (v.gruppo !== currentGruppo) {
+      currentGruppo = v.gruppo;
+      dSec += `<tr><td colspan="${1+sw.length}" style="background:#eee;font-weight:700">${v.gruppo}</td></tr>`;
+    }
+    const vals = state.tco.voci[v.id] || sw.map(()=>0);
+    dSec += `<tr><td>${escH(v.label)}</td>${sw.map(i=>`<td>${fmtEur(vals[i]||0)}</td>`).join('')}</tr>`;
+  });
+  const tcoTot = sw.map(i => TCO_VOCI.reduce((s,v)=>s+(state.tco.voci[v.id]?.[i]||0),0));
+  dSec += `<tr style="font-weight:700;background:#333;color:#fff"><td>TOTALE TCO</td>${sw.map(i=>`<td>${fmtEur(tcoTot[i])}</td>`).join('')}</tr>`;
+  dSec += '</tbody></table></div>';
+
+  // ── E. Pesi ──
+  let eSec = `<div class="pa-section"><h3>E. Pesi criteri (metodo TOPSIS)</h3>
+    <table><thead><tr><th>Criterio</th><th>Peso</th></tr></thead><tbody>`;
+  PESI_DEF.forEach(p => {
+    eSec += `<tr><td>${p.label}</td><td><strong>${state.pesi[p.id]}</strong></td></tr>`;
+  });
+  eSec += '</tbody></table></div>';
+
+  el.innerHTML = `<div style="margin-top:3rem;border-top:3px solid #333;padding-top:1rem">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Appendice — Dati di valutazione</h2>
+    <p style="font-size:.8rem;color:#555">Generato il ${new Date().toLocaleDateString('it-IT')} — ${escH(state.meta.pa||'')} — ${escH(state.meta.oggetto||'')}</p>
+    ${aSec}${bSec}${cSec}${dSec}${eSec}
+  </div>`;
+}
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (confirm('Iniziare una nuova valutazione? Tutti i dati andranno persi.')) {
+    clearBrowserSnapshot();
+    history.replaceState(null, '', location.pathname);
+    location.reload();
+  }
+});
+
+// Bind metadati
+['meta-pa','meta-data','meta-oggetto'].forEach(id => {
+  const field = id.replace('meta-','');
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => { state.meta[field] = el.value; });
+});
+// meta-categoria è una <select>
+document.getElementById('meta-categoria').addEventListener('change', e => {
+  state.meta.categoria = e.target.value;
+  syncMacroCategoriaPreset();
+  // pre-popola il preset pesi se la categoria corrisponde
+  if (PESI_PRESET[e.target.value]) {
+    PESI_PRESET[e.target.value].forEach((v,i) => { state.pesi[PESI_DEF[i].id] = v; });
+    renderPesi();
+  }
+});
+
+document.getElementById('tco-durata').addEventListener('input', e => { state.tco.durata = +e.target.value||5; });
+document.getElementById('tco-npa').addEventListener('input',    e => { state.tco.npa    = +e.target.value||1; });
+
+// Stepper click
+document.querySelectorAll('#steppers-list li').forEach((li, i) => {
+  li.style.cursor = 'pointer';
+  li.addEventListener('click', () => {
+    if (i === 3) computeAndRenderResults();
+    goToStep(i);
+  });
+});
+
+// ── Persistenza locale + permalink ───────────────────────────
+function _bytesToB64url(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+function _b64urlToBytes(b64) {
+  b64 = b64.replace(/-/g,'+').replace(/_/g,'/');
+  while (b64.length % 4) b64 += '=';
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function _compressBytes(input, format) {
+  const cs = new CompressionStream(format);
+  const w = cs.writable.getWriter(); w.write(input); w.close();
+  const chunks = []; const r = cs.readable.getReader();
+  for (;;) { const {done,value} = await r.read(); if (done) break; chunks.push(value); }
+  let len = 0; chunks.forEach(c => len += c.length);
+  const out = new Uint8Array(len); let off = 0;
+  chunks.forEach(c => { out.set(c,off); off += c.length; });
+  return out;
+}
+
+async function _decompressBytes(input, format) {
+  const ds = new DecompressionStream(format);
+  const w = ds.writable.getWriter(); w.write(input); w.close();
+  const chunks = []; const r = ds.readable.getReader();
+  for (;;) { const {done,value} = await r.read(); if (done) break; chunks.push(value); }
+  let len = 0; chunks.forEach(c => len += c.length);
+  const out = new Uint8Array(len); let off = 0;
+  chunks.forEach(c => { out.set(c,off); off += c.length; });
+  return new TextDecoder().decode(out);
+}
+
+function buildSnapshotPayload(s, step, ui) {
+  const snap = JSON.parse(JSON.stringify(s));
+  delete snap._reqCnt;
+  return { _step: step ?? currentStep, _ui: ui || getUIState(), _data: snap };
+}
+
+function persistBrowserSnapshot(s, step, ui) {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(buildSnapshotPayload(s, step, ui)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function readBrowserSnapshot() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const payload = JSON.parse(raw);
+    const restoredState = payload._data || payload;
+    const restoredStep  = payload._step ?? 0;
+    const restoredUI    = payload._ui ?? null;
+    if (!restoredState.prodotti || !Array.isArray(restoredState.prodotti)) return null;
+    return { state: restoredState, step: restoredStep, ui: restoredUI };
+  } catch {
+    return null;
+  }
+}
+
+function clearBrowserSnapshot() {
+  try { localStorage.removeItem(SNAPSHOT_KEY); } catch {}
+  try { sessionStorage.removeItem(UI_STATE_KEY); } catch {}
+}
+
+async function encodePortableStateToHash(s, step, ui) {
+  try {
+    const payload = buildSnapshotPayload(s, step, ui);
+    const bytes = new TextEncoder().encode(JSON.stringify(payload));
+    try {
+      const compressed = await _compressBytes(bytes, 'deflate-raw');
+      return '#v3/' + _bytesToB64url(compressed);
+    } catch {
+      const compressed = await _compressBytes(bytes, 'gzip');
+      return '#v2/' + _bytesToB64url(compressed);
+    }
+  } catch {
+    return '';
+  }
+}
+
+async function decodeStateFromHash(hash) {
+  try {
+    if (!hash) return null;
+    let json;
+    if (hash.startsWith('#b/current')) {
+      return readBrowserSnapshot();
+    } else if (hash.startsWith('#v3/')) {
+      json = await _decompressBytes(_b64urlToBytes(hash.slice(4)), 'deflate-raw');
+    } else if (hash.startsWith('#v2/')) {
+      json = await _decompressBytes(_b64urlToBytes(hash.slice(4)), 'gzip');
+    } else if (hash.startsWith('#v1/')) {
+      json = decodeURIComponent(escape(atob(hash.slice(4))));
+    } else { return null; }
+    const payload = JSON.parse(json);
+    const restoredState = payload._data || payload;
+    const restoredStep  = payload._step ?? 0;
+    const restoredUI    = payload._ui ?? null;
+    if (!restoredState.prodotti || !Array.isArray(restoredState.prodotti)) return null;
+    return { state: restoredState, step: restoredStep, ui: restoredUI };
+  } catch { return null; }
+}
+
+async function pushPermalink() {
+  const ui = getUIState();
+  persistUIState();
+  persistBrowserSnapshot(state, currentStep, ui);
+  history.replaceState(null, '', '#b/current');
+}
+
+// Debounce per aggiornamenti frequenti da input
+let _plTimer = null;
+function schedulePL() { clearTimeout(_plTimer); _plTimer = setTimeout(() => pushPermalink(), 600); }
+
+let _uiTimer = null;
+function scheduleUISync() {
+  clearTimeout(_uiTimer);
+  _uiTimer = setTimeout(() => {
+    persistUIState();
+    pushPermalink();
+  }, 150);
+}
+
+// Salva automaticamente ad ogni input nel documento
+document.getElementById('main-content').addEventListener('input', schedulePL);
+window.addEventListener('scroll', scheduleUISync, { passive: true });
+document.addEventListener('scroll', e => {
+  if (e.target?.id === 'sw-modal-body') scheduleUISync();
+}, true);
+window.addEventListener('beforeunload', persistUIState);
+
+// Copia URL corrente negli appunti
+document.getElementById('copy-permalink-btn').addEventListener('click', async () => {
+  const ui = getUIState();
+  persistUIState();
+  persistBrowserSnapshot(state, currentStep, ui);
+  const hash = await encodePortableStateToHash(state, currentStep, ui);
+  const url = hash ? `${location.origin}${location.pathname}${hash}` : location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-permalink-btn');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-check"></use></svg> Copiato!';
+    btn.classList.replace('btn-outline-secondary', 'btn-success');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('btn-success', 'btn-outline-secondary'); }, 2000);
+  }).catch(() => { prompt('Copia questo permalink:', url); });
+});
+
+function restorePaneState(barSelector, paneSelector, paneId) {
+  if (!paneId) return;
+  const pane = document.getElementById(paneId);
+  if (!pane) return;
+  document.querySelectorAll(`${barSelector} .inner-tab-btn`).forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(paneSelector).forEach(p => p.classList.remove('active'));
+  pane.classList.add('active');
+  const btn = document.querySelector(`${barSelector} [onclick*="'${paneId}'"]`);
+  if (btn) btn.classList.add('active');
+}
+
+function restoreUIState(ui) {
+  if (!ui) return;
+
+  if (ui.wizardVisible) {
+    document.getElementById('landing-page').classList.add('d-none');
+    document.getElementById('wizard-content').classList.add('d-block');
+    document.getElementById('step-nav-bar').style.display = '';
+    document.getElementById('wizard-info-bar').style.display = '';
+  }
+
+  restorePaneState('#sol-tab-bar', '#step-2 .inner-tab-pane', ui.solPane || 'sol-anagrafica');
+  if (ui.solPane === 'sol-requisiti') renderRivediRequisiti();
+  if (ui.solPane === 'sol-criteri') renderRivediCriteri();
+  if (ui.solPane === 'sol-tco') renderRivediTCO();
+
+  restorePaneState('#topsis-tab-bar', '#step-3 .inner-tab-pane', ui.topsisPane || 'topsis-pesi');
+  if (currentStep === TOTAL_STEPS - 1 || ui.topsisPane === 'topsis-risultati' || ui.modal) {
+    computeAndRenderResults();
+  }
+
+  if (ui.modal && Number.isInteger(ui.modal.swIdx) && state.prodotti[ui.modal.swIdx]) {
+    openSwModal(ui.modal.swIdx, ui.modal.pane || 'swm-ana');
+    const modalBody = document.getElementById('sw-modal-body');
+    if (modalBody) modalBody.scrollTop = ui.modal.bodyScrollTop || 0;
+  }
+
+  if (ui.pcPopup && Number.isInteger(ui.pcPopup.swIdx) && state.prodotti[ui.pcPopup.swIdx]) {
+    openPcPopup(ui.pcPopup.swIdx);
+  }
+
+  requestAnimationFrame(() => window.scrollTo(0, ui.scrollY || 0));
+}
+
+// ── Init ─────────────────────────────────────────────────────
+(async function init() {
+  const fromHash = await decodeStateFromHash(location.hash);
+  const browserSnapshot = readBrowserSnapshot();
+  const persistedUI = readPersistedUIState();
+  const restored = fromHash || browserSnapshot;
+  const restoredUI = restored?.ui || persistedUI;
+  if (restored) {
+    state = restored.state;
+    state._reqCnt = Math.max(0, ...(state.requisiti||[]).map(r => parseInt(r.id.replace(/\D/g,''))||0));
+    currentStep = restored.step;
+    document.getElementById('meta-pa').value        = state.meta?.pa        || '';
+    document.getElementById('meta-data').value      = state.meta?.data      || '';
+    document.getElementById('meta-oggetto').value   = state.meta?.oggetto   || '';
+    document.getElementById('meta-categoria').value = state.meta?.categoria || '';
+  } else {
+    document.getElementById('meta-data').value = state.meta.data;
+  }
+  rerenderAll();
+  renderPesi();
+  if (currentStep === TOTAL_STEPS - 1) computeAndRenderResults();
+  // Attiva lo step corretto (senza pushPermalink per non sovrascrivere l'hash esistente)
+  document.getElementById('step-0').classList.remove('active');
+  document.getElementById('step-' + currentStep).classList.add('active');
+  updateStepperUI();
+  // Se c'era un hash valido, mostra direttamente il wizard
+  if (fromHash || restoredUI?.wizardVisible) {
+    document.getElementById('landing-page').classList.add('d-none');
+    document.getElementById('wizard-content').classList.add('d-block');
+    document.getElementById('step-nav-bar').style.display = '';
+    document.getElementById('wizard-info-bar').style.display = '';
+  }
+  restoreUIState(restoredUI);
+  persistBrowserSnapshot(state, currentStep, restoredUI || getUIState());
+})();
+</script>
+</body>
+</html>

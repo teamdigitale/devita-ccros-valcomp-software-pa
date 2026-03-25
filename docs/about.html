@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Informazioni — Valutazione Comparativa Software AgID</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/css/bootstrap-italia.min.css" />
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']] },
+      options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.min.js" async></script>
+  <style>
+    body { background: #f2f7fc; }
+    .hero { background: linear-gradient(135deg, #0066cc, #004d99); color: #fff; padding: 2.5rem 0; margin-bottom: 2rem; }
+    .hero h1 { font-size: 1.9rem; font-weight: 700; }
+    .hero .lead { opacity: .9; }
+    .timeline-item { border-left: 3px solid #0066cc; padding-left: 1.25rem; margin-bottom: 1.5rem; position: relative; }
+    .timeline-item::before { content: ''; width: .75rem; height: .75rem; background: #0066cc; border-radius: 50%; position: absolute; left: -.45rem; top: .25rem; }
+    .badge-normativa { background: #0066cc; color: #fff; font-size: .75rem; padding: .2rem .5rem; border-radius: 4px; font-weight: 600; }
+    .formula-block { background: #f8f9fa; border-left: 3px solid #0066cc; border-radius: 0 .25rem .25rem 0; padding: .75rem 1rem; margin: .5rem 0 1rem; overflow-x: auto; }
+    .formula-block .MathJax { font-size: 1.1em !important; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="it-header-wrapper">
+  <div class="it-header-slim-wrapper">
+    <div class="container-xxl">
+      <div class="row"><div class="col-12">
+        <div class="it-header-slim-wrapper-content">
+          <div class="d-none d-lg-flex align-items-center gap-3">
+            <a class="navbar-brand" href="https://www.agid.gov.it">AgID</a>
+            <span class="text-white-50" aria-hidden="true">·</span>
+            <a class="navbar-brand" href="https://innovazione.gov.it">Dipartimento per la Trasformazione Digitale</a>
+          </div>
+          <div class="it-header-slim-right-zone">
+            <span class="text-white small">Art. 68-69 CAD</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="it-header-center-wrapper">
+    <div class="container-xxl"><div class="row"><div class="col-12">
+      <div class="it-header-center-content-wrapper">
+        <div class="it-brand-wrapper">
+          <a href="index.html" aria-label="Valutazione Comparativa Software — home">
+            <svg class="icon icon-xl icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-software"></use></svg>
+            <div class="it-brand-text">
+              <div class="it-brand-title">Valutazione Comparativa</div>
+              <div class="it-brand-tagline d-none d-md-block">Acquisizione e Riuso di Software per la PA</div>
+            </div>
+          </a>
+        </div>
+        <div class="it-right-zone">
+          <nav class="navbar navbar-expand-lg" aria-label="Navigazione principale">
+            <ul class="navbar-nav">
+              <li class="nav-item"><a class="nav-link text-white" href="index.html">Strumento</a></li>
+              <li class="nav-item"><a class="nav-link text-white fw-bold" href="about.html">Informazioni</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container-xxl">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1>Valutazione Comparativa Tecnica ed Economica</h1>
+        <p class="lead mb-3">Strumento open source per guidare le Pubbliche Amministrazioni nella scelta di software a riuso o open source, ai sensi degli <strong>artt. 68 e 69 del CAD</strong>.</p>
+        <a href="index.html" class="btn btn-light fw-semibold me-2">
+          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-arrow-right"></use></svg>
+          Apri lo strumento
+        </a>
+        <a href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa" target="_blank" rel="noopener" class="btn btn-outline-light">
+          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-github"></use></svg>
+          Repository GitHub
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="container-xxl mb-5">
+
+  <div class="row g-4 mb-5">
+    <!-- Cos'è -->
+    <div class="col-md-8">
+      <h2 class="h4 mb-3">Cos'è questo strumento</h2>
+      <p>La <strong>Valutazione Comparativa Tecnica ed Economica</strong> (CCROS-ValComp) è uno strumento web che assiste le Pubbliche Amministrazioni italiane nella scelta tra più soluzioni software esistenti, seguendo il metodo previsto dalle Linee Guida AgID sull'acquisizione e riuso di software.</p>
+      <p>Il metodo adottato è <strong>TOPSIS</strong> (Technique for Order of Preference by Similarity to Ideal Solution), un algoritmo multi-criterio che consente di classificare le soluzioni tenendo conto contemporaneamente di criteri tecnici e costi.</p>
+
+      <h3 class="h5 mt-4 mb-3">Evoluzione del foglio di calcolo AgID</h3>
+      <div class="callout callout-note mb-3">
+        <div class="callout-inner">
+          <div class="callout-title">
+            <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg>
+            <span>Origine</span>
+          </div>
+          <p class="mb-1">Questo strumento è un'evoluzione del foglio di calcolo originariamente pubblicato da AgID per supportare l'applicazione degli artt. 68 e 69 del CAD.</p>
+          <p class="mb-0">Il foglio originale (formato ODS/XLSX) è disponibile sul repository AgID:
+            <a href="https://github.com/AgID/ccros-valcomp" target="_blank" rel="noopener">
+              Valutazione comparativa — AgID
+            </a>
+          </p>
+        </div>
+      </div>
+      <p>Rispetto al foglio originale, questo strumento introduce:</p>
+      <ul>
+        <li>Interfaccia web accessibile, utilizzabile da qualsiasi browser senza installazioni</li>
+        <li>Supporto a più di due soluzioni (fino a 8)</li>
+        <li>Calcolo TOPSIS automatico con classifica e dettaglio intermedi</li>
+        <li>Importazione automatica dei metadati dal file <strong>publiccode.yml</strong> delle soluzioni</li>
+        <li>Esportazione in formato <strong>JSON machine-readable</strong> con schema pubblicato</li>
+        <li>Permalink per condividere e riprendere una valutazione</li>
+        <li>Appendice di stampa con tutti i dati della valutazione</li>
+        <li>Nessun dato inviato a server — tutto rimane nel browser</li>
+      </ul>
+
+      <h3 class="h5 mt-4 mb-3">Il metodo TOPSIS</h3>
+      <p>TOPSIS (<em>Technique for Order of Preference by Similarity to Ideal Solution</em>) è un metodo di analisi decisionale multi-criterio che classifica le alternative confrontandole con una soluzione ideale positiva e una negativa.</p>
+      <p>I pesi assegnati ai criteri permettono di calibrare l'importanza relativa di ciascuna dimensione (costi, requisiti funzionali, criteri tecnici) secondo le priorità della PA.</p>
+
+      <h4 class="h6 fw-bold mt-3 mb-2">Passi dell'algoritmo</h4>
+      <ol>
+        <li class="mb-3">
+          <strong>Matrice di valutazione</strong> — per ogni alternativa \(i\) e criterio \(j\) si costruisce la matrice \(X\) di dimensione \(m \times n\) (software × criteri).
+        </li>
+        <li class="mb-3">
+          <strong>Normalizzazione euclidea</strong> — ogni valore viene diviso per la norma della colonna:
+          <div class="formula-block">$$r_{ij} = \frac{x_{ij}}{\sqrt{\displaystyle\sum_{k=1}^{m} x_{kj}^{\,2}}}$$</div>
+        </li>
+        <li class="mb-3">
+          <strong>Pesatura</strong> — i valori normalizzati vengono moltiplicati per il peso \(w_j\) del criterio:
+          <div class="formula-block">$$v_{ij} = w_j \cdot r_{ij}$$</div>
+        </li>
+        <li class="mb-3">
+          <strong>Soluzione ideale positiva \(A^+\) e negativa \(A^-\)</strong> — per ogni criterio si determina il valore ottimale e quello peggiore. Per i criteri di costo (TCO, dipendenze) il minimo è il migliore:
+          <div class="formula-block">
+            $$A^+ = \bigl(\max_i v_{ij}\bigr)_{j \in B},\;\bigl(\min_i v_{ij}\bigr)_{j \in C}$$
+            $$A^- = \bigl(\min_i v_{ij}\bigr)_{j \in B},\;\bigl(\max_i v_{ij}\bigr)_{j \in C}$$
+          </div>
+          dove \(B\) = criteri di beneficio, \(C\) = criteri di costo.
+        </li>
+        <li class="mb-3">
+          <strong>Distanze euclidee</strong> — per ogni software si calcolano la distanza dall'ideale positivo \(D_i^+\) e da quello negativo \(D_i^-\):
+          <div class="formula-block">
+            $$D_i^+ = \sqrt{\sum_{j=1}^{n}\bigl(v_{ij} - A_j^+\bigr)^2} \qquad D_i^- = \sqrt{\sum_{j=1}^{n}\bigl(v_{ij} - A_j^-\bigr)^2}$$
+          </div>
+        </li>
+        <li class="mb-3">
+          <strong>Coefficiente di vicinanza \(C_i\)</strong> — indica la vicinanza relativa all'ideale positivo. Varia tra 0 (peggiore) e 1 (migliore):
+          <div class="formula-block">$$C_i = \frac{D_i^-}{D_i^+ + D_i^-}$$</div>
+        </li>
+        <li class="mb-0"><strong>Classifica</strong> — le soluzioni vengono ordinate in senso decrescente per \(C_i\).</li>
+      </ol>
+
+      <div class="callout callout-note mt-3">
+        <div class="callout-inner">
+          <div class="callout-title"><svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg><span>Criteri obbligatori</span></div>
+          <p class="mb-0 small">I criteri contrassegnati con <strong>*</strong> (interoperabilità, protezione dati, sicurezza, accessibilità) sono obbligatori per legge. Il TCO ha sempre peso 1. Gli altri criteri possono essere ponderati liberamente o azzerati.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h3 class="h6 fw-bold mb-3">Normativa di riferimento</h3>
+          <div class="timeline-item">
+            <span class="badge-normativa mb-1 d-inline-block">Art. 68 CAD</span>
+            <p class="small mb-0">Analisi comparativa delle soluzioni — obbligo di valutare soluzioni open source o a riuso prima di acquistare software proprietario.</p>
+            <a class="small" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68" target="_blank" rel="noopener">normattiva.it →</a>
+          </div>
+          <div class="timeline-item">
+            <span class="badge-normativa mb-1 d-inline-block">Art. 69 CAD</span>
+            <p class="small mb-0">Riuso delle soluzioni — obbligo per le PA di rendere disponibile in riuso il software sviluppato su commessa.</p>
+            <a class="small" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art69" target="_blank" rel="noopener">normattiva.it →</a>
+          </div>
+          <div class="timeline-item">
+            <p class="small mb-1 fw-semibold">Linee Guida acquisizione e riuso software</p>
+            <p class="small mb-0">Definiscono i criteri tecnici ed economici per la valutazione comparativa, inclusi i criteri obbligatori e facoltativi.</p>
+            <a class="small" href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/" target="_blank" rel="noopener">docs.italia.it →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h3 class="h6 fw-bold mb-2">Formato di esportazione</h3>
+          <p class="small">I dati vengono esportati in JSON con schema pubblicato, pensato per essere standardizzato e potenzialmente condiviso.</p>
+          <a class="small" href="schema/valutazione-comparativa-v1.0.json" target="_blank" rel="noopener">JSON Schema v1.0 →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h3 class="h6 fw-bold mb-2">Contributi</h3>
+          <p class="small">Lo strumento è open source (AGPL-3.0). Segnalazioni e contributi sono benvenuti su GitHub.</p>
+          <a href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa/issues" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+            <svg class="icon icon-xs me-1" aria-hidden="true"><use href="svg/sprites.svg#it-github"></use></svg>
+            Apri una segnalazione
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="it-footer">
+  <div class="it-footer-main">
+    <div class="container">
+      <section class="pb-4">
+        <div class="row clearfix"><div class="col-sm-12">
+          <div class="it-brand-wrapper">
+            <a href="https://www.agid.gov.it">
+              <div class="it-brand-text"><h2>AgID</h2><h3>Agenzia per l'Italia Digitale</h3></div>
+            </a>
+          </div>
+        </div></div>
+      </section>
+      <section>
+        <div class="row">
+          <div class="col-lg-3 col-md-4 col-sm-6 pb-2">
+            <h4>Strumento</h4>
+            <div class="link-list-wrapper">
+              <ul class="footer-list link-list clearfix">
+                <li><a class="list-item" href="index.html">Valutazione Comparativa</a></li>
+                <li><a class="list-item" href="about.html">Informazioni</a></li>
+                <li><a class="list-item" href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa">Repository GitHub</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-4 col-sm-6 pb-2">
+            <h4>Normativa</h4>
+            <div class="link-list-wrapper">
+              <ul class="footer-list link-list clearfix">
+                <li><a class="list-item" href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/">Linee guida acquisizione e riuso</a></li>
+                <li><a class="list-item" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68">Art. 68-69 CAD</a></li>
+                <li><a class="list-item" href="https://developers.italia.it/it/riuso/">Developers Italia — Riuso</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="it-footer-small-prints clearfix">
+    <div class="container">
+      <ul class="it-footer-small-prints-list list-inline mb-0 d-flex flex-column flex-md-row">
+        <li class="list-inline-item"><a href="https://www.agid.gov.it/it/privacy-policy">Privacy policy</a></li>
+        <li class="list-inline-item"><a href="https://www.agid.gov.it/it/note-legali">Note legali</a></li>
+        <li class="list-inline-item"><a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL-3.0-only</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/js/bootstrap-italia.bundle.min.js"></script>
+</body>
+</html>

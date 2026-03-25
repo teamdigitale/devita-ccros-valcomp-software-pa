@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/teamdigitale/devita-ccros-valcomp-software-pa/main/docs/schema/valutazione-comparativa-v1.0.json",
+  "title": "Valutazione Comparativa Software — AgID",
+  "description": "Schema JSON per la valutazione comparativa di software ai sensi degli artt. 68 e 69 del Codice dell'Amministrazione Digitale (CAD). Prodotto dallo strumento CCROS Valutazione Comparativa.",
+  "type": "object",
+  "required": ["tipo", "versione_schema", "valutazione"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "tipo": { "type": "string", "const": "valutazione-comparativa-software" },
+    "versione_schema": { "type": "string", "enum": ["1.0"] },
+    "riferimento_normativo": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "codice": { "type": "string" },
+          "testo": { "type": "string" }
+        }
+      }
+    },
+    "generato_da": {
+      "type": "object",
+      "properties": {
+        "strumento": { "type": "string" },
+        "versione": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "generato_il": { "type": "string", "format": "date-time" },
+    "valutazione": {
+      "type": "object",
+      "required": ["meta", "prodotti", "pesi"],
+      "properties": {
+        "meta": {
+          "type": "object",
+          "properties": {
+            "pa": { "type": "string", "description": "Pubblica Amministrazione compilatrice" },
+            "data": { "type": "string", "format": "date", "description": "Data della valutazione" },
+            "oggetto": { "type": "string", "description": "Oggetto/categoria software valutata" },
+            "categoria": { "type": "string", "description": "Categoria software (foglio Pesi)" }
+          }
+        },
+        "prodotti": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": ["nome"],
+            "properties": {
+              "nome": { "type": "string" },
+              "titolarita": { "type": "string" },
+              "maintainer": { "type": "string" },
+              "sito": { "type": "string", "format": "uri" },
+              "repo": { "type": "string", "format": "uri" },
+              "publiccode": { "type": "string", "format": "uri", "description": "URL del file publiccode.yml" }
+            }
+          }
+        },
+        "requisiti": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "tipo", "peso", "copertura"],
+            "properties": {
+              "id": { "type": "string" },
+              "tipo": { "type": "string", "enum": ["fn", "nfn"] },
+              "descrizione": { "type": "string" },
+              "peso": { "type": "number", "minimum": 0, "maximum": 100 },
+              "copertura": {
+                "type": "array",
+                "items": { "type": "number", "minimum": 0, "maximum": 100 }
+              },
+              "note_copertura": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "criteri": {
+          "type": "object",
+          "description": "Valori dei criteri tecnici per criterio e per soluzione",
+          "properties": {
+            "interoperabilita": {
+              "type": "object",
+              "properties": { "items": { "type": "object", "description": "Chiavi i1-i4, array per soluzione con valori si/no/nonec" } }
+            },
+            "protezione_dati": {
+              "type": "object",
+              "properties": { "items": { "type": "object", "description": "Chiavi p1-p3, array per soluzione con valori si/no/nonec" } }
+            },
+            "sicurezza": {
+              "type": "object",
+              "properties": { "items": { "type": "object", "description": "Chiavi s1-s2, array per soluzione con valori si/no/nonec" } }
+            },
+            "accessibilita": {
+              "type": "object",
+              "properties": { "scelta": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 2 } } }
+            },
+            "manutentore": {
+              "type": "object",
+              "properties": { "scelta": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 2 } } }
+            },
+            "supporto": {
+              "type": "object",
+              "properties": { "items": { "type": "object", "description": "Chiavi su1-su2, array per soluzione con valori si/no/nonec" } }
+            },
+            "dipendenze": {
+              "type": "object",
+              "properties": {
+                "proprietario": { "type": "array", "items": { "type": "number", "minimum": 0 } },
+                "opensource":   { "type": "array", "items": { "type": "number", "minimum": 0 } }
+              }
+            },
+            "competenze_pa": {
+              "type": "object",
+              "properties": { "scelta": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 2 } } }
+            },
+            "numero_pa": {
+              "type": "object",
+              "properties": {
+                "utilizzano":  { "type": "array", "items": { "type": "number", "minimum": 0 } },
+                "interessate": { "type": "array", "items": { "type": "number", "minimum": 0 } }
+              }
+            },
+            "vitalita": {
+              "type": "object",
+              "properties": {
+                "giorni":      { "type": "array", "items": { "type": "number", "minimum": 0 } },
+                "commit":      { "type": "array", "items": { "type": "number", "minimum": 0 } },
+                "contributi":  { "type": "array", "items": { "type": "number", "minimum": 0 } },
+                "release":     { "type": "array", "items": { "type": "number", "minimum": 0 } }
+              }
+            }
+          }
+        },
+        "tco": {
+          "type": "object",
+          "properties": {
+            "durata": { "type": "integer", "minimum": 1, "description": "Anni di valutazione TCO" },
+            "npa": { "type": "integer", "minimum": 1, "description": "Numero di PA del lotto" },
+            "voci": { "type": "object", "description": "Voci di costo indicizzate per ID voce, array di valori per soluzione" }
+          }
+        },
+        "pesi": {
+          "type": "object",
+          "description": "Peso assegnato a ciascun criterio TOPSIS (chiave = ID criterio, valore = numero 0-1)",
+          "properties": {
+            "tco":              { "type": "number", "minimum": 0, "maximum": 1 },
+            "interoperabilita": { "type": "number", "minimum": 0, "maximum": 1 },
+            "protezione_dati":  { "type": "number", "minimum": 0, "maximum": 1 },
+            "sicurezza":        { "type": "number", "minimum": 0, "maximum": 1 },
+            "accessibilita":    { "type": "number", "minimum": 0, "maximum": 1 },
+            "copertura_req":    { "type": "number", "minimum": 0, "maximum": 1 },
+            "manutentore":      { "type": "number", "minimum": 0, "maximum": 1 },
+            "supporto":         { "type": "number", "minimum": 0, "maximum": 1 },
+            "dipendenze":       { "type": "number", "minimum": 0, "maximum": 1 },
+            "competenze_pa":    { "type": "number", "minimum": 0, "maximum": 1 },
+            "numero_pa":        { "type": "number", "minimum": 0, "maximum": 1 },
+            "vitalita":         { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    }
+  }
+}
