@@ -115,11 +115,12 @@
       color: #fff !important;
     }
     @media print {
-      .steppers, .step-nav, .it-header-wrapper, footer, #wizard-info-bar { display: none !important; }
+      .steppers, .step-nav, .it-header-wrapper, footer, #wizard-info-bar, #topsis-pesi, #step-3 h2.h4.mb-3, .d-print-none { display: none !important; }
       .step-panel { display: none !important; }
       #step-3 { display: block !important; }
       .inner-tab-bar { display: none !important; }
       .inner-tab-pane { display: block !important; }
+      #topsis-pesi { display: none !important; }
       body { background: white; }
       #print-appendix { display: block !important; }
       .pa-section { page-break-before: always; margin-top: 2rem; }
@@ -536,7 +537,8 @@
 
     <!-- Tab: Risultati -->
     <div class="inner-tab-pane" id="topsis-risultati">
-      <div id="risultati-meta" class="mb-3 text-muted small"></div>
+      <div id="print-intro" class="d-none d-print-block mb-4 border-bottom pb-3"></div>
+      <div id="risultati-meta" class="mb-3 text-muted small d-print-none"></div>
       <div class="row mb-4" id="risultati-cards"></div>
       <div id="topsis-scatter-container" class="mb-4"></div>
       <h3 class="h5 mb-2">Dettaglio punteggi per criterio</h3>
@@ -549,7 +551,7 @@
           <table class="table table-sm results-table" id="topsis-table"></table>
         </div>
       </details>
-      <div class="d-flex flex-wrap gap-2">
+      <div class="d-flex flex-wrap gap-2 d-print-none">
         <button class="btn btn-primary" id="export-json-btn">
           <svg class="icon icon-sm me-2 icon-white" aria-hidden="true"><use href="svg/sprites.svg#it-download"></use></svg>
           Esporta JSON
@@ -2104,6 +2106,19 @@ function computeAndRenderResults() {
     `<strong>PA:</strong> ${escH(state.meta.pa)||'—'} &nbsp;|&nbsp; ` +
     `<strong>Data:</strong> ${escH(state.meta.data)||'—'} &nbsp;|&nbsp; ` +
     `<strong>Oggetto:</strong> ${escH(state.meta.oggetto)||'—'}`;
+
+  const printIntro = document.getElementById('print-intro');
+  if (printIntro) {
+    printIntro.innerHTML = `
+      <h2 class="h4 fw-bold mb-1">Valutazione comparativa di software</h2>
+      <p class="text-muted small mb-3">Ai sensi degli artt. 68 e 69 del Codice dell'Amministrazione Digitale (D.Lgs. 82/2005)</p>
+      <div class="d-flex flex-column gap-1 mt-2">
+        <div><strong>Amministrazione procedente:</strong> ${escH(state.meta.pa)||'—'}</div>
+        <div><strong>Oggetto della valutazione:</strong> ${escH(state.meta.oggetto)||'—'}</div>
+        <div><strong>Data di compilazione:</strong> ${escH(state.meta.data)?new Date(state.meta.data).toLocaleDateString('it-IT'):'—'}</div>
+      </div>
+    `;
+  }
 
   // Cards
   document.getElementById('risultati-cards').innerHTML = ranking.map((r,rank) => `
