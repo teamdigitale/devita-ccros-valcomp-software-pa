@@ -1583,6 +1583,7 @@ async function fetchPublicCode() {
     }
   } catch(e) {
     msgEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem"><strong>Errore:</strong> ${escH(e.message)}<br><small>Verifica che l'URL sia il file raw e che CORS sia abilitato sul repository.</small></div>`;
+  } finally {
     btn.disabled = false;
   }
 }
