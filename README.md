@@ -1,4 +1,4 @@
-# Tool per la Valutazione Comparativa nell'Acquisizione e Riuso di Software
+# Strumento per la Valutazione Comparativa nell'Acquisizione e Riuso di Software
 
 Le ["Linee Guida su acquisizione e riuso di software per le pubbliche amministrazioni"](https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/index.html) entrate in vigore il 9 maggio 2019 hanno cambiato i paradigmi per l'acquisizione del software da parte delle pubbliche amministrazioni. Da questa data l'acquisizione di software attraverso il riuso di soluzioni di proprietà delle amministrazioni deve essere preceduta dall'**obbligo di apporre una licenza aperta** sul codice e la relativa documentazione, rendendo la **scelta open source strategica**.
 
@@ -9,9 +9,9 @@ Per rendere la stesura di questo documento più agevole si è realizzato uno **s
 - **[Web App](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/)** — applicazione interattiva client-side, utilizzabile direttamente dal browser senza installazioni, con supporto per 2–8 soluzioni, import/export JSON e calcolo TOPSIS integrato
 - **Fogli di calcolo** — file ODS scaricabili per l'utilizzo offline
 
-Questo tool è stato reso possibile dalla collaborazione tra il [Centro di Competenza Riuso e Open Source di AgID](https://www.agid.gov.it/it/design-servizi/riuso-open-source/centro-competenza-riuso-open-source) e il [Nexa Center for Internet & Society del Politecnico di Torino](https://nexa.polito.it/), con il prezioso supporto di alcune amministrazioni, tra le quali vanno ricordate la [Regione Piemonte](https://www.regione.piemonte.it), la [Regione Veneto](https://www.regione.veneto.it), la [Regione Emilia-Romagna](https://www.regione.emilia-romagna.it), la [Regione Marche](https://www.regione.marche.it), la [Regione Molise](http://www.regione.molise.it), il [Comune di Firenze](https://www.comune.fi.it).
+Questo strumento è stato reso possibile dalla collaborazione tra il [Centro di Competenza Riuso e Open Source di AgID](https://www.agid.gov.it/it/design-servizi/riuso-open-source/centro-competenza-riuso-open-source) e il [Nexa Center for Internet & Society del Politecnico di Torino](https://nexa.polito.it/), con il prezioso supporto di alcune amministrazioni, tra le quali vanno ricordate la [Regione Piemonte](https://www.regione.piemonte.it), la [Regione Veneto](https://www.regione.veneto.it), la [Regione Emilia-Romagna](https://www.regione.emilia-romagna.it), la [Regione Marche](https://www.regione.marche.it), la [Regione Molise](http://www.regione.molise.it), il [Comune di Firenze](https://www.comune.fi.it).
 
-Il tool è scaricabile e fruibile dalle amministrazioni interessate e accettiamo volentieri **suggerimenti e proposte di modifica** per migliorare il suo utilizzo.
+Lo strumento è scaricabile e fruibile dalle amministrazioni interessate e accettiamo volentieri **suggerimenti e proposte di modifica** per migliorare il suo utilizzo.
 
 # Organizzazione del repository
 

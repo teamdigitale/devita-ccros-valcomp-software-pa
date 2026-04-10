@@ -115,21 +115,68 @@
       color: #fff !important;
     }
     @media print {
-      .steppers, .step-nav, .it-header-wrapper, footer, #wizard-info-bar, #topsis-pesi, #step-3 h2.h4.mb-3, .d-print-none { display: none !important; }
-      .step-panel { display: none !important; }
-      #step-3 { display: block !important; }
-      .inner-tab-bar { display: none !important; }
-      .inner-tab-pane { display: block !important; }
-      #topsis-pesi { display: none !important; }
-      body { background: white; }
+      /* ── Nascondi tutto il sito ── */
+      .it-header-wrapper, footer, .steppers, #step-nav-bar,
+      #wizard-info-bar, #landing-page,
+      #wizard-content, #wizard-content.d-block { display: none !important; }
+      body   { background: white; font-family: 'Titillium Web', sans-serif; color: #000; font-size: 10pt; }
+      #main-content { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
       #print-appendix { display: block !important; }
-      .pa-section { page-break-before: always; margin-top: 2rem; }
-      .pa-section h3 { font-size: 1rem; font-weight: 700; border-bottom: 2px solid #333; padding-bottom: .25rem; margin-bottom: .75rem; }
-      .pa-section table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-      .pa-section th, .pa-section td { border: 1px solid #999; padding: 3px 6px; }
-      .pa-section th { background: #e8e8e8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .pa-val-si  { color: #008055; font-weight: 700; }
-      .pa-val-no  { color: #cc334d; font-weight: 700; }
+
+      @page { margin: 2.5cm 2.5cm 2.2cm 2.5cm; }
+
+      /* ── Struttura pagine ── */
+      .pr-page          { page-break-before: always; }
+      .pr-no-break      { page-break-inside: avoid; }
+
+      /* ── Intestazione pagina (ogni pagina tranne frontespizio) ── */
+      .pr-page-header {
+        border-bottom: 1px solid #555; padding-bottom: .25rem; margin-bottom: .9rem;
+        display: flex; justify-content: space-between; align-items: baseline;
+        font-size: 7.5pt; color: #444; font-family: 'Titillium Web', sans-serif;
+        letter-spacing: .02em;
+      }
+
+      /* ── FRONTESPIZIO ── */
+      .pr-frontespizio { text-align: center; padding-top: 2cm; page-break-inside: avoid; page-break-after: always; }
+      .pr-front-logo   { font-size: 8pt; letter-spacing: .08em; color: #333; margin-bottom: 1.8cm; text-transform: uppercase; font-weight: 600; }
+      .pr-front-title  { font-size: 16pt; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; line-height: 1.4; margin-bottom: .5cm; }
+      .pr-front-sub    { font-size: 10pt; font-style: italic; margin-bottom: 1cm; }
+      .pr-front-norm   { font-size: 8pt; color: #555; margin-bottom: 1.2cm; }
+      .pr-front-meta   { width: 80%; margin: 0 auto .8cm; border-collapse: collapse; text-align: left; font-size: 9pt; }
+      .pr-front-meta td { padding: .35rem .65rem; border: 1px solid #bbb; }
+      .pr-front-meta td:first-child { font-weight: 700; background: #f0f0f0 !important; width: 42%;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pr-front-generated { font-size: 7pt; color: #888; margin-top: 1cm; }
+      .pr-front-confidential { margin-top: .6cm; font-size: 7.5pt; border: 1px solid #aaa; display: inline-block; padding: .2rem .65rem; color: #555; }
+
+      /* ── RELAZIONE ── */
+      .pr-relazione h2 { font-size: 11pt; font-weight: 700; margin: 1.2rem 0 .4rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1.5px solid #000; padding-bottom: .15rem; font-family: 'Titillium Web', sans-serif; }
+      .pr-relazione p  { font-size: 9.5pt; line-height: 1.55; margin-bottom: .5rem; text-align: justify; }
+      .pr-motivazione  { min-height: 3.5cm; border: 1px solid #bbb; padding: .5rem .75rem; margin-bottom: 1rem; font-size: 9.5pt; }
+      .pr-firma-block  { margin-top: 1.5cm; display: flex; justify-content: flex-end; }
+      .pr-firma-box    { text-align: center; font-size: 9pt; min-width: 8cm; }
+      .pr-firma-box .pr-firma-line { border-top: 1px solid #333; margin-top: .6rem; padding-top: .3rem; }
+
+      /* ── Tabelle comuni ── */
+      .pr-table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-bottom: .75rem; }
+      .pr-table th { background: #ddd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        font-weight: 700; text-align: left; padding: 4px 6px; border: 1px solid #999; }
+      .pr-table td { border: 1px solid #bbb; padding: 3px 6px; vertical-align: top; }
+      .pr-table tr.pr-group-row td { background: #f0f0f0 !important; font-weight: 700;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pr-table tr.pr-rank-1 td { background: #f0fff4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .pr-table td.pr-center, .pr-table th.pr-center { text-align: center; }
+      .pr-table td.pr-right,  .pr-table th.pr-right  { text-align: right; }
+      .pr-val-si   { color: #006633; font-weight: 700; }
+      .pr-val-no   { color: #aa0000; font-weight: 700; }
+      .pr-val-nonec{ color: #775500; }
+      .pr-best     { font-weight: 700; }
+
+      /* ── Appendice intestazione sezione ── */
+      .pr-appendice h2 { font-size: 11pt; font-weight: 700; border-bottom: 2px solid #000; padding-bottom: .2rem; margin-bottom: .7rem; text-transform: uppercase; letter-spacing: .05em; font-family: 'Titillium Web', sans-serif; }
+      .pr-appendice h3 { font-size: 9.5pt; font-weight: 700; margin: .8rem 0 .3rem; font-family: 'Titillium Web', sans-serif; }
+      .pr-appendice p  { font-size: 8.5pt; line-height: 1.4; margin-bottom: .4rem; }
     }
   </style>
 </head>
@@ -568,10 +615,10 @@
     </div>
   </div>
 
+  </div><!-- /wizard-content -->
+
   <!-- Appendice di stampa – visibile solo in @media print -->
   <div id="print-appendix" aria-hidden="true" style="display:none"></div>
-
-  </div><!-- /wizard-content -->
 
   <!-- Navigazione wizard (sticky) -->
   <div class="step-nav" id="step-nav-bar" style="display:none">
@@ -2363,115 +2410,359 @@ document.getElementById('print-btn').addEventListener('click', () => { buildPrin
 
 // ── Appendice di stampa ───────────────────────────────────────
 function buildPrintAppendix() {
-  const el = document.getElementById('print-appendix');
-  const sw = range();
-  const hdrs = sw.map(i => `<th style="min-width:90px">${escH(swName(i))}</th>`).join('');
+  const el   = document.getElementById('print-appendix');
+  const sw   = range();
+  const n    = nSw();
+  const now  = new Date();
+  const datePrint = now.toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  const pa   = escH(state.meta.pa    || '');
+  const data = escH(state.meta.data  || '');
+  const ogg  = escH(state.meta.oggetto || '');
+  const cat  = escH(state.meta.categoria || '');
 
-  // ── A. Soluzioni ──
-  const aSec = `<div class="pa-section">
-    <h3>A. Soluzioni valutate</h3>
-    <table><thead><tr><th>Campo</th>${hdrs}</tr></thead><tbody>
-    ${[['Nome','nome'],['Titolarità','titolarita'],['Maintainer','maintainer'],['Sito','sito'],['Repository','repo']]
-      .map(([lbl,f]) => `<tr><td><strong>${lbl}</strong></td>${sw.map(i=>`<td>${escH(state.prodotti[i]?.[f]||'—')}</td>`).join('')}</tr>`)
-      .join('')}
-    </tbody></table></div>`;
+  // Calcola TOPSIS per la relazione
+  const scores  = computeScores();
+  const topsis  = computeTOPSIS(scores, state.pesi);
+  const { ci, dP, dM, ids } = topsis;
+  const ranking = sw.map(i=>({idx:i, ci:ci[i]})).sort((a,b)=>b.ci-a.ci);
+  const tcoTot  = sw.map(i => TCO_VOCI.reduce((s,v)=>s+(+state.tco.voci[v.id]?.[i]||0),0));
+  const MEDALS  = ['1°','2°','3°','4°','5°','6°','7°','8°'];
 
-  // ── B. Requisiti ──
-  let bSec = '';
-  if (state.requisiti.length) {
-    const rRows = state.requisiti.map(r => `<tr>
-      <td><code>${r.id}</code></td>
-      <td>${r.tipo==='fn'?'FN':'NFN'}</td>
-      <td>${escH(r.descrizione||'')}</td>
-      <td>${r.peso}%</td>
-      ${sw.map(i => {
-        const cop = r.copertura[i]??0;
-        const nota = r.note_copertura?.[i]||'';
-        return `<td>${cop}%${nota?`<br><small>${escH(nota)}</small>`:''}`;
-      }).join('')}
+  // ── Helper intestazione pagina ──────────────────────────────
+  const pageHeader = (left, right='') => `
+    <div class="pr-page-header">
+      <span>${escH(left)}</span>
+      <span>${escH(right)}</span>
+    </div>`;
+
+  // ── Helper intestazioni tabelle ─────────────────────────────
+  const swHdrs = sw.map(i=>`<th class="pr-center">${escH(swName(i))}</th>`).join('');
+
+  // ══════════════════════════════════════════════════════════════
+  // FRONTESPIZIO
+  // ══════════════════════════════════════════════════════════════
+  const frontespizio = `
+  <div class="pr-frontespizio">
+    <div class="pr-front-logo">AgID — Agenzia per l'Italia Digitale<br>Dipartimento per la Trasformazione Digitale</div>
+    <div class="pr-front-title">Relazione di valutazione comparativa<br>di soluzioni software</div>
+    <div class="pr-front-sub">ai sensi degli artt. 68 e 69 del D.Lgs. 82/2005 (CAD)</div>
+    <table class="pr-front-meta">
+      <tbody>
+        <tr><td>Pubblica Amministrazione</td><td>${pa||'—'}</td></tr>
+        <tr><td>Data della valutazione</td><td>${data||'—'}</td></tr>
+        <tr><td>Oggetto della valutazione</td><td>${ogg||'—'}</td></tr>
+        <tr><td>Categoria software</td><td>${cat||'—'}</td></tr>
+        <tr><td>Numero soluzioni valutate</td><td>${n}</td></tr>
+        <tr><td>Metodo di valutazione</td><td>TOPSIS (ISO/IEC 25010 — analisi multi-criterio)</td></tr>
+      </tbody>
+    </table>
+    <div class="pr-front-norm">
+      Riferimenti normativi: Art. 68 CAD (analisi comparativa delle soluzioni) —
+      Art. 69 CAD (riuso delle soluzioni) —
+      Linee guida AgID sull'acquisizione e riuso di software
+    </div>
+    <div class="pr-front-generated">
+      Documento generato il ${datePrint} con CCROS Valutazione Comparativa v3.0 beta
+    </div>
+    <div class="pr-front-confidential">Documento ad uso amministrativo interno</div>
+  </div>`;
+
+  // ══════════════════════════════════════════════════════════════
+  // PAGINA 2-3 — RELAZIONE (allegabile all'atto)
+  // ══════════════════════════════════════════════════════════════
+
+  // Tabella classifica finale
+  const rankingRows = ranking.map((r, pos) => `
+    <tr class="${pos===0?'pr-rank-1':''}">
+      <td class="pr-center"><strong>${MEDALS[pos]}</strong></td>
+      <td><strong>${escH(swName(r.idx))}</strong></td>
+      <td class="pr-center pr-best">${(r.ci*100).toFixed(2)}%</td>
+      <td class="pr-center">${dP[r.idx].toFixed(4)}</td>
+      <td class="pr-center">${dM[r.idx].toFixed(4)}</td>
+      <td class="pr-center">${fmtEur(tcoTot[r.idx])}</td>
     </tr>`).join('');
-    bSec = `<div class="pa-section">
-      <h3>B. Requisiti funzionali e non funzionali</h3>
-      <table><thead><tr><th>ID</th><th>Tipo</th><th>Descrizione</th><th>Peso</th>${hdrs}</tr></thead>
-      <tbody>${rRows}</tbody></table></div>`;
+
+  // Tabella punteggi per criterio (sintetica)
+  const scoreRows = ids.map(id => {
+    const pd = PESI_DEF.find(p=>p.id===id);
+    if ((state.pesi[id]||0) === 0) return '';
+    const row = scores[id];
+    const isCost = COST_CRITERIA.has(id);
+    const best = isCost ? Math.min(...row) : Math.max(...row);
+    const fmt = v => id==='tco' ? fmtEur(v)
+                   : id==='copertura_req' ? (v*100).toFixed(1)+'%'
+                   : (Number.isInteger(v)?v:v.toFixed(2));
+    return `<tr>
+      <td>${pd.label}${isCost?' <em>(costo)</em>':''}</td>
+      <td class="pr-center">${state.pesi[id]}</td>
+      ${sw.map(i=>{
+        const isBest = row[i]===best;
+        return `<td class="pr-center${isBest?' pr-best':''}">${fmt(row[i])}</td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+
+  // Pesi attivi (peso > 0)
+  const pesiAttiviRows = PESI_DEF.filter(p=>state.pesi[p.id]>0).map(p=>`
+    <tr>
+      <td>${p.label}${p.fixed?' <em>(obbligatorio)</em>':''}</td>
+      <td class="pr-center">${state.pesi[p.id]}</td>
+      <td>${p.note||'—'}</td>
+    </tr>`).join('');
+
+  const relazione = `
+  <div class="pr-relazione pr-page">
+    ${pageHeader('Relazione di valutazione comparativa — ' + (state.meta.pa||''), datePrint)}
+
+    <h2>1. Oggetto e contesto</h2>
+    <p>
+      ${pa ? `La <strong>${pa}</strong>` : `La Pubblica Amministrazione`} ha effettuato,
+      in data ${data||'___________'}, una valutazione comparativa tecnica ed economica
+      di <strong>${n} soluzioni software</strong> per ${ogg||'l\'acquisizione di software'
+      }${cat ? ` (categoria: ${cat})` : ''}, in adempimento dell'obbligo previsto
+      dall'<strong>art. 68 del Codice dell'Amministrazione Digitale (D.Lgs. 82/2005)</strong>,
+      che impone alle PA di effettuare un'analisi comparativa prima di procedere
+      all'acquisizione di software.
+    </p>
+    <p>
+      La valutazione è stata condotta con il metodo <strong>TOPSIS</strong>
+      (Technique for Order of Preference by Similarity to Ideal Solution),
+      analisi multi-criterio che consente di classificare le soluzioni in base
+      alla loro prossimità alla soluzione ideale, ponderando i criteri tecnici
+      ed economici con i pesi definiti dalla PA.
+    </p>
+
+    <h2>2. Soluzioni valutate</h2>
+    <table class="pr-table pr-no-break">
+      <thead><tr><th>#</th><th>Software</th><th>Titolarità / Maintainer</th><th>Sito / Repository</th></tr></thead>
+      <tbody>${sw.map(i=>{
+        const p = state.prodotti[i];
+        return `<tr>
+          <td class="pr-center">${i+1}</td>
+          <td><strong>${escH(p.nome||'—')}</strong></td>
+          <td>${escH(p.titolarita||'')}${p.titolarita&&p.maintainer?' / ':''
+              }${escH(p.maintainer||'')||'—'}</td>
+          <td style="font-size:.75rem">${p.sito?escH(p.sito):''
+              }${p.sito&&p.repo?'<br>':''}${p.repo?escH(p.repo):''
+              }${!p.sito&&!p.repo?'—':''}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+
+    <h2>3. Classifica finale</h2>
+    <table class="pr-table pr-no-break">
+      <thead><tr>
+        <th class="pr-center">Posizione</th>
+        <th>Software</th>
+        <th class="pr-center">Punteggio C<sub>i</sub></th>
+        <th class="pr-center">D⁺ (dist. ideale)</th>
+        <th class="pr-center">D⁻ (dist. anti-ideale)</th>
+        <th class="pr-center">TCO totale</th>
+      </tr></thead>
+      <tbody>${rankingRows}</tbody>
+    </table>
+    <p style="font-size:.75rem;margin-top:.25rem">
+      C<sub>i</sub> = D⁻ / (D⁺ + D⁻): più alto indica maggiore prossimità alla soluzione ideale.
+      Il primo classificato è la soluzione tecnicamente ed economicamente più vantaggiosa.
+    </p>
+
+    <h2>4. Punteggi per criterio</h2>
+    <table class="pr-table">
+      <thead><tr><th>Criterio</th><th class="pr-center">Peso</th>${swHdrs}</tr></thead>
+      <tbody>${scoreRows}</tbody>
+    </table>
+    <p style="font-size:.75rem">I valori in grassetto indicano il migliore per ciascun criterio.</p>
+
+    <h2>5. Criteri e pesi applicati</h2>
+    <table class="pr-table pr-no-break">
+      <thead><tr><th>Criterio</th><th class="pr-center">Peso</th><th>Note</th></tr></thead>
+      <tbody>${pesiAttiviRows}</tbody>
+    </table>
+
+    <h2>6. Motivazione della scelta</h2>
+    <p>La soluzione selezionata è <strong>${escH(swName(ranking[0].idx))}</strong>,
+    risultata prima in classifica con punteggio TOPSIS C<sub>i</sub> = ${(ranking[0].ci*100).toFixed(2)}%.
+    Si riportano di seguito le motivazioni a supporto della scelta:</p>
+    <div class="pr-motivazione">&nbsp;</div>
+
+    <div class="pr-firma-block">
+      <div class="pr-firma-box">
+        <div>Luogo e data: ___________________</div>
+        <div class="pr-firma-line">Il Responsabile del procedimento</div>
+        <div style="margin-top:1.8cm;border-top:1px solid #333;font-size:.8rem">Firma e timbro</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ══════════════════════════════════════════════════════════════
+  // APPENDICI TECNICHE
+  // ══════════════════════════════════════════════════════════════
+
+  // ── App. A — Anagrafica soluzioni ──
+  const appA = `
+  <div class="pr-appendice pr-page">
+    ${pageHeader('Appendice A — Anagrafica soluzioni', pa)}
+    <h2>Appendice A — Anagrafica soluzioni valutate</h2>
+    <table class="pr-table">
+      <thead><tr><th>Campo</th>${swHdrs}</tr></thead>
+      <tbody>
+        ${[['Nome','nome'],['Titolarità','titolarita'],['Maintainer','maintainer'],['Sito','sito'],['Repository','repo'],['publiccode.yml','publiccode']]
+          .map(([lbl,f])=>`<tr><td><strong>${lbl}</strong></td>${sw.map(i=>`<td style="font-size:.75rem">${escH(state.prodotti[i]?.[f]||'—')}</td>`).join('')}</tr>`)
+          .join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  // ── App. B — Requisiti ──
+  let appB = '';
+  if (state.requisiti.length) {
+    const fn  = state.requisiti.filter(r=>r.tipo==='fn');
+    const nfn = state.requisiti.filter(r=>r.tipo==='nfn');
+    const reqRows = (reqs) => reqs.map(r => {
+      const cop = sw.map(i=>{
+        const v = r.copertura[i]??0;
+        const nota = r.note_copertura?.[i]||'';
+        const cls  = v>=80?'pr-val-si':v>=50?'':v>0?'pr-val-no':'';
+        return `<td class="pr-center ${cls}">${v}%${nota?`<br><small>${escH(nota)}</small>`:''}</td>`;
+      }).join('');
+      return `<tr><td><code style="font-size:.75rem">${r.id}</code></td><td>${escH(r.descrizione||'—')}</td><td class="pr-center">${r.peso}%</td>${cop}</tr>`;
+    }).join('');
+    const totPeso = state.requisiti.reduce((s,r)=>s+r.peso,0);
+    appB = `
+    <div class="pr-appendice pr-page">
+      ${pageHeader('Appendice B — Requisiti', pa)}
+      <h2>Appendice B — Requisiti funzionali e non funzionali</h2>
+      <p>Totale pesi requisiti: <strong>${totPeso.toFixed(1)}%</strong>${Math.abs(totPeso-100)>0.1?' (la valutazione è normalizzata automaticamente su 100)':''}.</p>
+      ${fn.length?`<h3>Requisiti funzionali (FN)</h3>
+        <table class="pr-table">
+          <thead><tr><th>ID</th><th>Descrizione</th><th class="pr-center">Peso</th>${swHdrs}</tr></thead>
+          <tbody>${reqRows(fn)}</tbody>
+        </table>`:''}
+      ${nfn.length?`<h3>Requisiti non funzionali (NFN)</h3>
+        <table class="pr-table">
+          <thead><tr><th>ID</th><th>Descrizione</th><th class="pr-center">Peso</th>${swHdrs}</tr></thead>
+          <tbody>${reqRows(nfn)}</tbody>
+        </table>`:''}
+      <p style="font-size:.72rem">Copertura: verde ≥80%, arancione ≥50%, rosso &lt;50%.</p>
+    </div>`;
   }
 
-  // ── C. Criteri tecnici ──
-  let cSec = '<div class="pa-section"><h3>C. Criteri di valutazione tecnica</h3>';
+  // ── App. C — Criteri tecnici ──
+  const valLabel = {si:'Sì', no:'No', nonec:'Non nec.','':'—'};
+  const valClass = {si:'pr-val-si', no:'pr-val-no', nonec:'pr-val-nonec','':''};
+  let cRows = '';
   Object.entries(CRITERI_DEF).forEach(([key, def]) => {
-    cSec += `<p style="margin:.5rem 0 .2rem;font-weight:700">${def.label}</p>`;
-    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-      const valLabel = {si:'sì', no:'no', nonec:'non nec.', '':'—'};
-      const valClass = {si:'pa-val-si', no:'pa-val-no', nonec:'', '':''};
-      cSec += `<table><thead><tr><th>Criterio</th>${hdrs}</tr></thead><tbody>`;
+    cRows += `<tr class="pr-group-row"><td colspan="${2+n}"><strong>${def.label}</strong></td></tr>`;
+    if (def.tipo==='sinon'||def.tipo==='sinon_nonec') {
       def.items.forEach(item => {
-        const cur = state.criteri[key].items[item.id] || sw.map(()=>'');
-        cSec += `<tr><td>${escH(item.testo)}</td>${sw.map(i=>{
-          const v = cur[i]||'';
-          return `<td class="${valClass[v]||''}">${valLabel[v]??v}</td>`;
-        }).join('')}</tr>`;
+        const cur = state.criteri[key].items[item.id]||sw.map(()=>'');
+        cRows += `<tr><td></td><td style="font-size:.75rem">${escH(item.testo)}</td>
+          ${sw.map(i=>{const v=cur[i]||'';return`<td class="pr-center ${valClass[v]||''}">${valLabel[v]??v}</td>`;}).join('')}</tr>`;
       });
-      cSec += '</tbody></table>';
-    } else if (def.tipo === 'radio') {
-      cSec += `<table><thead><tr><th>Opzione</th>${hdrs}</tr></thead><tbody>`;
-      def.items.forEach(item => {
-        cSec += `<tr><td>${escH(item.testo)}</td>${sw.map(i=>{
-          const sel = state.criteri[key].scelta[i] === item.valore;
-          return `<td>${sel?'<strong>✓</strong>':''}</td>`;
-        }).join('')}</tr>`;
+    } else if (def.tipo==='radio') {
+      cRows += `<tr><td></td><td style="font-size:.75rem">Opzione scelta</td>
+        ${sw.map(i=>{const c=def.items.find(it=>it.valore===state.criteri[key].scelta[i]);
+          return`<td class="pr-center" style="font-size:.73rem">${c?escH(c.testo):'—'}</td>`;}).join('')}</tr>`;
+    } else if (def.tipo==='numero_dipendenze') {
+      cRows += `<tr><td></td><td style="font-size:.75rem">Dipendenze proprietarie</td>${sw.map(i=>`<td class="pr-center">${state.criteri.dipendenze.proprietario[i]||0}</td>`).join('')}</tr>`;
+      cRows += `<tr><td></td><td style="font-size:.75rem">Dipendenze open source</td>${sw.map(i=>`<td class="pr-center">${state.criteri.dipendenze.opensource[i]||0}</td>`).join('')}</tr>`;
+    } else if (def.tipo==='numero_pa') {
+      cRows += `<tr><td></td><td style="font-size:.75rem">PA che utilizzano</td>${sw.map(i=>`<td class="pr-center">${state.criteri.numero_pa.utilizzano[i]||0}</td>`).join('')}</tr>`;
+      cRows += `<tr><td></td><td style="font-size:.75rem">PA interessate</td>${sw.map(i=>`<td class="pr-center">${state.criteri.numero_pa.interessate[i]||0}</td>`).join('')}</tr>`;
+    } else if (def.tipo==='vitalita') {
+      [['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3 anni)'],['contributi','Contributori (3 anni)'],['release','Release (3 anni)']].forEach(([f,lbl])=>{
+        cRows += `<tr><td></td><td style="font-size:.75rem">${lbl}</td>${sw.map(i=>`<td class="pr-center">${state.criteri.vitalita[f][i]||0}</td>`).join('')}</tr>`;
       });
-      cSec += '</tbody></table>';
-    } else if (def.tipo === 'numero_dipendenze') {
-      cSec += `<table><thead><tr><th>Tipo</th>${hdrs}</tr></thead><tbody>
-        <tr><td>Dipendenze proprietarie</td>${sw.map(i=>`<td>${state.criteri.dipendenze.proprietario[i]||0}</td>`).join('')}</tr>
-        <tr><td>Dipendenze open source</td>${sw.map(i=>`<td>${state.criteri.dipendenze.opensource[i]||0}</td>`).join('')}</tr>
-      </tbody></table>`;
-    } else if (def.tipo === 'numero_pa') {
-      cSec += `<table><thead><tr><th>Voce</th>${hdrs}</tr></thead><tbody>
-        <tr><td>PA che utilizzano</td>${sw.map(i=>`<td>${state.criteri.numero_pa.utilizzano[i]||0}</td>`).join('')}</tr>
-        <tr><td>PA interessate</td>${sw.map(i=>`<td>${state.criteri.numero_pa.interessate[i]||0}</td>`).join('')}</tr>
-      </tbody></table>`;
-    } else if (def.tipo === 'vitalita') {
-      const rows=[['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3 anni)'],['contributi','Contributori (3 anni)'],['release','Release (3 anni)']];
-      cSec += `<table><thead><tr><th>Metrica</th>${hdrs}</tr></thead><tbody>`;
-      rows.forEach(([f,lbl])=>{
-        cSec += `<tr><td>${lbl}</td>${sw.map(i=>`<td>${state.criteri.vitalita[f][i]||0}</td>`).join('')}</tr>`;
-      });
-      cSec += '</tbody></table>';
     }
   });
-  cSec += '</div>';
+  const appC = `
+  <div class="pr-appendice pr-page">
+    ${pageHeader('Appendice C — Criteri tecnici', pa)}
+    <h2>Appendice C — Criteri di valutazione tecnica</h2>
+    <table class="pr-table">
+      <thead><tr><th></th><th>Criterio / Voce</th>${swHdrs}</tr></thead>
+      <tbody>${cRows}</tbody>
+    </table>
+    <p style="font-size:.72rem">I criteri contrassegnati con * sono obbligatori ai sensi del CAD.</p>
+  </div>`;
 
-  // ── D. TCO ──
-  const durationLabel = `Durata ${state.tco.durata} anni, ${state.tco.npa} PA`;
-  let dSec = `<div class="pa-section"><h3>D. Costi — TCO (${durationLabel})</h3>
-    <table><thead><tr><th>Voce</th>${hdrs}</tr></thead><tbody>`;
+  // ── App. D — TCO ──
+  let dRows = '';
   let currentGruppo = '';
   TCO_VOCI.forEach(v => {
-    if (v.gruppo !== currentGruppo) {
-      currentGruppo = v.gruppo;
-      dSec += `<tr><td colspan="${1+sw.length}" style="background:#eee;font-weight:700">${v.gruppo}</td></tr>`;
+    if (v.gruppo!==currentGruppo) {
+      currentGruppo=v.gruppo;
+      dRows+=`<tr class="pr-group-row"><td colspan="${1+n}"><strong>${v.gruppo}</strong></td></tr>`;
     }
-    const vals = state.tco.voci[v.id] || sw.map(()=>0);
-    dSec += `<tr><td>${escH(v.label)}</td>${sw.map(i=>`<td>${fmtEur(vals[i]||0)}</td>`).join('')}</tr>`;
+    const vals=state.tco.voci[v.id]||sw.map(()=>0);
+    dRows+=`<tr><td style="font-size:.75rem">${escH(v.label)}</td>${sw.map(i=>`<td class="pr-right">${fmtEur(vals[i]||0)}</td>`).join('')}</tr>`;
   });
-  const tcoTot = sw.map(i => TCO_VOCI.reduce((s,v)=>s+(state.tco.voci[v.id]?.[i]||0),0));
-  dSec += `<tr style="font-weight:700;background:#333;color:#fff"><td>TOTALE TCO</td>${sw.map(i=>`<td>${fmtEur(tcoTot[i])}</td>`).join('')}</tr>`;
-  dSec += '</tbody></table></div>';
-
-  // ── E. Pesi ──
-  let eSec = `<div class="pa-section"><h3>E. Pesi criteri (metodo TOPSIS)</h3>
-    <table><thead><tr><th>Criterio</th><th>Peso</th></tr></thead><tbody>`;
-  PESI_DEF.forEach(p => {
-    eSec += `<tr><td>${p.label}</td><td><strong>${state.pesi[p.id]}</strong></td></tr>`;
-  });
-  eSec += '</tbody></table></div>';
-
-  el.innerHTML = `<div style="margin-top:3rem;border-top:3px solid #333;padding-top:1rem">
-    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Appendice — Dati di valutazione</h2>
-    <p style="font-size:.8rem;color:#555">Generato il ${new Date().toLocaleDateString('it-IT')} — ${escH(state.meta.pa||'')} — ${escH(state.meta.oggetto||'')}</p>
-    ${aSec}${bSec}${cSec}${dSec}${eSec}
+  dRows+=`<tr class="pr-group-row"><td><strong>TOTALE TCO</strong></td>${sw.map(i=>`<td class="pr-right pr-best">${fmtEur(tcoTot[i])}</td>`).join('')}</tr>`;
+  const appD = `
+  <div class="pr-appendice pr-page">
+    ${pageHeader('Appendice D — TCO', pa)}
+    <h2>Appendice D — Costo Totale di Proprietà (TCO)</h2>
+    <p>Durata di valutazione: <strong>${state.tco.durata} anni</strong> — Numero PA del lotto: <strong>${state.tco.npa}</strong>.</p>
+    <table class="pr-table">
+      <thead><tr><th>Voce di costo</th>${swHdrs}</tr></thead>
+      <tbody>${dRows}</tbody>
+    </table>
   </div>`;
+
+  // ── App. E — Pesi ──
+  const eRows = PESI_DEF.map(p=>`<tr>
+    <td>${p.label}${p.fixed?' <em>(obbligatorio)</em>':''}</td>
+    <td class="pr-center"><strong>${state.pesi[p.id]}</strong></td>
+    <td>${p.note||'—'}</td>
+  </tr>`).join('');
+  const appE = `
+  <div class="pr-appendice pr-page">
+    ${pageHeader('Appendice E — Pesi TOPSIS', pa)}
+    <h2>Appendice E — Pesi dei criteri TOPSIS</h2>
+    <p>I pesi definiscono l'importanza relativa di ciascun criterio nel calcolo TOPSIS. Il TCO ha peso fisso 1 per obbligo normativo.</p>
+    <table class="pr-table" style="max-width:18cm">
+      <thead><tr><th>Criterio</th><th class="pr-center">Peso (0–1)</th><th>Note</th></tr></thead>
+      <tbody>${eRows}</tbody>
+    </table>
+  </div>`;
+
+  // ── App. F — Dati intermedi TOPSIS ──
+  const fRows = ids.map((id,ci2)=>{
+    const pd=PESI_DEF.find(p=>p.id===id);
+    return `<tr>
+      <td style="font-size:.75rem">${pd.label}</td>
+      <td class="pr-center">${state.pesi[id]}</td>
+      ${sw.map(i=>`<td class="pr-center">${topsis.norm[ci2][i].toFixed(4)}</td>`).join('')}
+      ${sw.map(i=>`<td class="pr-center">${topsis.wgt[ci2][i].toFixed(4)}</td>`).join('')}
+      <td class="pr-center pr-best">${topsis.aP[ci2].toFixed(4)}</td>
+      <td class="pr-center">${topsis.aM[ci2].toFixed(4)}</td>
+    </tr>`;
+  }).join('');
+  const ciRow=`<tr class="pr-group-row"><td><strong>C<sub>i</sub> TOPSIS</strong></td><td></td>
+    ${sw.map(i=>`<td class="pr-center" colspan="2"><strong>${ci[i].toFixed(4)} (${(ci[i]*100).toFixed(1)}%)</strong></td>`).join('')}
+    <td colspan="2"></td></tr>`;
+  const distRow=`<tr><td><em>Distanze</em></td><td></td>
+    ${sw.map(i=>`<td class="pr-center" style="font-size:.73rem">D⁺=${dP[i].toFixed(4)}</td><td class="pr-center" style="font-size:.73rem">D⁻=${dM[i].toFixed(4)}</td>`).join('')}
+    <td colspan="2"></td></tr>`;
+  const appF = `
+  <div class="pr-appendice pr-page">
+    ${pageHeader('Appendice F — Dati intermedi TOPSIS', pa)}
+    <h2>Appendice F — Dati intermedi del calcolo TOPSIS</h2>
+    <p>Matrice normalizzata (euclidea), matrice pesata, soluzioni ideale A⁺ e anti-ideale A⁻.</p>
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th rowspan="2">Criterio</th><th class="pr-center" rowspan="2">Peso</th>
+          ${sw.map(i=>`<th class="pr-center" colspan="2">${escH(swName(i))}</th>`).join('')}
+          <th class="pr-center" rowspan="2">A⁺</th><th class="pr-center" rowspan="2">A⁻</th>
+        </tr>
+        <tr>${sw.map(()=>'<th class="pr-center" style="font-size:.7rem">norm.</th><th class="pr-center" style="font-size:.7rem">pesato</th>').join('')}</tr>
+      </thead>
+      <tbody>${fRows}${distRow}${ciRow}</tbody>
+    </table>
+  </div>`;
+
+  el.innerHTML = frontespizio + relazione + appA + appB + appC + appD + appE + appF;
 }
 document.getElementById('reset-btn').addEventListener('click', () => {
   if (confirm('Iniziare una nuova valutazione? Tutti i dati andranno persi.')) {
