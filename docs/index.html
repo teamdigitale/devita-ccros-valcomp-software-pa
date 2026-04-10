@@ -788,21 +788,67 @@ function shrinkSwArr(arr, idx) { arr.splice(idx, 1); return arr; }
 let state = buildInitialState();
 
 function buildInitialState() {
-  return {
+  return normalizeState({
     meta: { pa:'', data: new Date().toISOString().slice(0,10), oggetto:'', categoria:'' },
     prodotti: [
       { nome:'Software A', titolarita:'', maintainer:'', sito:'', repo:'' },
       { nome:'Software B', titolarita:'', maintainer:'', sito:'', repo:'' },
-    ],
-    requisiti: [],
-    criteri: buildCriteriState(2),
-    tco: {
-      durata: 5, npa: 1,
-      voci: Object.fromEntries(TCO_VOCI.map(v => [v.id, [0,0]])),
-    },
-    pesi: Object.fromEntries(PESI_DEF.map(p => [p.id, p.def])),
-    _reqCnt: 0,
-  };
+    ]
+  });
+}
+
+function normalizeState(s) {
+  if (!s) return buildInitialState();
+  if (!s.meta) s.meta = {};
+  if (!s.prodotti || !Array.isArray(s.prodotti)) s.prodotti = [];
+  const n = Math.max(2, s.prodotti.length);
+  s.requisiti = s.requisiti || [];
+  
+  if (!s.criteri) s.criteri = {};
+  const defCri = buildCriteriState(n);
+  Object.keys(defCri).forEach(k => {
+    if (!s.criteri[k]) s.criteri[k] = defCri[k];
+    else {
+      if (defCri[k].items) {
+        if (!s.criteri[k].items) s.criteri[k].items = {};
+        Object.keys(defCri[k].items).forEach(ik => {
+          if (!s.criteri[k].items[ik]) s.criteri[k].items[ik] = Array(n).fill('');
+          while(s.criteri[k].items[ik].length < n) s.criteri[k].items[ik].push('');
+        });
+      }
+      Object.keys(defCri[k]).forEach(subk => {
+        if (subk === 'items') return;
+        if (!s.criteri[k][subk]) s.criteri[k][subk] = defCri[k][subk];
+        else if (Array.isArray(s.criteri[k][subk])) {
+          while(s.criteri[k][subk].length < n) s.criteri[k][subk].push(0);
+        }
+      });
+    }
+  });
+
+  if (!s.tco) s.tco = { voci: {} };
+  if (!s.tco.voci) s.tco.voci = {};
+  TCO_VOCI.forEach(v => {
+    if (!s.tco.voci[v.id]) s.tco.voci[v.id] = Array(n).fill(0);
+    while(s.tco.voci[v.id].length < n) s.tco.voci[v.id].push(0);
+  });
+  s.tco.durata = s.tco.durata || 5;
+  s.tco.npa = s.tco.npa || 1;
+
+  if (!s.pesi) s.pesi = {};
+  PESI_DEF.forEach(p => {
+    if (s.pesi[p.id] === undefined) s.pesi[p.id] = p.def;
+  });
+
+  s.requisiti.forEach(r => {
+    if (!Array.isArray(r.copertura)) r.copertura = Array(n).fill(0);
+    while (r.copertura.length < n) r.copertura.push(0);
+    if (!Array.isArray(r.note_copertura)) r.note_copertura = Array(n).fill('');
+    while (r.note_copertura.length < n) r.note_copertura.push('');
+  });
+
+  s._reqCnt = s._reqCnt || Math.max(0, ...s.requisiti.map(r => parseInt((r.id||'').replace(/\D/g,''))||0));
+  return s;
 }
 
 function buildCriteriState(n) {
@@ -2207,12 +2253,13 @@ document.getElementById('import-json-landing').addEventListener('change', e => {
         ? parsed.valutazione : parsed;
       if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2)
         throw new Error('Campo "prodotti" mancante o con meno di 2 soluzioni.');
-      state = imported;
-      state._reqCnt = state._reqCnt || Math.max(0, ...(state.requisiti||[]).map(r=>parseInt(r.id.replace(/\D/g,''))||0));
+      state = normalizeState(imported);
       document.getElementById('meta-pa').value     = state.meta?.pa     || '';
       document.getElementById('meta-data').value   = state.meta?.data   || '';
       document.getElementById('meta-oggetto').value= state.meta?.oggetto|| '';
       document.getElementById('meta-categoria').value=state.meta?.categoria||'';
+      document.getElementById('tco-durata').value  = state.tco?.durata || 5;
+      document.getElementById('tco-npa').value     = state.tco?.npa || 1;
       rerenderAll(); renderPesi(); goToStep(0);
       showWizard();
     } catch(err) { alert('❌ Errore nel file JSON:\n' + err.message); }
@@ -2237,15 +2284,14 @@ document.getElementById('import-json').addEventListener('change', e => {
       if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2) {
         throw new Error('File non valido: campo "prodotti" mancante o con meno di 2 soluzioni.');
       }
-      state = imported;
-      // Ripristina _reqCnt (può essere assente nel formato envelope)
-      state._reqCnt = state._reqCnt
-        || Math.max(0, ...(state.requisiti||[]).map(r => parseInt(r.id.replace(/\D/g,''))||0));
+      state = normalizeState(imported);
       // Reinizializza UI
       document.getElementById('meta-pa').value    = state.meta?.pa    || '';
       document.getElementById('meta-data').value  = state.meta?.data  || '';
       document.getElementById('meta-oggetto').value= state.meta?.oggetto||'';
       document.getElementById('meta-categoria').value=state.meta?.categoria||'';
+      document.getElementById('tco-durata').value  = state.tco?.durata || 5;
+      document.getElementById('tco-npa').value     = state.tco?.npa || 1;
       rerenderAll();
       renderPesi();
       goToStep(0);
@@ -2655,13 +2701,14 @@ function restoreUIState(ui) {
   const restored = fromHash || browserSnapshot;
   const restoredUI = restored?.ui || persistedUI;
   if (restored) {
-    state = restored.state;
-    state._reqCnt = Math.max(0, ...(state.requisiti||[]).map(r => parseInt(r.id.replace(/\D/g,''))||0));
+    state = normalizeState(restored.state);
     currentStep = restored.step;
     document.getElementById('meta-pa').value        = state.meta?.pa        || '';
     document.getElementById('meta-data').value      = state.meta?.data      || '';
     document.getElementById('meta-oggetto').value   = state.meta?.oggetto   || '';
     document.getElementById('meta-categoria').value = state.meta?.categoria || '';
+    document.getElementById('tco-durata').value     = state.tco?.durata     || 5;
+    document.getElementById('tco-npa').value        = state.tco?.npa        || 1;
   } else {
     document.getElementById('meta-data').value = state.meta.data;
   }
