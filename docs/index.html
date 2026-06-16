@@ -363,7 +363,7 @@
           <div class="card-body">
             <h3 class="h6 fw-bold mb-3">Normativa di riferimento</h3>
             <ul class="small ps-3">
-              <li class="mb-2"><a href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/" target="_blank" rel="noopener">Linee Guida acquisizione e riuso software (AgID)</a></li>
+              <li class="mb-2"><a href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Sviluppo e riuso del software — Developers Italia</a></li>
               <li class="mb-2"><a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68" target="_blank" rel="noopener">Art. 68 CAD — Analisi comparativa delle soluzioni</a></li>
               <li class="mb-2"><a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art69" target="_blank" rel="noopener">Art. 69 CAD — Riuso delle soluzioni</a></li>
               <li class="mb-2"><a href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Developers Italia — Riuso del software</a></li>
@@ -509,6 +509,22 @@
     <div class="inner-tab-pane" id="sol-criteri">
       <p class="text-muted small mb-2">Valori dei criteri tecnici per ciascuna soluzione. <strong>Clicca su un valore</strong> per aprire la scheda e modificarlo.</p>
       <div class="callout callout-warning mb-3"><div class="callout-inner"><div class="callout-title"><svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-warning-circle"></use></svg><span class="visually-hidden">Attenzione</span><span class="text">Criteri obbligatori</span></div><p class="mb-0 small">I criteri con <strong>*</strong> sono obbligatori per legge.</p></div></div>
+      <div class="callout callout-note mb-3">
+        <div class="callout-inner">
+          <div class="callout-title">
+            <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg>
+            <span class="visually-hidden">Nota</span><span class="text">Riferimenti per la compilazione</span>
+          </div>
+          <p class="mb-2 small">I criteri di interoperabilità e sicurezza (i1, i2, s1, s2) fanno riferimento al Modello di Interoperabilità (ModI) AgID. Il criterio i3 fa riferimento alle ontologie e vocabolari controllati di <a href="https://schema.gov.it" target="_blank" rel="noopener">schema.gov.it</a>.</p>
+          <p class="mb-0 small">
+            <a href="about.html" target="_blank" rel="noopener">Come funziona la valutazione →</a>
+            ·
+            <a href="https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI) →</a>
+            ·
+            <a href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Sviluppo e riuso del software PA →</a>
+          </p>
+        </div>
+      </div>
       <div id="rv-cri-container"></div>
     </div>
 
@@ -527,6 +543,22 @@
             <label class="active" for="tco-npa" style="position:static;font-size:.75rem;display:block;margin-bottom:.25rem">N° PA</label>
             <input type="number" class="form-control form-control-sm" id="tco-npa" value="1" min="1" style="width:80px" />
           </div>
+        </div>
+      </div>
+      <div class="callout callout-note mb-3">
+        <div class="callout-inner">
+          <div class="callout-title">
+            <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg>
+            <span>Approfondimenti sul TCO</span>
+          </div>
+          <p class="mb-2 small">Il TCO è obbligatorio ai sensi dell'art. 68 CAD. Qui puoi trovare contesto normativo e indicazioni di compilazione.</p>
+          <p class="mb-0 small">
+            <a href="about.html" target="_blank" rel="noopener">Metodo e riferimenti normativi →</a>
+            ·
+            <a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68" target="_blank" rel="noopener">Art. 68 CAD →</a>
+            ·
+            <a href="https://github.com/AgID/ccros-valcomp/blob/lab/documentation/manual.md#5-tco" target="_blank" rel="noopener">Guida originale AgID: TCO →</a>
+          </p>
         </div>
       </div>
       <div class="table-scroll" id="rv-tco-container"></div>
@@ -658,15 +690,16 @@
           <div class="col-lg-4 col-sm-6 pb-3">
             <h4>Strumento</h4>
             <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
-              <li><a class="list-item" href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa">Repository GitHub</a></li>
-              <li><a class="list-item" href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/">Linee guida acquisizione e riuso</a></li>
+              <li><a class="list-item" href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa" target="_blank" rel="noopener">Repository GitHub</a></li>
+              <li><a class="list-item" href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Sviluppo e riuso del software PA</a></li>
+              <li><a class="list-item" href="https://schema.gov.it" target="_blank" rel="noopener">Schema.gov.it — ontologie PA</a></li>
             </ul></div>
           </div>
           <div class="col-lg-4 col-sm-6 pb-3">
             <h4>Normativa</h4>
             <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
-              <li><a class="list-item" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82" target="_blank" rel="noopener">Art. 68-69 CAD</a></li>
-              <li><a class="list-item" href="https://docs.italia.it/italia/piano-triennale-ict/lg-modellointeroperabilita-docs/">Modello di Interoperabilità PA</a></li>
+              <li><a class="list-item" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82" target="_blank" rel="noopener">Art. 68-69 CAD (Normattiva)</a></li>
+              <li><a class="list-item" href="https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI)</a></li>
             </ul></div>
           </div>
           <div class="col-lg-4 col-sm-6 pb-3">
@@ -747,9 +780,9 @@ const CRITERI_DEF = {
   interoperabilita: {
     label: 'Interoperabilità *', obbligatorio: true, tipo: 'sinon',
     items: [
-      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true },
-      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true },
-      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true },
+      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
+      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
+      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true, url:"https://schema.gov.it" },
       { id:'i4', testo:"Interoperabilità con gli ecosistemi della PA di interesse", obbligatorio:false },
     ]
   },
@@ -764,8 +797,8 @@ const CRITERI_DEF = {
   sicurezza: {
     label: 'Sicurezza *', obbligatorio: true, tipo: 'sinon',
     items: [
-      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true },
-      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true },
+      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
+      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
     ]
   },
   accessibilita: {
