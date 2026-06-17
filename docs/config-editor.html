@@ -11,6 +11,8 @@
     .cfg-section { display: none; }
     .cfg-section.active { display: block; }
     .item-row { border-left: 3px solid #0066cc; padding-left: .75rem; margin-bottom: .75rem; }
+    .cri-card-header { border-bottom: 1px solid #dee2e6; padding-bottom: .75rem; margin-bottom: .75rem; }
+    .tipo-hint { font-size: .75rem; color: #6c757d; margin-top: .25rem; }
   </style>
 </head>
 <body>
@@ -62,8 +64,16 @@
       <div class="col-md-12"><label class="form-label">Descrizione</label><input type="text" class="form-control form-control-sm" id="f-descrizione" /></div>
     </div>
     <h2 class="h6 mt-4">Criteri costo TOPSIS</h2>
-    <p class="small text-muted">ID separati da virgola (es. tco, dipendenze)</p>
+    <p class="small text-muted">ID separati da virgola — punteggio «meno è meglio» (es. tco, dipendenze)</p>
     <input type="text" class="form-control form-control-sm" id="f-cost-criteria" />
+    <h2 class="h6 mt-4">Scoring automatico</h2>
+    <p class="small text-muted mb-1">Aggiornati dal tab Criteri in base al tipo di ogni gruppo.</p>
+    <div class="row g-2 small">
+      <div class="col-md-6"><label class="form-label mb-0">Conteggio «sì» (tipo sinon)</label>
+        <input type="text" class="form-control form-control-sm" id="f-count-si-groups" readonly /></div>
+      <div class="col-md-6"><label class="form-label mb-0">Scelta radio (tipo radio)</label>
+        <input type="text" class="form-control form-control-sm" id="f-radio-groups" readonly /></div>
+    </div>
   </section>
 
   <section class="cfg-section" id="pane-pesi">
@@ -76,7 +86,9 @@
   </section>
 
   <section class="cfg-section" id="pane-criteri">
+    <p class="small text-muted mb-3">Ogni gruppo corrisponde a una sezione del wizard e a una riga in <strong>Pesi TOPSIS</strong>. Il campo <em>Tipo</em> determina controlli e formula di punteggio.</p>
     <div id="criteri-editor"></div>
+    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-cri-group-btn">+ Gruppo criterio</button>
   </section>
 
   <section class="cfg-section" id="pane-tco">
@@ -112,9 +124,211 @@
 
 let cfg = null;
 
+const CRITERIO_TIPI = [
+  { id: 'sinon', label: 'Sì/No', hint: 'Ogni voce: sì/no. Punteggio = numero di «sì».' },
+  { id: 'sinon_nonec', label: 'Sì/No/Non nec.', hint: 'Come Sì/No con opzione «non necessario» (Supporto usa logica dedicata nel wizard).' },
+  { id: 'radio', label: 'Scelta unica', hint: 'Opzioni esclusive con valore 0–2.' },
+  { id: 'numero_dipendenze', label: 'Dipendenze', hint: 'Due numeri: proprietarie e open source.' },
+  { id: 'numero_pa', label: 'Numero PA', hint: 'Due numeri: PA che utilizzano e PA interessate.' },
+  { id: 'vitalita', label: 'Vitalità', hint: 'Campi numerici dal repository con pesi.' },
+];
+
+const TIPO_HINT = Object.fromEntries(CRITERIO_TIPI.map(t => [t.id, t.hint]));
+
 function showStatus(msg, type) {
   document.getElementById('status').innerHTML = msg
     ? `<div class="alert alert-${type || 'info'} py-2 small mb-0">${msg}</div>` : '';
+}
+
+function ensureScoring() {
+  cfg.scoring = cfg.scoring || {};
+}
+
+function syncScoringGroups() {
+  ensureScoring();
+  cfg.scoring.count_si_groups = Object.entries(cfg.criteri || {})
+    .filter(([, d]) => d.tipo === 'sinon')
+    .map(([k]) => k);
+  cfg.scoring.radio_groups = Object.entries(cfg.criteri || {})
+    .filter(([, d]) => d.tipo === 'radio')
+    .map(([k]) => k);
+}
+
+function renderScoringMeta() {
+  syncScoringGroups();
+  document.getElementById('f-count-si-groups').value = (cfg.scoring?.count_si_groups || []).join(', ');
+  document.getElementById('f-radio-groups').value = (cfg.scoring?.radio_groups || []).join(', ');
+}
+
+function defaultDefForTipo(tipo, label) {
+  const base = { label: label || 'Nuovo criterio', obbligatorio: false, tipo };
+  if (tipo === 'sinon' || tipo === 'sinon_nonec') {
+    return { ...base, items: [{ id: 'v1', testo: 'Nuova voce', obbligatorio: false }] };
+  }
+  if (tipo === 'radio') {
+    return {
+      ...base,
+      items: [
+        { id: 'r0', testo: 'Opzione bassa', valore: 0 },
+        { id: 'r1', testo: 'Opzione media', valore: 1 },
+        { id: 'r2', testo: 'Opzione alta', valore: 2 },
+      ],
+    };
+  }
+  if (tipo === 'vitalita') {
+    return {
+      ...base,
+      fields: [
+        { id: 'giorni', label: 'Giorni dall\'ultimo commit', weight: '0.30' },
+        { id: 'commit', label: 'Commit (3 anni)', weight: '0.40' },
+        { id: 'contributi', label: 'Contributori (3 anni)', weight: '0.15' },
+        { id: 'release', label: 'Release (3 anni)', weight: '0.15' },
+      ],
+    };
+  }
+  return base;
+}
+
+function renameFieldHelpPrefix(oldPrefix, newPrefix) {
+  if (!cfg.field_help) return;
+  Object.keys(cfg.field_help).forEach(k => {
+    if (k === oldPrefix || k.startsWith(oldPrefix + '.')) {
+      cfg.field_help[newPrefix + k.slice(oldPrefix.length)] = cfg.field_help[k];
+      delete cfg.field_help[k];
+    }
+  });
+}
+
+function renameCriterioGroup(oldKey, newKey) {
+  newKey = newKey.trim().replace(/\s+/g, '_').replace(/[^\w]/g, '_');
+  if (!newKey) throw new Error('ID gruppo non valido.');
+  if (oldKey === newKey) return newKey;
+  if (cfg.criteri[newKey]) throw new Error(`ID gruppo già presente: ${newKey}`);
+
+  cfg.criteri[newKey] = cfg.criteri[oldKey];
+  delete cfg.criteri[oldKey];
+
+  const peso = (cfg.pesi_def || []).find(p => p.id === oldKey);
+  if (peso) peso.id = newKey;
+
+  cfg.cost_criteria = (cfg.cost_criteria || []).map(id => (id === oldKey ? newKey : id));
+
+  ensureScoring();
+  ['count_si_groups', 'radio_groups'].forEach(arrName => {
+    if (Array.isArray(cfg.scoring[arrName])) {
+      cfg.scoring[arrName] = cfg.scoring[arrName].map(id => (id === oldKey ? newKey : id));
+    }
+  });
+
+  renameFieldHelpPrefix(`criteri.${oldKey}`, `criteri.${newKey}`);
+  return newKey;
+}
+
+function renameCriterioItemId(groupKey, oldId, newId) {
+  newId = newId.trim().replace(/\s+/g, '_');
+  if (!newId || oldId === newId) return newId;
+  renameFieldHelpPrefix(`criteri.${groupKey}.${oldId}`, `criteri.${groupKey}.${newId}`);
+  return newId;
+}
+
+function addPesoForGroup(id, label) {
+  if ((cfg.pesi_def || []).some(p => p.id === id)) return;
+  cfg.pesi_def = cfg.pesi_def || [];
+  cfg.pesi_def.push({ id, label: label || id, def: 0, note: '' });
+  Object.keys(cfg.pesi_preset || {}).forEach(k => {
+    cfg.pesi_preset[k] = cfg.pesi_preset[k] || [];
+    cfg.pesi_preset[k].push(0);
+  });
+}
+
+function removePesoForGroup(id) {
+  const idx = (cfg.pesi_def || []).findIndex(p => p.id === id);
+  if (idx < 0) return;
+  cfg.pesi_def.splice(idx, 1);
+  Object.keys(cfg.pesi_preset || {}).forEach(k => {
+    if (Array.isArray(cfg.pesi_preset[k]) && cfg.pesi_preset[k].length > idx) {
+      cfg.pesi_preset[k].splice(idx, 1);
+    }
+  });
+}
+
+function removeFieldHelpForGroup(groupKey) {
+  const prefix = `criteri.${groupKey}`;
+  Object.keys(cfg.field_help || {}).forEach(k => {
+    if (k === prefix || k.startsWith(prefix + '.')) delete cfg.field_help[k];
+  });
+}
+
+function syncCriteriFromForm() {
+  if (!cfg?.criteri) return;
+  let needsRerender = false;
+
+  document.querySelectorAll('#criteri-editor [data-group-key]').forEach(card => {
+    let key = card.dataset.groupKey;
+    const def = cfg.criteri[key];
+    if (!def) return;
+
+    const idInp = card.querySelector('[data-k="groupId"]');
+    if (idInp) {
+      const newKey = idInp.value.trim().replace(/\s+/g, '_').replace(/[^\w]/g, '_');
+      if (newKey && newKey !== key) {
+        renameCriterioGroup(key, newKey);
+        key = newKey;
+        card.dataset.groupKey = newKey;
+        needsRerender = true;
+      }
+    }
+
+    const labelInp = card.querySelector('[data-k="label"]');
+    if (labelInp) {
+      cfg.criteri[key].label = labelInp.value;
+      const peso = (cfg.pesi_def || []).find(p => p.id === key);
+      if (peso) peso.label = labelInp.value;
+    }
+
+    const obbInp = card.querySelector('[data-k="obbligatorio"]');
+    if (obbInp) cfg.criteri[key].obbligatorio = obbInp.checked;
+
+    const tipoEl = card.querySelector('[data-k="tipo"]');
+    if (tipoEl && tipoEl.value !== cfg.criteri[key].tipo) {
+      const label = cfg.criteri[key].label;
+      const obb = cfg.criteri[key].obbligatorio;
+      cfg.criteri[key] = defaultDefForTipo(tipoEl.value, label);
+      cfg.criteri[key].obbligatorio = obb;
+      needsRerender = true;
+      return;
+    }
+
+    const cur = cfg.criteri[key];
+    if (cur.tipo === 'sinon' || cur.tipo === 'sinon_nonec' || cur.tipo === 'radio') {
+      cur.items = cur.items || [];
+      card.querySelectorAll('[data-cri-item]').forEach(el => {
+        const j = +el.dataset.j;
+        if (!cur.items[j]) return;
+        const k = el.dataset.k;
+        if (k === 'obbligatorio') cur.items[j][k] = el.checked;
+        else if (k === 'valore') cur.items[j][k] = +el.value || 0;
+        else if (k === 'id') {
+          const oldId = cur.items[j].id;
+          const newId = renameCriterioItemId(key, oldId, el.value);
+          cur.items[j].id = newId;
+          if (newId !== oldId) needsRerender = true;
+        } else cur.items[j][k] = el.value;
+      });
+    }
+
+    if (cur.tipo === 'vitalita') {
+      cur.fields = cur.fields || [];
+      card.querySelectorAll('[data-vit]').forEach(el => {
+        const j = +el.dataset.j;
+        if (!cur.fields[j]) return;
+        cur.fields[j][el.dataset.k] = el.value;
+      });
+    }
+  });
+
+  syncScoringGroups();
+  if (needsRerender) renderCriteri();
 }
 
 function syncFromForm() {
@@ -123,7 +337,9 @@ function syncFromForm() {
   cfg.id = document.getElementById('f-id').value.trim();
   cfg.descrizione = document.getElementById('f-descrizione').value.trim();
   cfg.cost_criteria = document.getElementById('f-cost-criteria').value.split(',').map(s => s.trim()).filter(Boolean);
+  syncCriteriFromForm();
   syncPesiFromForm();
+  renderScoringMeta();
   syncJsonEditor();
 }
 
@@ -132,6 +348,7 @@ function syncToForm() {
   document.getElementById('f-id').value = cfg.id || '';
   document.getElementById('f-descrizione').value = cfg.descrizione || '';
   document.getElementById('f-cost-criteria').value = (cfg.cost_criteria || []).join(', ');
+  renderScoringMeta();
   renderPesi();
   renderCriteri();
   renderTco();
@@ -165,59 +382,199 @@ function syncPesiFromForm() {
   });
 }
 
-function renderCriteri() {
-  const root = document.getElementById('criteri-editor');
-  root.innerHTML = Object.entries(cfg.criteri || {}).map(([key, def]) => `
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="row g-2 mb-2">
-          <div class="col-md-3"><label class="small">ID gruppo</label><input class="form-control form-control-sm" value="${esc(key)}" disabled /></div>
-          <div class="col-md-5"><label class="small">Etichetta</label>
-            <input class="form-control form-control-sm" data-cri-key="${esc(key)}" data-k="label" value="${esc(def.label)}" /></div>
-          <div class="col-md-2"><label class="small">Tipo</label>
-            <input class="form-control form-control-sm" value="${esc(def.tipo)}" disabled /></div>
-          <div class="col-md-2 d-flex align-items-end">
-            <div class="form-check"><input type="checkbox" data-cri-key="${esc(key)}" data-k="obbligatorio" ${def.obbligatorio ? 'checked' : ''} />
-            <label class="form-check-label small">Obbligatorio</label></div>
+function renderTipoOptions(selected) {
+  return CRITERIO_TIPI.map(t =>
+    `<option value="${t.id}"${t.id === selected ? ' selected' : ''}>${esc(t.label)}</option>`
+  ).join('');
+}
+
+function renderCriteriItems(key, def) {
+  if (def.tipo === 'numero_dipendenze' || def.tipo === 'numero_pa') {
+    return `<p class="small text-muted mb-0">Nessuna voce da elencare — il wizard mostra campi numerici dedicati.</p>`;
+  }
+  if (def.tipo === 'vitalita') {
+    const rows = (def.fields || []).map((f, j) => `
+      <div class="item-row">
+        <div class="row g-2 align-items-center">
+          <div class="col-md-3"><label class="small text-muted">ID campo</label>
+            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="id" value="${esc(f.id)}" /></div>
+          <div class="col-md-5"><label class="small text-muted">Etichetta</label>
+            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="label" value="${esc(f.label)}" /></div>
+          <div class="col-md-2"><label class="small text-muted">Peso</label>
+            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="weight" value="${esc(f.weight)}" /></div>
+          <div class="col-md-2 text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm" data-action="del-vit-field" data-group="${esc(key)}" data-j="${j}">Elimina</button>
           </div>
         </div>
-        ${(def.items || []).map((item, j) => `
-          <div class="item-row">
-            <div class="row g-2">
-              <div class="col-md-2"><input class="form-control form-control-sm" data-cri-item="${esc(key)}" data-j="${j}" data-k="id" value="${esc(item.id)}" /></div>
-              <div class="col-md-8"><input class="form-control form-control-sm" data-cri-item="${esc(key)}" data-j="${j}" data-k="testo" value="${esc(item.testo || '')}" /></div>
-              <div class="col-md-2"><div class="form-check mt-1"><input type="checkbox" data-cri-item="${esc(key)}" data-j="${j}" data-k="obbligatorio" ${item.obbligatorio ? 'checked' : ''} /><label class="form-check-label small">Obbl.</label></div></div>
-            </div>
-          </div>`).join('')}
-        ${def.tipo === 'vitalita' ? (def.fields || []).map((f, j) => `
-          <div class="item-row"><div class="row g-2">
-            <div class="col-md-3"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="id" value="${esc(f.id)}" /></div>
-            <div class="col-md-6"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="label" value="${esc(f.label)}" /></div>
-            <div class="col-md-3"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="weight" value="${esc(f.weight)}" /></div>
-          </div></div>`).join('') : ''}
+      </div>`).join('');
+    return `<h3 class="h6 mt-2">Campi vitalità</h3>${rows}
+      <button type="button" class="btn btn-outline-secondary btn-sm mt-1" data-action="add-vit-field" data-group="${esc(key)}">+ Campo</button>`;
+  }
+
+  const isRadio = def.tipo === 'radio';
+  const showObbl = def.tipo === 'sinon' || def.tipo === 'sinon_nonec';
+  const rows = (def.items || []).map((item, j) => `
+    <div class="item-row">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-2"><label class="small text-muted">ID</label>
+          <input class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="id" value="${esc(item.id)}" /></div>
+        <div class="col${isRadio ? '-md-6' : '-md-8'}"><label class="small text-muted">Testo</label>
+          <input class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="testo" value="${esc(item.testo || '')}" /></div>
+        ${isRadio ? `<div class="col-md-1"><label class="small text-muted">Val.</label>
+          <input type="number" class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="valore" value="${item.valore ?? 0}" /></div>` : ''}
+        ${showObbl ? `<div class="col-md-1"><div class="form-check mt-3">
+          <input type="checkbox" data-cri-item data-j="${j}" data-k="obbligatorio" ${item.obbligatorio ? 'checked' : ''} />
+          <label class="form-check-label small">Obbl.</label></div></div>` : ''}
+        <div class="col-md-2 text-end">
+          <button type="button" class="btn btn-outline-danger btn-sm" data-action="del-item" data-group="${esc(key)}" data-j="${j}">Elimina</button>
+        </div>
       </div>
     </div>`).join('');
 
-  root.querySelectorAll('[data-cri-key]').forEach(el => {
-    el.addEventListener('input', () => {
-      const key = el.dataset.criKey;
-      cfg.criteri[key][el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value;
-      if (el.dataset.k === 'obbligatorio') cfg.criteri[key].obbligatorio = el.checked;
-    });
-    if (el.type === 'checkbox') el.addEventListener('change', () => {
-      cfg.criteri[el.dataset.criKey].obbligatorio = el.checked;
-    });
-  });
-  root.querySelectorAll('[data-cri-item]').forEach(el => {
-    el.addEventListener('input', () => {
-      const key = el.dataset.criItem;
-      const j = +el.dataset.j;
-      const k = el.dataset.k;
-      if (k === 'obbligatorio') cfg.criteri[key].items[j][k] = el.checked;
-      else cfg.criteri[key].items[j][k] = el.value;
-    });
-  });
+  return `${rows}
+    <button type="button" class="btn btn-outline-secondary btn-sm mt-1" data-action="add-item" data-group="${esc(key)}">+ Voce</button>`;
 }
+
+function renderCriteri() {
+  const root = document.getElementById('criteri-editor');
+  root.innerHTML = Object.entries(cfg.criteri || {}).map(([key, def]) => `
+    <div class="card mb-3" data-group-key="${esc(key)}">
+      <div class="card-body">
+        <div class="cri-card-header">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="small">ID gruppo</label>
+              <input class="form-control form-control-sm font-monospace" data-k="groupId" value="${esc(key)}" />
+            </div>
+            <div class="col-md-4">
+              <label class="small">Etichetta</label>
+              <input class="form-control form-control-sm" data-k="label" value="${esc(def.label)}" />
+            </div>
+            <div class="col-md-3">
+              <label class="small">Tipo</label>
+              <select class="form-select form-select-sm" data-k="tipo">${renderTipoOptions(def.tipo)}</select>
+              <div class="tipo-hint">${esc(TIPO_HINT[def.tipo] || '')}</div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-check mb-2">
+                <input type="checkbox" data-k="obbligatorio" ${def.obbligatorio ? 'checked' : ''} />
+                <label class="form-check-label small">Obbligatorio</label>
+              </div>
+              <button type="button" class="btn btn-outline-danger btn-sm w-100" data-action="del-group" data-group="${esc(key)}">Elimina gruppo</button>
+            </div>
+          </div>
+        </div>
+        ${renderCriteriItems(key, def)}
+      </div>
+    </div>`).join('') || '<p class="text-muted small">Nessun gruppo criterio. Aggiungine uno con il pulsante sotto.</p>';
+}
+
+function addCriterioGroup() {
+  syncCriteriFromForm();
+  let id = 'nuovo_criterio';
+  let n = 1;
+  while (cfg.criteri[id]) { id = `nuovo_criterio_${n++}`; }
+  const def = defaultDefForTipo('sinon', 'Nuovo criterio');
+  cfg.criteri[id] = def;
+  addPesoForGroup(id, def.label);
+  syncScoringGroups();
+  renderCriteri();
+  renderPesi();
+  renderScoringMeta();
+  syncJsonEditor();
+  showStatus(`Gruppo <code>${esc(id)}</code> aggiunto.`, 'success');
+}
+
+function deleteCriterioGroup(key) {
+  if (!cfg.criteri[key]) return;
+  const label = cfg.criteri[key].label || key;
+  if (!confirm(`Eliminare il gruppo criterio «${label}» (${key})?`)) return;
+  syncCriteriFromForm();
+  delete cfg.criteri[key];
+  removePesoForGroup(key);
+  cfg.cost_criteria = (cfg.cost_criteria || []).filter(id => id !== key);
+  removeFieldHelpForGroup(key);
+  syncScoringGroups();
+  renderCriteri();
+  renderPesi();
+  renderScoringMeta();
+  syncJsonEditor();
+}
+
+function addCriterioItem(key) {
+  syncCriteriFromForm();
+  const def = cfg.criteri[key];
+  if (!def || !def.items) return;
+  let id = 'v1';
+  let n = 1;
+  const ids = new Set(def.items.map(i => i.id));
+  while (ids.has(id)) { id = `v${++n}`; }
+  const item = def.tipo === 'radio'
+    ? { id, testo: 'Nuova opzione', valore: def.items.length }
+    : { id, testo: 'Nuova voce', obbligatorio: false };
+  def.items.push(item);
+  renderCriteri();
+  syncJsonEditor();
+}
+
+function deleteCriterioItem(key, j) {
+  syncCriteriFromForm();
+  const def = cfg.criteri[key];
+  if (!def?.items || def.items.length <= 1) {
+    showStatus('Serve almeno una voce nel gruppo.', 'warning');
+    return;
+  }
+  def.items.splice(j, 1);
+  renderCriteri();
+  syncJsonEditor();
+}
+
+function addVitField(key) {
+  syncCriteriFromForm();
+  const def = cfg.criteri[key];
+  if (!def || def.tipo !== 'vitalita') return;
+  def.fields = def.fields || [];
+  def.fields.push({ id: 'campo', label: 'Nuovo campo', weight: '0.1' });
+  renderCriteri();
+  syncJsonEditor();
+}
+
+function deleteVitField(key, j) {
+  syncCriteriFromForm();
+  const def = cfg.criteri[key];
+  if (!def?.fields || def.fields.length <= 1) {
+    showStatus('Serve almeno un campo vitalità.', 'warning');
+    return;
+  }
+  def.fields.splice(j, 1);
+  renderCriteri();
+  syncJsonEditor();
+}
+
+document.getElementById('criteri-editor').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const group = btn.dataset.group;
+  const j = btn.dataset.j !== undefined ? +btn.dataset.j : -1;
+
+  if (action === 'del-group') deleteCriterioGroup(group);
+  else if (action === 'add-item') addCriterioItem(group);
+  else if (action === 'del-item') deleteCriterioItem(group, j);
+  else if (action === 'add-vit-field') addVitField(group);
+  else if (action === 'del-vit-field') deleteVitField(group, j);
+});
+
+document.getElementById('criteri-editor').addEventListener('change', e => {
+  if (e.target.matches('[data-k="tipo"]')) {
+    syncCriteriFromForm();
+    renderCriteri();
+    renderScoringMeta();
+    syncJsonEditor();
+  }
+});
+
+document.getElementById('add-cri-group-btn').addEventListener('click', addCriterioGroup);
 
 function renderTco() {
   document.getElementById('tco-tbody').innerHTML = (cfg.tco_voci || []).map((v, i) => `

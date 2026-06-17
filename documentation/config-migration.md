@@ -160,7 +160,9 @@ Valutazioni esportate prima di questa funzionalità:
 
 ## Editor configurazione
 
-- **URL:** `docs/config-editor.html`
+- **Online (GitHub Pages):** https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config-editor.html
+- **Sorgente:** `docs/config-editor.html`
+- Tab **Criteri:** crea/modifica/elimina gruppi e voci, cambia tipo (sinon, radio, …); sincronizza automaticamente `pesi_def` e `scoring.count_si_groups` / `radio_groups`
 - Scarica JSON da sostituire in `docs/config/criteri-config-v1.0.json`
 - Validazione: `tipo`, `versione`, `criteri`, `pesi_def`, `tco_voci`
 
