@@ -264,22 +264,37 @@
   </div>
 </div>
 
-<!-- Popup publiccode one-shot -->
+<!-- Popup import metadati (publiccode / catalogo / GitHub) -->
 <div id="pc-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="pc-popup-title">
   <div style="background:#fff;border-radius:.5rem;width:100%;max-width:560px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
     <div style="padding:1rem 1.25rem;border-bottom:1px solid #dee2e6;display:flex;align-items:center;justify-content:space-between">
       <h2 class="h5 mb-0" id="pc-popup-title">
         <svg class="icon icon-sm me-2" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>
-        Inizializza con publiccode.yml
+        Inizializza metadati software
       </h2>
       <button class="btn btn-link p-0" onclick="closePcPopup()" aria-label="Chiudi">
         <svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-close"></use></svg>
       </button>
     </div>
     <div style="padding:1.25rem">
-      <p class="small text-muted mb-3">Inserisci l'URL diretto al file <code>publiccode.yml</code> raw del repository. I dati vengono importati una sola volta e non vengono sincronizzati automaticamente.</p>
+      <p class="small text-muted mb-3" id="pc-popup-desc">Importa anagrafica e criteri da <code>publiccode.yml</code>, dalla scheda nel catalogo Developers Italia o dal repository GitHub. L'import è una tantum e non si sincronizza automaticamente.</p>
+      <fieldset class="mb-3">
+        <legend class="visually-hidden">Origine metadati</legend>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="pc-popup-source" id="pc-src-publiccode" value="publiccode" checked onchange="updatePcPopupSource()" />
+          <label class="form-check-label small" for="pc-src-publiccode">URL diretto a <code>publiccode.yml</code></label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="pc-popup-source" id="pc-src-catalog" value="catalog" onchange="updatePcPopupSource()" />
+          <label class="form-check-label small" for="pc-src-catalog">Scheda nel catalogo Developers Italia</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="pc-popup-source" id="pc-src-github" value="github" onchange="updatePcPopupSource()" />
+          <label class="form-check-label small" for="pc-src-github">Repository GitHub</label>
+        </div>
+      </fieldset>
       <div class="form-group" style="position:relative;padding-top:1.25rem;margin-bottom:1rem">
-        <label class="active" for="pc-popup-url" style="position:absolute;top:0;left:0;font-size:.72rem">URL publiccode.yml</label>
+        <label class="active" for="pc-popup-url" id="pc-popup-url-label" style="position:absolute;top:0;left:0;font-size:.72rem">URL publiccode.yml</label>
         <input type="url" class="form-control" id="pc-popup-url"
           placeholder="https://raw.githubusercontent.com/org/repo/main/publiccode.yml" />
       </div>
@@ -347,7 +362,7 @@
             <div class="d-flex flex-column gap-2">
               <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">1</div><small>Inserisci le informazioni della PA e della valutazione</small></div>
               <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">2</div><small>Definisci i requisiti funzionali e non funzionali con i pesi</small></div>
-              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">3</div><small>Aggiungi le soluzioni, compila criteri, TCO e copertura requisiti (anche da publiccode.yml)</small></div>
+              <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">3</div><small>Aggiungi le soluzioni, compila criteri, TCO e copertura requisiti (anche importando metadati da catalogo, GitHub o publiccode.yml)</small></div>
               <div class="d-flex gap-2 align-items-start"><div class="landing-step-num">4</div><small>Assegna i pesi ai criteri e ottieni la classifica TOPSIS con esportazione JSON</small></div>
             </div>
           </div>
@@ -509,7 +524,7 @@
 
     <!-- Tab: Anagrafica -->
     <div class="inner-tab-pane active" id="sol-anagrafica">
-      <p class="text-muted small">Massimo 8 soluzioni. Almeno 2 per il calcolo TOPSIS. Usa "Inizializza con publiccode.yml" per importare i dati automaticamente.</p>
+      <p class="text-muted small">Massimo 8 soluzioni. Almeno 2 per il calcolo TOPSIS. Usa «Inizializza metadati» per importare anagrafica da publiccode.yml, catalogo Developers Italia o repository GitHub.</p>
       <div class="row" id="prodotti-container"></div>
     </div>
 
@@ -746,6 +761,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/js/bootstrap-italia.bundle.min.js"></script>
+<script src="js/valcomp-config.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════
@@ -771,174 +787,11 @@ const STEP_LABELS = [
 ];
 const TOTAL_STEPS = 4;
 
-const PESI_PRESET = {
-  'gestione-progetti':      [1,1,1,1,0.7,0,0.5,0.7,0.6,0,0,0.8],
-  'comunicazione':          [1,1,1,1,0.5,0,0.6,0,0,0,0,0.8],
-  'ufficio-contabilita':    [1,1,1,1,0.8,0,0.5,0.8,0.6,0,0,0.8],
-  'sviluppo-software':      [1,1,1,1,0,0,0.6,0,0,0,0,0.8],
-  'scientifico-ingegneria': [1,1,1,1,0.7,0,1,0.6,0,0,0,0.8],
-  'multimedia':             [1,1,1,1,0.7,0,0.5,0.7,0.6,0,0,0.8],
-  'sicurezza':              [1,1,1,1,0.8,0,0.7,0.8,0.6,0,0,0.8],
-  'ludicizzazione':         [1,1,1,1,0.5,0,0.6,0,0,0,0,0.8],
-  'altro':                  [1,1,1,1,0.7,0,0.6,0,0,0,0,0.8],
-};
-
-const PESI_DEF = [
-  { id: 'tco',            label: 'TCO',                    def: 1,   note: 'Obbligatorio — Art. 68 CAD', fixed: true },
-  { id: 'interoperabilita', label: 'Interoperabilità',   def: 0.7, note: '' },
-  { id: 'protezione_dati',  label: 'Protezione dati',    def: 0.6, note: '' },
-  { id: 'sicurezza',        label: 'Sicurezza',          def: 0.8, note: '' },
-  { id: 'accessibilita',    label: 'Accessibilità',      def: 0,   note: '' },
-  { id: 'copertura_req',    label: 'Copertura requisiti',def: 0,   note: 'Compilare lo step Requisiti' },
-  { id: 'manutentore',      label: 'Manutentore',        def: 0,   note: '' },
-  { id: 'supporto',         label: 'Supporto',           def: 0,   note: '' },
-  { id: 'dipendenze',       label: 'Dipendenze',         def: 0,   note: 'Criterio costo (meno = meglio)' },
-  { id: 'competenze_pa',    label: 'Competenze PA',      def: 0,   note: '' },
-  { id: 'numero_pa',        label: 'Numero PA',          def: 0,   note: '' },
-  { id: 'vitalita',         label: 'Vitalità',           def: 0.8, note: '' },
-];
-
-const COST_CRITERIA = new Set(['tco','dipendenze']);
-
-/** Link di riferimento verificati (hub AgID + docs.italia) */
-const REF_LINKS = {
-  modi: 'https://www.agid.gov.it/it/argomenti/interoperabilita',
-  modiHub: 'https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita',
-  lgInterop: 'https://docs.italia.it/italia/pa-digitalizzazione/lg-interoperabilita-docs/it/last/',
-  schemaGov: 'https://schema.gov.it',
-  ccros: 'https://www.agid.gov.it/it/design-servizi/riuso-open-source/centro-competenza-riuso-open-source',
-  valComparativa: 'https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/acquisizione-software/valutazione-comparativa.html',
-  developersRiuso: 'https://developers.italia.it/it/riuso/',
-  accessibilita: 'https://www.agid.gov.it/it/design-servizi/accessibilita',
-  cad68: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68',
-};
-
-const FIELD_HELP = {
-  'sw.nome': { help: 'Nome commerciale o identificativo usato nel report e nella classifica TOPSIS.' },
-  'sw.titolarita': { help: 'Ente pubblico o titolare del software in riuso (come da catalogo o publiccode.yml).' },
-  'sw.maintainer': { help: 'Soggetto che cura manutenzione e supporto (ente, azienda, community).' },
-  'sw.sito': { help: 'Sito ufficiale del progetto — utile per la documentazione della valutazione.' },
-  'sw.repo': { help: 'Repository pubblico (GitHub/GitLab) per verificare vitalità e licenza open source.' },
-  'sw.publiccode': { help: 'URL del publiccode.yml per importare anagrafica e metadati.', link: REF_LINKS.developersRiuso, linkLabel: 'Riuso software PA' },
-  'sw.req.intro': { help: 'Indica quanto ogni requisito è coperto da questa soluzione. Il punteggio ponderato alimenta il criterio TOPSIS «Copertura requisiti».' },
-  'sw.req.copertura': { help: 'Percentuale 0–100. Solo i requisiti definiti nello step Requisiti vengono considerati.' },
-  'sw.req.note': { help: 'Note facoltative (moduli parziali, roadmap, limitazioni).' },
-  'criteri.interoperabilita': { help: 'Criteri obbligatori per legge. Verificare conformità al Modello di Interoperabilità (ModI).', link: REF_LINKS.modi, linkLabel: 'ModI AgID' },
-  'criteri.interoperabilita.i1': { help: 'Protocolli e pattern di interazione previsti dal ModI (API REST/SOAP).', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
-  'criteri.interoperabilita.i2': { help: 'Pubblicazione open data in formati aperti come da Linee guida interoperabilità.', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
-  'criteri.interoperabilita.i3': { help: 'Uso di ontologie e vocabolari controllati della PA.', link: REF_LINKS.schemaGov, linkLabel: 'schema.gov.it' },
-  'criteri.interoperabilita.i4': { help: 'Integrazione con ecosistemi PA rilevanti (SPID, PagoPA, anagrafe, protocollo, ecc.).' },
-  'criteri.protezione_dati': { help: 'Criteri obbligatori sulla protezione dei dati personali nel software.' },
-  'criteri.protezione_dati.p1': { help: 'Funzionalità di anonimizzazione o pseudonimizzazione dei dati.' },
-  'criteri.protezione_dati.p2': { help: 'Crittografia per archiviazione, trasferimento e elaborazione dei dati.' },
-  'criteri.protezione_dati.p3': { help: 'Possibilità di cancellazione definitiva dei dati a richiesta.' },
-  'criteri.sicurezza': { help: 'Criteri obbligatori su autenticazione, autorizzazione e sicurezza delle interazioni.', link: REF_LINKS.lgInterop, linkLabel: 'Pattern sicurezza ModI' },
-  'criteri.sicurezza.s1': { help: 'Protocolli ModI per autenticazione e autorizzazione (SPID, CIE, OAuth2, SAML).', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
-  'criteri.sicurezza.s2': { help: 'Protocolli ModI per integrità e confidenzialità dei dati scambiati.', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
-  'criteri.accessibilita': { help: 'Conformità alle Linee guida di accessibilità AgID (0 = non conforme, 2 = pienamente conforme).', link: REF_LINKS.accessibilita, linkLabel: 'Accessibilità AgID' },
-  'criteri.manutentore': { help: 'Disponibilità di soggetti in grado di manutenere il software.' },
-  'criteri.supporto': { help: 'Supporto per installazione, personalizzazione e assistenza. «Non nec.» = non necessario per questo software.' },
-  'criteri.supporto.su1': { help: 'Accordi con terzi per installazione e personalizzazione.' },
-  'criteri.supporto.su2': { help: 'Soggetti in grado di fornire supporto. «Non nec.» se il supporto non è richiesto.' },
-  'criteri.dipendenze': { help: 'Conteggio dipendenze proprietarie e open source. Formula: 2×proprietarie + open source — criterio costo (meno è meglio).' },
-  'criteri.competenze_pa': { help: 'Competenze interne della PA per gestire e personalizzare il software.' },
-  'criteri.numero_pa': { help: 'PA che già utilizzano o sono interessate alla soluzione — indicatore di maturità e riuso.' },
-  'criteri.vitalita': { help: 'Metriche dal repository. Se commit = 0 il punteggio vitalità è zero indipendentemente dagli altri valori.' },
-  'criteri.vitalita.giorni': { help: 'Giorni dall\'ultimo commit — bonus se ≤ 365 giorni (peso 0,30).' },
-  'criteri.vitalita.commit': { help: 'Commit negli ultimi 3 anni (peso 0,40 nel punteggio grezzo).' },
-  'criteri.vitalita.contributi': { help: 'Contributori attivi negli ultimi 3 anni (peso 0,15).' },
-  'criteri.vitalita.release': { help: 'Release negli ultimi 3 anni (peso 0,15).' },
-  'tco.intro': { help: 'Stima del Total Cost of Ownership per art. 68 CAD. Non è obbligatorio compilare tutte le voci.', link: REF_LINKS.valComparativa, linkLabel: 'Guida valutazione comparativa' },
-  'tco.durata': { help: 'Anni di valutazione/amortamento del TCO (come nel foglio di calcolo AgID).' },
-  'tco.npa': { help: 'Numero di PA che condividono i costi — parametro documentale nel foglio originale.' },
-  'tco.sviluppo': { help: 'Costi di sviluppo complessivi o personalizzazioni iniziali.' },
-  'tco.integrazione': { help: 'Costi per integrare il software con i sistemi esistenti della PA.' },
-  'tco.hardware': { help: 'Server, periferiche, apparati di rete necessari.' },
-  'tco.consegna': { help: 'Spese di consegna, trasporto e assicurazione.' },
-  'tco.adeguamento': { help: 'Adeguamento alle specifiche e verifica di conformità.' },
-  'tco.formazione': { help: 'Formazione del personale sulla nuova soluzione.' },
-  'tco.licenze': { help: 'Licenze software proprietarie, se presenti.' },
-  'tco.assistenza': { help: 'Assistenza tecnica e manutenzione evolutiva/correttiva.' },
-  'tco.cloud': { help: 'Hosting, cloud, connettività e servizi gestiti.' },
-  'tco.gestione': { help: 'Gestione operativa e supporto al day-by-day.' },
-  'tco.migrazione': { help: 'Migrazione dati e dismissione sistemi legacy.' },
-  'tco.sicurezza_c': { help: 'Costi per sicurezza, audit e compliance normativa.' },
-};
-
-const CRITERI_DEF = {
-  interoperabilita: {
-    label: 'Interoperabilità *', obbligatorio: true, tipo: 'sinon',
-    items: [
-      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true },
-      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true },
-      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true },
-      { id:'i4', testo:"Interoperabilità con gli ecosistemi della PA di interesse", obbligatorio:false },
-    ]
-  },
-  protezione_dati: {
-    label: 'Protezione dati personali *', obbligatorio: true, tipo: 'sinon',
-    items: [
-      { id:'p1', testo:"Utilizzo di tecniche di anonimizzazione/pseudonimizzazione", obbligatorio:true },
-      { id:'p2', testo:"Utilizzo di crittografia per immagazzinamento, trasferimento e processamento dei dati", obbligatorio:true },
-      { id:'p3', testo:"Possibilità di cancellazione definitiva dei dati", obbligatorio:true },
-    ]
-  },
-  sicurezza: {
-    label: 'Sicurezza *', obbligatorio: true, tipo: 'sinon',
-    items: [
-      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true },
-      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true },
-    ]
-  },
-  accessibilita: {
-    label: 'Accessibilità *', obbligatorio: true, tipo: 'radio',
-    items: [
-      { id:'a0', testo:"Il software NON è conforme alle Linee guida sull'accessibilità", valore:0 },
-      { id:'a1', testo:"Il software è PARZIALMENTE conforme alle Linee guida sull'accessibilità", valore:1 },
-      { id:'a2', testo:"Il software è DEL TUTTO conforme alle Linee guida sull'accessibilità", valore:2 },
-    ]
-  },
-  manutentore: {
-    label: 'Manutentore', obbligatorio: false, tipo: 'radio',
-    items: [
-      { id:'m0', testo:"Assenza di manutentori esterni", valore:0 },
-      { id:'m1', testo:"Presenza di manutentori esterni nel mercato", valore:1 },
-      { id:'m2', testo:"Presenza di manutentori esterni in-house o nella PA", valore:2 },
-    ]
-  },
-  supporto: {
-    label: 'Supporto', obbligatorio: false, tipo: 'sinon_nonec',
-    items: [
-      { id:'su1', testo:"Presenza di accordi con terzi per supporto di installazione/personalizzazione" },
-      { id:'su2', testo:"Presenza di soggetti in grado di fornire supporto (non nec. = non necessario)" },
-    ]
-  },
-  dipendenze:   { label: 'Dipendenze',   obbligatorio: false, tipo: 'numero_dipendenze' },
-  competenze_pa:{ label: 'Competenze PA',obbligatorio: false, tipo: 'radio',
-    items: [
-      { id:'c0', testo:"Le risorse PA NON hanno alcuna competenza", valore:0 },
-      { id:'c1', testo:"Le risorse PA hanno competenza LIMITATA", valore:1 },
-      { id:'c2', testo:"Le risorse PA hanno competenza ECCELLENTE", valore:2 },
-    ]
-  },
-  numero_pa:    { label: 'Numero PA',    obbligatorio: false, tipo: 'numero_pa' },
-  vitalita:     { label: 'Vitalità',     obbligatorio: false, tipo: 'vitalita' },
-};
-
-const TCO_VOCI = [
-  { id:'sviluppo',     label:"Costi di sviluppo dell'intero software",         gruppo:'CAPEX' },
-  { id:'integrazione', label:"Integrazione con i propri sistemi",               gruppo:'CAPEX' },
-  { id:'hardware',     label:"Hardware (server, periferiche, apparati rete)",   gruppo:'CAPEX' },
-  { id:'consegna',     label:"Costi di consegna e assicurazione",               gruppo:'CAPEX' },
-  { id:'adeguamento',  label:"Adeguamento alle specifiche e verifica conformità",gruppo:'CAPEX' },
-  { id:'formazione',   label:"Formazione del personale",                        gruppo:'OPEX' },
-  { id:'licenze',      label:"Licenze software (se presenti)",                  gruppo:'OPEX' },
-  { id:'assistenza',   label:"Assistenza tecnica e manutenzione",               gruppo:'OPEX' },
-  { id:'cloud',        label:"Servizi cloud / hosting / connettività",          gruppo:'OPEX' },
-  { id:'gestione',     label:"Gestione e supporto operativo",                   gruppo:'OPEX' },
-  { id:'migrazione',   label:"Migrazione dati e dismissione sistemi legacy",    gruppo:'ALTRO' },
-  { id:'sicurezza_c',  label:"Costi di sicurezza e compliance",                 gruppo:'ALTRO' },
-];
+// Config caricata da config/criteri-config-v1.0.json (vedi js/valcomp-config.js)
+let PESI_PRESET, PESI_DEF, CRITERI_DEF, TCO_VOCI, FIELD_HELP, REF_LINKS, SCORING, CATEGORIE_PRESET;
+let COST_CRITERIA = new Set(['tco', 'dipendenze']);
+let CONFIG_VERSION = '1.0';
+let CONFIG_ID = 'criteri-config-v1.0';
 
 // ── Helpers ──────────────────────────────────────────────────
 const nSw = () => state.prodotti.length;
@@ -1023,20 +876,7 @@ function normalizeState(s) {
 }
 
 function buildCriteriState(n) {
-  const zeros = () => Array(n).fill(0);
-  const empty = () => Array(n).fill('');
-  return {
-    interoperabilita: { items: { i1:empty(), i2:empty(), i3:empty(), i4:empty() } },
-    protezione_dati:  { items: { p1:empty(), p2:empty(), p3:empty() } },
-    sicurezza:        { items: { s1:empty(), s2:empty() } },
-    accessibilita:    { scelta: zeros() },
-    manutentore:      { scelta: zeros() },
-    supporto:         { items: { su1:empty(), su2:empty() } },
-    dipendenze:       { proprietario: zeros(), opensource: zeros() },
-    competenze_pa:    { scelta: zeros() },
-    numero_pa:        { utilizzano: zeros(), interessate: zeros() },
-    vitalita:         { giorni: zeros(), commit: zeros(), contributi: zeros(), release: zeros() },
-  };
+  return ValcompConfig.buildEmptyCriteriState(n);
 }
 
 // ── Gestione soluzioni (add/remove) ─────────────────────────
@@ -1044,26 +884,7 @@ function addSoftware() {
   if (nSw() >= SW_MAX) { alert(`Massimo ${SW_MAX} soluzioni.`); return; }
   const idx = nSw();
   state.prodotti.push({ nome:`Software ${swLetter(idx)}`, titolarita:'', maintainer:'', sito:'', repo:'' });
-  // Estendi tutti gli array criteri
-  Object.values(state.criteri.interoperabilita.items).forEach(a => a.push(''));
-  Object.values(state.criteri.protezione_dati.items).forEach(a => a.push(''));
-  Object.values(state.criteri.sicurezza.items).forEach(a => a.push(''));
-  state.criteri.accessibilita.scelta.push(0);
-  state.criteri.manutentore.scelta.push(0);
-  Object.values(state.criteri.supporto.items).forEach(a => a.push(''));
-  state.criteri.dipendenze.proprietario.push(0);
-  state.criteri.dipendenze.opensource.push(0);
-  state.criteri.competenze_pa.scelta.push(0);
-  state.criteri.numero_pa.utilizzano.push(0);
-  state.criteri.numero_pa.interessate.push(0);
-  state.criteri.vitalita.giorni.push(0);
-  state.criteri.vitalita.commit.push(0);
-  state.criteri.vitalita.contributi.push(0);
-  state.criteri.vitalita.release.push(0);
-  // TCO
-  Object.values(state.tco.voci).forEach(a => a.push(0));
-  // Requisiti
-  state.requisiti.forEach(r => { r.copertura.push(0); if(r.note_copertura) r.note_copertura.push(''); });
+  ValcompConfig.extendStateForNewSolution(state);
   rerenderAll();
 }
 
@@ -1071,23 +892,7 @@ function removeSoftware(idx) {
   if (nSw() <= SW_DEL_MIN) { alert(`Deve esserci almeno una soluzione.`); return; }
   if (!confirm(`Rimuovere la soluzione "${swName(idx)}"? I dati inseriti per questa soluzione andranno persi.`)) return;
   state.prodotti.splice(idx, 1);
-  Object.values(state.criteri.interoperabilita.items).forEach(a => a.splice(idx,1));
-  Object.values(state.criteri.protezione_dati.items).forEach(a => a.splice(idx,1));
-  Object.values(state.criteri.sicurezza.items).forEach(a => a.splice(idx,1));
-  state.criteri.accessibilita.scelta.splice(idx,1);
-  state.criteri.manutentore.scelta.splice(idx,1);
-  Object.values(state.criteri.supporto.items).forEach(a => a.splice(idx,1));
-  state.criteri.dipendenze.proprietario.splice(idx,1);
-  state.criteri.dipendenze.opensource.splice(idx,1);
-  state.criteri.competenze_pa.scelta.splice(idx,1);
-  state.criteri.numero_pa.utilizzano.splice(idx,1);
-  state.criteri.numero_pa.interessate.splice(idx,1);
-  state.criteri.vitalita.giorni.splice(idx,1);
-  state.criteri.vitalita.commit.splice(idx,1);
-  state.criteri.vitalita.contributi.splice(idx,1);
-  state.criteri.vitalita.release.splice(idx,1);
-  Object.values(state.tco.voci).forEach(a => a.splice(idx,1));
-  state.requisiti.forEach(r => { r.copertura.splice(idx,1); if(r.note_copertura) r.note_copertura.splice(idx,1); });
+  ValcompConfig.shrinkStateForRemovedSolution(state, idx);
   rerenderAll();
 }
 
@@ -1292,7 +1097,7 @@ function renderRivediCriteri() {
       rows = `<tr><td class="small">PA che <strong>utilizzano</strong></td>${cellsU}</tr>
               <tr><td class="small">PA <strong>interessate</strong></td>${cellsI}</tr>`;
     } else if (def.tipo === 'vitalita') {
-      const vrows = [['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3a)'],['contributi','Contributori (3a)'],['release','Release (3a)']];
+      const vrows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label]);
       rows = vrows.map(([f,lbl])=>{
         const cells = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.vitalita[f][i]||0}</span></td>`).join('');
         return `<tr><td class="small">${lbl}</td>${cells}</tr>`;
@@ -1463,7 +1268,7 @@ function buildModalCriteriHTML(i) {
             oninput="state.criteri.numero_pa.interessate[${i}]=+this.value||0" /></div>
       </div>`;
     } else if (def.tipo === 'vitalita') {
-      const rows = [['giorni',"Giorni dall'ultimo commit",'0.30'],['commit','Commit (3 anni)','0.40'],['contributi','Contributori (3 anni)','0.15'],['release','Release (3 anni)','0.15']];
+      const rows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label, f.weight]);
       html += `<div class="d-flex gap-3 flex-wrap">`;
       rows.forEach(([f,lbl,w]) => {
         html += `<div>
@@ -1577,7 +1382,7 @@ function openSwModal(i, initialPane) {
     <div id="swm-ana" class="sw-modal-pane" style="${paneVisible('swm-ana')}">
       <div class="mb-3">
         <button class="btn btn-outline-primary btn-sm" onclick="openPcPopup(${i})">
-          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>Inizializza con publiccode.yml
+          <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-refresh"></use></svg>Inizializza metadati
         </button>
         ${p.publiccode ? `<span class="ms-2 small text-muted">Già inizializzato</span>` : ''}
       </div>
@@ -1643,14 +1448,49 @@ function closeSwModal(skipRefresh) {
   syncUIState();
 }
 
-// ── Popup publiccode one-shot ─────────────────────────────────
+// ── Popup import metadati (publiccode / catalogo / GitHub) ───
 let _pcSwIdx = 0;
+
+const PC_POPUP_SOURCES = {
+  publiccode: {
+    label: 'URL publiccode.yml',
+    placeholder: 'https://raw.githubusercontent.com/org/repo/main/publiccode.yml',
+  },
+  catalog: {
+    label: 'URL scheda catalogo',
+    placeholder: 'https://developers.italia.it/it/software/00000000-0000-4000-8000-000000000000',
+  },
+  github: {
+    label: 'URL repository GitHub',
+    placeholder: 'https://github.com/org/repo',
+  },
+};
+
+function getPcPopupSource() {
+  return document.querySelector('input[name="pc-popup-source"]:checked')?.value || 'publiccode';
+}
+
+function updatePcPopupSource() {
+  const src = getPcPopupSource();
+  const meta = PC_POPUP_SOURCES[src] || PC_POPUP_SOURCES.publiccode;
+  const label = document.getElementById('pc-popup-url-label');
+  const inp = document.getElementById('pc-popup-url');
+  if (label) label.textContent = meta.label;
+  if (inp) inp.placeholder = meta.placeholder;
+}
 
 function openPcPopup(i) {
   _pcSwIdx = i;
   const overlay = document.getElementById('pc-popup-overlay');
   const inp = document.getElementById('pc-popup-url');
-  inp.value = state.prodotti[i].publiccode || '';
+  const stored = state.prodotti[i].publiccode || '';
+  const isCatalog = /developers\.italia\.it\/(?:it|en)\/software\//i.test(stored);
+  const isGithub = /github\.com\//i.test(stored) && !/raw\.githubusercontent\.com/i.test(stored);
+  const source = isCatalog ? 'catalog' : isGithub ? 'github' : 'publiccode';
+  const radio = document.getElementById(`pc-src-${source}`);
+  if (radio) radio.checked = true;
+  updatePcPopupSource();
+  inp.value = stored;
   document.getElementById('pc-popup-msg').innerHTML = '';
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1664,70 +1504,114 @@ function closePcPopup() {
   syncUIState();
 }
 
-// ── Fuzzy match testo: true se str2 contiene >50% delle parole significative di str1
-function _fuzzyMatch(a, b) {
-  const stop = new Set(['il','lo','la','i','gli','le','di','a','da','in','con','su','per','tra','fra','e','o','un','una','uno','che','non','del','della','dei','degli','delle','al','alla','ai','agli','alle','dal','dalla','dai','dagli','dalle','nel','nella','nei','negli','nelle','sul','sulla','sui','sugli','sulle','è','sono','ha','hanno']);
-  const words = s => s.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
-  const wa = words(a); const wb = new Set(words(b));
-  if (!wa.length) return false;
-  const matches = wa.filter(w => wb.has(w)).length;
-  return matches / wa.length >= 0.4;
+function _normalizeGithubRepoUrl(url) {
+  const m = url.trim().replace(/\/+$/, '').match(/github\.com\/([^/]+)\/([^/#?]+)/i);
+  if (!m) return null;
+  const repo = m[2].replace(/\.git$/, '');
+  return { owner: m[1], repo, canonical: `https://github.com/${m[1]}/${repo}` };
 }
 
-// ── Fetch publiccode.yml ───────────────────────────────────────
+function _parseCatalogSoftwareId(url) {
+  const m = url.trim().match(/developers\.italia\.it\/(?:it|en)\/software\/([a-f0-9-]{36})/i);
+  return m ? m[1] : null;
+}
+
+async function _resolvePublicCodeFromInput(sourceType, input) {
+  const trimmed = (input || '').trim();
+  if (!trimmed) throw new Error('Inserisci prima un URL valido.');
+
+  if (sourceType === 'catalog') {
+    const id = _parseCatalogSoftwareId(trimmed);
+    if (!id) throw new Error('URL catalogo non riconosciuto. Usa una pagina software di developers.italia.it (es. …/it/software/UUID).');
+    const res = await fetch(`https://api.developers.italia.it/v1/software/${id}`);
+    if (!res.ok) throw new Error(`Catalogo Developers Italia: HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.publiccodeYml) throw new Error('La scheda catalogo non contiene publiccode.yml.');
+    return { yaml: data.publiccodeYml, storedUrl: trimmed };
+  }
+
+  if (sourceType === 'github') {
+    const gh = _normalizeGithubRepoUrl(trimmed);
+    if (!gh) throw new Error('URL GitHub non riconosciuto. Usa https://github.com/org/repo.');
+    const catRes = await fetch(`https://api.developers.italia.it/v1/software?url=${encodeURIComponent(gh.canonical)}`);
+    if (catRes.ok) {
+      const cat = await catRes.json();
+      if (cat.data?.[0]?.publiccodeYml) {
+        return { yaml: cat.data[0].publiccodeYml, storedUrl: gh.canonical };
+      }
+    }
+    let branch = 'main';
+    try {
+      const repoRes = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}`);
+      if (repoRes.ok) {
+        const repo = await repoRes.json();
+        if (repo.default_branch) branch = repo.default_branch;
+      }
+    } catch (_) { /* usa fallback branch */ }
+    for (const b of [...new Set([branch, 'main', 'master'])]) {
+      const rawUrl = `https://raw.githubusercontent.com/${gh.owner}/${gh.repo}/${b}/publiccode.yml`;
+      const rawRes = await fetch(rawUrl, { mode: 'cors' });
+      if (rawRes.ok) return { yaml: await rawRes.text(), storedUrl: gh.canonical };
+    }
+    throw new Error('publiccode.yml non trovato (repository non in catalogo o file assente).');
+  }
+
+  const res = await fetch(trimmed, { mode: 'cors' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return { yaml: await res.text(), storedUrl: trimmed };
+}
+
+function _applyPublicCodeData(i, pc, storedUrl) {
+  state.prodotti[i].publiccode = storedUrl;
+
+  const descObj = pc.description || {};
+  const lang = descObj.it ? 'it' : descObj['it-IT'] ? 'it-IT' : Object.keys(descObj)[0] || 'en';
+  const desc = descObj[lang] || {};
+  if (pc.name) state.prodotti[i].nome = pc.name;
+  if (pc.url) state.prodotti[i].repo = pc.url;
+  if (pc.landingURL) state.prodotti[i].sito = pc.landingURL;
+  const contact = pc.maintenance?.contacts?.[0];
+  if (contact?.name) state.prodotti[i].maintainer = contact.name;
+  const owner = pc.legal?.mainCopyrightOwner || contact?.affiliation;
+  if (owner) state.prodotti[i].titolarita = owner;
+
+  const depOpen = (pc.dependsOn?.open || []).length;
+  const depProp = (pc.dependsOn?.proprietary || []).length;
+  state.criteri.dipendenze.opensource[i] = depOpen;
+  state.criteri.dipendenze.proprietario[i] = depProp;
+
+  const mType = pc.maintenance?.type;
+  const mMap = { internal: 2, contract: 2, community: 1, none: 0 };
+  if (mType && mMap[mType] !== undefined) state.criteri.manutentore.scelta[i] = mMap[mType];
+
+  const accessible = pc.isAccessible ?? (desc.accessibilityGoals ? true : undefined);
+  if (accessible === true) state.criteri.accessibilita.scelta[i] = 2;
+  else if (accessible === false) state.criteri.accessibilita.scelta[i] = 0;
+
+  if (pc.releaseDate) {
+    const days = Math.round((Date.now() - new Date(pc.releaseDate).getTime()) / 86400000);
+    if (!isNaN(days)) state.criteri.vitalita.giorni[i] = days;
+  }
+
+  return desc.features || [];
+}
+
 async function fetchPublicCode() {
   const i = _pcSwIdx;
   const url = (document.getElementById('pc-popup-url')?.value || '').trim();
+  const sourceType = getPcPopupSource();
   const msgEl = document.getElementById('pc-popup-msg');
-  if (!url) { msgEl.innerHTML = '<p class="text-danger small mb-0">Inserisci prima un URL valido.</p>'; return; }
   const btn = document.getElementById('pc-popup-fetch-btn');
   btn.disabled = true;
   msgEl.innerHTML = '<p class="text-muted small mb-0">Recupero in corso…</p>';
   try {
-    const res = await fetch(url, { mode: 'cors' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const pc = jsyaml.load(await res.text());
-    state.prodotti[i].publiccode = url;
+    const resolved = await _resolvePublicCodeFromInput(sourceType, url);
+    const pc = jsyaml.load(resolved.yaml);
+    const features = _applyPublicCodeData(i, pc, resolved.storedUrl);
 
-    // ── Anagrafica ──────────────────────────────────────────────
-    const lang = pc.description?.it ? 'it' : Object.keys(pc.description||{})[0] || 'en';
-    const desc = pc.description?.[lang] || {};
-    if (pc.name)       state.prodotti[i].nome      = pc.name;
-    if (pc.url)        state.prodotti[i].repo       = pc.url;
-    if (pc.landingURL) state.prodotti[i].sito       = pc.landingURL;
-    const contact = pc.maintenance?.contacts?.[0];
-    if (contact?.name) state.prodotti[i].maintainer = contact.name;
-    const owner = pc.legal?.mainCopyrightOwner || contact?.affiliation;
-    if (owner)         state.prodotti[i].titolarita = owner;
-
-    // ── Criteri — Dipendenze ────────────────────────────────────
-    const depOpen = (pc.dependsOn?.open        || []).length;
-    const depProp = (pc.dependsOn?.proprietary || []).length;
-    state.criteri.dipendenze.opensource[i]  = depOpen;
-    state.criteri.dipendenze.proprietario[i]= depProp;
-
-    // ── Criteri — Manutentore ───────────────────────────────────
-    const mType = pc.maintenance?.type;
-    const mMap = { internal:2, contract:2, community:1, none:0 };
-    if (mType && mMap[mType] !== undefined) state.criteri.manutentore.scelta[i] = mMap[mType];
-
-    // ── Criteri — Accessibilità ─────────────────────────────────
-    const accessible = pc.isAccessible ?? (desc.accessibilityGoals ? true : undefined);
-    if (accessible === true)  state.criteri.accessibilita.scelta[i] = 2;
-    else if (accessible === false) state.criteri.accessibilita.scelta[i] = 0;
-
-    // ── Criteri — Vitalità ──────────────────────────────────────
-    if (pc.releaseDate) {
-      const days = Math.round((Date.now() - new Date(pc.releaseDate).getTime()) / 86400000);
-      if (!isNaN(days)) state.criteri.vitalita.giorni[i] = days;
-    }
-
-    // ── Chiudi popup, riapri la scheda sul tab Anagrafica ────────
     closePcPopup();
     openSwModal(i, 'swm-ana');
 
-    // ── Features: UI interattiva di associazione ─────────────────
-    const features = desc.features || [];
     if (features.length) {
       _renderPcFeaturesUI(i, features);
     } else {
@@ -1736,11 +1620,21 @@ async function fetchPublicCode() {
         <strong>✓ Dati importati</strong> — nessuna funzionalità trovata in publiccode.yml.
       </div>`;
     }
-  } catch(e) {
-    msgEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem"><strong>Errore:</strong> ${escH(e.message)}<br><small>Verifica che l'URL sia il file raw e che CORS sia abilitato sul repository.</small></div>`;
+  } catch (e) {
+    msgEl.innerHTML = `<div class="alert alert-danger py-2 px-3 mb-0" style="font-size:.82rem"><strong>Errore:</strong> ${escH(e.message)}<br><small>Per l'URL diretto verifica che sia il file raw e che CORS sia abilitato sul repository.</small></div>`;
   } finally {
     btn.disabled = false;
   }
+}
+
+// ── Fuzzy match testo: true se str2 contiene >40% delle parole significative di str1
+function _fuzzyMatch(a, b) {
+  const stop = new Set(['il','lo','la','i','gli','le','di','a','da','in','con','su','per','tra','fra','e','o','un','una','uno','che','non','del','della','dei','degli','delle','al','alla','ai','agli','alle','dal','dalla','dai','dagli','dalle','nel','nella','nei','negli','nelle','sul','sulla','sui','sugli','sulle','è','sono','ha','hanno']);
+  const words = s => s.toLowerCase().replace(/[^\w\s]/g,' ').split(/\s+/).filter(w => w.length > 2 && !stop.has(w));
+  const wa = words(a); const wb = new Set(words(b));
+  if (!wa.length) return false;
+  const matches = wa.filter(w => wb.has(w)).length;
+  return matches / wa.length >= 0.4;
 }
 
 // ── Render UI interattiva funzionalità publiccode ─────────────
@@ -2039,12 +1933,7 @@ function renderCriteri() {
       </table></div>`;
 
     } else if (def.tipo === 'vitalita') {
-      const rows = [
-        ['giorni',    "Giorni dall'ultimo commit",              '0.30'],
-        ['commit',    'Commit negli ultimi 3 anni',             '0.40'],
-        ['contributi','Contributori attivi negli ultimi 3 anni','0.15'],
-        ['release',   'Release negli ultimi 3 anni',           '0.15'],
-      ];
+      const rows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label, f.weight]);
       inner = `<div class="table-scroll"><table class="table table-sm">
         <thead><tr><th style="min-width:240px;width:45%">Metrica (da GitHub/GitLab)</th><th style="width:60px">Peso</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
         <tbody>${rows.map(([field,label,peso]) => `<tr>
@@ -2134,15 +2023,16 @@ function computeScores() {
   range().forEach(i => { s.tco[i] = TCO_VOCI.reduce((t,v)=>t+(+state.tco.voci[v.id]?.[i]||0),0); });
 
   // Interoperabilità, protezione_dati, sicurezza — COUNTIF("si") solo
-  ['interoperabilita','protezione_dati','sicurezza'].forEach(k => {
+  (SCORING.count_si_groups || ['interoperabilita','protezione_dati','sicurezza']).forEach(k => {
+    if (!state.criteri[k]?.items) return;
     range().forEach(i => {
       s[k][i] = Object.values(state.criteri[k].items).filter(a=>a[i]==='si').length;
     });
   });
 
   // Accessibilità, manutentore, competenze_pa — radio 0/1/2
-  ['accessibilita','manutentore','competenze_pa'].forEach(k => {
-    range().forEach(i => { s[k][i] = state.criteri[k].scelta[i]||0; });
+  (SCORING.radio_groups || ['accessibilita','manutentore','competenze_pa']).forEach(k => {
+    range().forEach(i => { s[k][i] = state.criteri[k]?.scelta?.[i]||0; });
   });
 
   // Copertura requisiti — media pesata
@@ -2153,17 +2043,19 @@ function computeScores() {
     });
   }
 
-  // Supporto — COUNTIF("si") + IF(nonec → 3)
+  // Supporto — COUNTIF("si") + IF(nonec → score config)
+  const nonecScore = SCORING.supporto_nonec_score ?? 3;
   range().forEach(i => {
     const items = Object.values(state.criteri.supporto.items);
-    if (items.some(a=>a[i]==='nonec')) { s.supporto[i]=3; return; }
+    if (items.some(a=>a[i]==='nonec')) { s.supporto[i]=nonecScore; return; }
     s.supporto[i] = items.filter(a=>a[i]==='si').length;
   });
 
   // Dipendenze — criterio costo
+  const dep = SCORING.dipendenze || { proprietario_factor: 2, opensource_factor: 1 };
   range().forEach(i => {
-    s.dipendenze[i] = 2*(state.criteri.dipendenze.proprietario[i]||0)
-                    +   (state.criteri.dipendenze.opensource[i]||0);
+    s.dipendenze[i] = (dep.proprietario_factor||2)*(state.criteri.dipendenze.proprietario[i]||0)
+                    + (dep.opensource_factor||1)*(state.criteri.dipendenze.opensource[i]||0);
   });
 
   // Numero PA
@@ -2173,12 +2065,16 @@ function computeScores() {
   });
 
   // Vitalità
+  const vit = SCORING.vitalita || { requires_commit: true, giorni_soglia: 365, weights: { commit: 0.4, contributi: 0.15, release: 0.15, giorni_bonus: 0.3 } };
+  const vw = vit.weights || {};
   range().forEach(i => {
     const g=state.criteri.vitalita.giorni[i]||0, c=state.criteri.vitalita.commit[i]||0,
           co=state.criteri.vitalita.contributi[i]||0, r=state.criteri.vitalita.release[i]||0;
-    if (!c) { s.vitalita[i]=0; return; }
-    const base = c*0.4 + co*0.15 + r*0.15;
-    s.vitalita[i] = g<=365 ? base+(365-g)*0.3 : base;
+    if (vit.requires_commit && !c) { s.vitalita[i]=0; return; }
+    const base = c*(vw.commit||0.4) + co*(vw.contributi||0.15) + r*(vw.release||0.15);
+    s.vitalita[i] = g <= (vit.giorni_soglia || 365)
+      ? base + ((vit.giorni_soglia || 365) - g) * (vw.giorni_bonus || 0.3)
+      : base;
   });
 
   return s;
@@ -2310,6 +2206,7 @@ function validateBeforeTopsis() {
   }
 
   ['interoperabilita', 'protezione_dati', 'sicurezza'].forEach(key => {
+    if (!CRITERI_DEF[key]?.items) return;
     CRITERI_DEF[key].items.filter(item => item.obbligatorio).forEach(item => {
       range().forEach(i => {
         const v = state.criteri[key].items[item.id]?.[i];
@@ -2466,8 +2363,8 @@ function computeAndRenderResults() {
 // ── Export JSON ──────────────────────────────────────────────
 function exportJSON() {
   const snapshot = JSON.parse(JSON.stringify(state));
-  // Rimuovi campo interno non significativo per l'interscambio
   delete snapshot._reqCnt;
+  Object.assign(snapshot, ValcompConfig.exportMetaPatch());
 
   const envelope = {
     "$schema": "https://raw.githubusercontent.com/teamdigitale/devita-ccros-valcomp-software-pa/main/docs/schema/valutazione-comparativa-v1.0.json",
@@ -2483,6 +2380,7 @@ function exportJSON() {
       "url": "https://github.com/teamdigitale/devita-ccros-valcomp-software-pa"
     },
     "generato_il": new Date().toISOString(),
+    ...ValcompConfig.exportEnvelopeConfigFields(),
     "valutazione": snapshot,
   };
 
@@ -2494,6 +2392,35 @@ function exportJSON() {
   });
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function formatImportMessages(warnings) {
+  if (!warnings?.length) return '';
+  return '\n\n' + warnings.slice(0, 8).join('\n') + (warnings.length > 8 ? `\n…e altri ${warnings.length - 8} messaggi.` : '');
+}
+
+function importValutazioneFromParsed(parsed) {
+  const imported = (parsed.tipo === 'valutazione-comparativa-software' && parsed.valutazione)
+    ? parsed
+    : { valutazione: parsed };
+  const payload = imported.valutazione;
+  if (!payload.prodotti || !Array.isArray(payload.prodotti) || payload.prodotti.length < 2) {
+    throw new Error('Campo "prodotti" mancante o con meno di 2 soluzioni.');
+  }
+  const migWarnings = [];
+  const normalized = ValcompConfig.prepareImportedValutazione(imported, migWarnings);
+  state = normalizeState(normalized);
+  document.getElementById('meta-pa').value        = state.meta?.pa        || '';
+  document.getElementById('meta-data').value      = state.meta?.data      || '';
+  document.getElementById('meta-oggetto').value    = state.meta?.oggetto   || '';
+  document.getElementById('meta-categoria').value = state.meta?.categoria || '';
+  document.getElementById('tco-durata').value     = state.tco?.durata     || 5;
+  document.getElementById('tco-npa').value        = state.tco?.npa        || 1;
+  rerenderAll();
+  renderPesi();
+  goToStep(0);
+  showWizard();
+  return migWarnings;
 }
 
 // ── Landing page ─────────────────────────────────────────────
@@ -2529,20 +2456,8 @@ document.getElementById('import-json-landing').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      const parsed = JSON.parse(ev.target.result);
-      const imported = (parsed.tipo === 'valutazione-comparativa-software' && parsed.valutazione)
-        ? parsed.valutazione : parsed;
-      if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2)
-        throw new Error('Campo "prodotti" mancante o con meno di 2 soluzioni.');
-      state = normalizeState(imported);
-      document.getElementById('meta-pa').value     = state.meta?.pa     || '';
-      document.getElementById('meta-data').value   = state.meta?.data   || '';
-      document.getElementById('meta-oggetto').value= state.meta?.oggetto|| '';
-      document.getElementById('meta-categoria').value=state.meta?.categoria||'';
-      document.getElementById('tco-durata').value  = state.tco?.durata || 5;
-      document.getElementById('tco-npa').value     = state.tco?.npa || 1;
-      rerenderAll(); renderPesi(); goToStep(0);
-      showWizard();
+      const migWarnings = importValutazioneFromParsed(JSON.parse(ev.target.result));
+      alert('✅ Sessione caricata.' + formatImportMessages(migWarnings));
     } catch(err) { alert('❌ Errore nel file JSON:\n' + err.message); }
   };
   reader.readAsText(file);
@@ -2556,28 +2471,8 @@ document.getElementById('import-json').addEventListener('change', e => {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      const parsed = JSON.parse(ev.target.result);
-      // Supporta sia il formato envelope (v1.0+) sia il vecchio formato grezzo
-      const imported = (parsed.tipo === 'valutazione-comparativa-software' && parsed.valutazione)
-        ? parsed.valutazione
-        : parsed;
-      // Valida struttura minima
-      if (!imported.prodotti || !Array.isArray(imported.prodotti) || imported.prodotti.length < 2) {
-        throw new Error('File non valido: campo "prodotti" mancante o con meno di 2 soluzioni.');
-      }
-      state = normalizeState(imported);
-      // Reinizializza UI
-      document.getElementById('meta-pa').value    = state.meta?.pa    || '';
-      document.getElementById('meta-data').value  = state.meta?.data  || '';
-      document.getElementById('meta-oggetto').value= state.meta?.oggetto||'';
-      document.getElementById('meta-categoria').value=state.meta?.categoria||'';
-      document.getElementById('tco-durata').value  = state.tco?.durata || 5;
-      document.getElementById('tco-npa').value     = state.tco?.npa || 1;
-      rerenderAll();
-      renderPesi();
-      goToStep(0);
-      showWizard();
-      alert('✅ Sessione caricata correttamente.');
+      const migWarnings = importValutazioneFromParsed(JSON.parse(ev.target.result));
+      alert('✅ Sessione caricata correttamente.' + formatImportMessages(migWarnings));
     } catch(err) {
       alert('❌ Errore nel file JSON:\n' + err.message);
     }
@@ -3251,12 +3146,21 @@ function restoreUIState(ui) {
 
 // ── Init ─────────────────────────────────────────────────────
 (async function init() {
+  try {
+    await ValcompConfig.load();
+    ValcompConfig.applyToGlobals();
+  } catch (e) {
+    alert('Impossibile caricare la configurazione criteri.\n' + e.message + '\n\nServire l\'app da un web server (es. python3 -m http.server nella cartella docs).');
+    return;
+  }
+
   const fromHash = await decodeStateFromHash(location.hash);
   const browserSnapshot = readBrowserSnapshot();
   const persistedUI = readPersistedUIState();
   const restored = fromHash || browserSnapshot;
   const restoredUI = restored?.ui || persistedUI;
   if (restored) {
+    ValcompConfig.migrateValutazione(restored.state, []);
     state = normalizeState(restored.state);
     currentStep = restored.step;
     document.getElementById('meta-pa').value        = state.meta?.pa        || '';

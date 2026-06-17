@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editor configurazione criteri — CCROS Valutazione Comparativa</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/css/bootstrap-italia.min.css" />
+  <style>
+    body { padding-bottom: 4rem; }
+    #json-editor { font-family: ui-monospace, monospace; font-size: .8125rem; min-height: 420px; }
+    .cfg-section { display: none; }
+    .cfg-section.active { display: block; }
+    .item-row { border-left: 3px solid #0066cc; padding-left: .75rem; margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+<div class="it-header-wrapper">
+  <div class="it-header it-header-slim">
+    <div class="container-xxl">
+      <div class="row"><div class="col-12">
+        <nav class="navbar navbar-expand-lg has-megamenu">
+          <a class="navbar-brand" href="index.html">← Valutazione Comparativa</a>
+          <span class="navbar-brand ms-auto text-muted small">Editor config criteri</span>
+        </nav>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<main class="container-xxl mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Configurazione criteri</h1>
+      <p class="text-muted small mb-0">Modifica <code>config/criteri-config-v1.0.json</code> — pesi TOPSIS, criteri, TCO, suggerimenti e link.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <label class="btn btn-outline-primary btn-sm mb-0">
+        Carica JSON<input type="file" id="load-file" accept=".json" class="d-none" />
+      </label>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="reload-btn">Ricarica default</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="validate-btn">Valida</button>
+      <button type="button" class="btn btn-primary btn-sm" id="download-btn">Scarica JSON</button>
+    </div>
+  </div>
+
+  <div id="status" class="mb-3"></div>
+
+  <ul class="nav nav-tabs mb-3" id="cfg-tabs" role="tablist">
+    <li class="nav-item"><button type="button" class="nav-link active" data-pane="meta">Meta</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="pesi">Pesi TOPSIS</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="criteri">Criteri</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="tco">TCO</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="help">Suggerimenti</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="links">Link</button></li>
+    <li class="nav-item"><button type="button" class="nav-link" data-pane="json">JSON grezzo</button></li>
+  </ul>
+
+  <section class="cfg-section active" id="pane-meta">
+    <div class="row g-3">
+      <div class="col-md-4"><label class="form-label">Versione</label><input type="text" class="form-control form-control-sm" id="f-versione" /></div>
+      <div class="col-md-4"><label class="form-label">ID config</label><input type="text" class="form-control form-control-sm" id="f-id" /></div>
+      <div class="col-md-12"><label class="form-label">Descrizione</label><input type="text" class="form-control form-control-sm" id="f-descrizione" /></div>
+    </div>
+    <h2 class="h6 mt-4">Criteri costo TOPSIS</h2>
+    <p class="small text-muted">ID separati da virgola (es. tco, dipendenze)</p>
+    <input type="text" class="form-control form-control-sm" id="f-cost-criteria" />
+  </section>
+
+  <section class="cfg-section" id="pane-pesi">
+    <div class="table-scroll">
+      <table class="table table-sm table-hover">
+        <thead><tr><th>ID</th><th>Etichetta</th><th>Default</th><th>Nota</th><th>Fisso</th></tr></thead>
+        <tbody id="pesi-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="cfg-section" id="pane-criteri">
+    <div id="criteri-editor"></div>
+  </section>
+
+  <section class="cfg-section" id="pane-tco">
+    <div class="table-scroll">
+      <table class="table table-sm">
+        <thead><tr><th>ID</th><th>Gruppo</th><th>Etichetta</th></tr></thead>
+        <tbody id="tco-tbody"></tbody>
+      </table>
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-tco-btn">+ Voce TCO</button>
+  </section>
+
+  <section class="cfg-section" id="pane-help">
+    <p class="small text-muted">Chiavi help (es. <code>criteri.interoperabilita.i1</code>). Link: chiave in ref_links.</p>
+    <div id="help-editor"></div>
+    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-help-btn">+ Suggerimento</button>
+  </section>
+
+  <section class="cfg-section" id="pane-links">
+    <div id="links-editor"></div>
+    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-link-btn">+ Link</button>
+  </section>
+
+  <section class="cfg-section" id="pane-json">
+    <textarea class="form-control" id="json-editor" spellcheck="false"></textarea>
+    <button type="button" class="btn btn-primary btn-sm mt-2" id="apply-json-btn">Applica JSON al modello</button>
+  </section>
+</main>
+
+<script src="js/valcomp-config.js"></script>
+<script>
+'use strict';
+
+let cfg = null;
+
+function showStatus(msg, type) {
+  document.getElementById('status').innerHTML = msg
+    ? `<div class="alert alert-${type || 'info'} py-2 small mb-0">${msg}</div>` : '';
+}
+
+function syncFromForm() {
+  if (!cfg) return;
+  cfg.versione = document.getElementById('f-versione').value.trim();
+  cfg.id = document.getElementById('f-id').value.trim();
+  cfg.descrizione = document.getElementById('f-descrizione').value.trim();
+  cfg.cost_criteria = document.getElementById('f-cost-criteria').value.split(',').map(s => s.trim()).filter(Boolean);
+  syncPesiFromForm();
+  syncJsonEditor();
+}
+
+function syncToForm() {
+  document.getElementById('f-versione').value = cfg.versione || '';
+  document.getElementById('f-id').value = cfg.id || '';
+  document.getElementById('f-descrizione').value = cfg.descrizione || '';
+  document.getElementById('f-cost-criteria').value = (cfg.cost_criteria || []).join(', ');
+  renderPesi();
+  renderCriteri();
+  renderTco();
+  renderHelp();
+  renderLinks();
+  syncJsonEditor();
+}
+
+function syncJsonEditor() {
+  document.getElementById('json-editor').value = JSON.stringify(cfg, null, 2);
+}
+
+function renderPesi() {
+  document.getElementById('pesi-tbody').innerHTML = (cfg.pesi_def || []).map((p, i) => `
+    <tr>
+      <td><input class="form-control form-control-sm" data-pesi="${i}" data-k="id" value="${esc(p.id)}" /></td>
+      <td><input class="form-control form-control-sm" data-pesi="${i}" data-k="label" value="${esc(p.label)}" /></td>
+      <td><input type="number" step="0.05" class="form-control form-control-sm" style="width:80px" data-pesi="${i}" data-k="def" value="${p.def}" /></td>
+      <td><input class="form-control form-control-sm" data-pesi="${i}" data-k="note" value="${esc(p.note || '')}" /></td>
+      <td><input type="checkbox" data-pesi="${i}" data-k="fixed" ${p.fixed ? 'checked' : ''} /></td>
+    </tr>`).join('');
+}
+
+function syncPesiFromForm() {
+  document.querySelectorAll('#pesi-tbody [data-pesi]').forEach(el => {
+    const i = +el.dataset.pesi;
+    const k = el.dataset.k;
+    if (k === 'fixed') cfg.pesi_def[i][k] = el.checked;
+    else if (k === 'def') cfg.pesi_def[i][k] = +el.value || 0;
+    else cfg.pesi_def[i][k] = el.value;
+  });
+}
+
+function renderCriteri() {
+  const root = document.getElementById('criteri-editor');
+  root.innerHTML = Object.entries(cfg.criteri || {}).map(([key, def]) => `
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-2 mb-2">
+          <div class="col-md-3"><label class="small">ID gruppo</label><input class="form-control form-control-sm" value="${esc(key)}" disabled /></div>
+          <div class="col-md-5"><label class="small">Etichetta</label>
+            <input class="form-control form-control-sm" data-cri-key="${esc(key)}" data-k="label" value="${esc(def.label)}" /></div>
+          <div class="col-md-2"><label class="small">Tipo</label>
+            <input class="form-control form-control-sm" value="${esc(def.tipo)}" disabled /></div>
+          <div class="col-md-2 d-flex align-items-end">
+            <div class="form-check"><input type="checkbox" data-cri-key="${esc(key)}" data-k="obbligatorio" ${def.obbligatorio ? 'checked' : ''} />
+            <label class="form-check-label small">Obbligatorio</label></div>
+          </div>
+        </div>
+        ${(def.items || []).map((item, j) => `
+          <div class="item-row">
+            <div class="row g-2">
+              <div class="col-md-2"><input class="form-control form-control-sm" data-cri-item="${esc(key)}" data-j="${j}" data-k="id" value="${esc(item.id)}" /></div>
+              <div class="col-md-8"><input class="form-control form-control-sm" data-cri-item="${esc(key)}" data-j="${j}" data-k="testo" value="${esc(item.testo || '')}" /></div>
+              <div class="col-md-2"><div class="form-check mt-1"><input type="checkbox" data-cri-item="${esc(key)}" data-j="${j}" data-k="obbligatorio" ${item.obbligatorio ? 'checked' : ''} /><label class="form-check-label small">Obbl.</label></div></div>
+            </div>
+          </div>`).join('')}
+        ${def.tipo === 'vitalita' ? (def.fields || []).map((f, j) => `
+          <div class="item-row"><div class="row g-2">
+            <div class="col-md-3"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="id" value="${esc(f.id)}" /></div>
+            <div class="col-md-6"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="label" value="${esc(f.label)}" /></div>
+            <div class="col-md-3"><input class="form-control form-control-sm" data-vit="${esc(key)}" data-j="${j}" data-k="weight" value="${esc(f.weight)}" /></div>
+          </div></div>`).join('') : ''}
+      </div>
+    </div>`).join('');
+
+  root.querySelectorAll('[data-cri-key]').forEach(el => {
+    el.addEventListener('input', () => {
+      const key = el.dataset.criKey;
+      cfg.criteri[key][el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value;
+      if (el.dataset.k === 'obbligatorio') cfg.criteri[key].obbligatorio = el.checked;
+    });
+    if (el.type === 'checkbox') el.addEventListener('change', () => {
+      cfg.criteri[el.dataset.criKey].obbligatorio = el.checked;
+    });
+  });
+  root.querySelectorAll('[data-cri-item]').forEach(el => {
+    el.addEventListener('input', () => {
+      const key = el.dataset.criItem;
+      const j = +el.dataset.j;
+      const k = el.dataset.k;
+      if (k === 'obbligatorio') cfg.criteri[key].items[j][k] = el.checked;
+      else cfg.criteri[key].items[j][k] = el.value;
+    });
+  });
+}
+
+function renderTco() {
+  document.getElementById('tco-tbody').innerHTML = (cfg.tco_voci || []).map((v, i) => `
+    <tr>
+      <td><input class="form-control form-control-sm" data-tco="${i}" data-k="id" value="${esc(v.id)}" /></td>
+      <td><input class="form-control form-control-sm" style="width:90px" data-tco="${i}" data-k="gruppo" value="${esc(v.gruppo)}" /></td>
+      <td><input class="form-control form-control-sm" data-tco="${i}" data-k="label" value="${esc(v.label)}" /></td>
+    </tr>`).join('');
+  document.querySelectorAll('[data-tco]').forEach(el => {
+    el.addEventListener('input', () => {
+      cfg.tco_voci[+el.dataset.tco][el.dataset.k] = el.value;
+    });
+  });
+}
+
+function renderHelp() {
+  const root = document.getElementById('help-editor');
+  root.innerHTML = Object.entries(cfg.field_help || {}).map(([key, h]) => `
+    <div class="row g-2 mb-2 align-items-start">
+      <div class="col-md-3"><input class="form-control form-control-sm font-monospace" data-help-key="${esc(key)}" data-k="_key" value="${esc(key)}" /></div>
+      <div class="col-md-5"><textarea class="form-control form-control-sm" rows="2" data-help="${esc(key)}" data-k="help">${esc(h.help || '')}</textarea></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" placeholder="link key" data-help="${esc(key)}" data-k="link" value="${esc(h.link || '')}" /></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" placeholder="link label" data-help="${esc(key)}" data-k="linkLabel" value="${esc(h.linkLabel || '')}" /></div>
+    </div>`).join('');
+  root.querySelectorAll('[data-help]').forEach(el => {
+    el.addEventListener('input', () => {
+      const key = el.dataset.help;
+      cfg.field_help[key][el.dataset.k] = el.value;
+    });
+  });
+}
+
+function renderLinks() {
+  const root = document.getElementById('links-editor');
+  root.innerHTML = Object.entries(cfg.ref_links || {}).map(([key, url]) => `
+    <div class="row g-2 mb-2">
+      <div class="col-md-3"><input class="form-control form-control-sm" data-link-key="${esc(key)}" value="${esc(key)}" disabled /></div>
+      <div class="col-md-9"><input class="form-control form-control-sm" data-link="${esc(key)}" value="${esc(url)}" /></div>
+    </div>`).join('');
+  root.querySelectorAll('[data-link]').forEach(el => {
+    el.addEventListener('input', () => { cfg.ref_links[el.dataset.link] = el.value; });
+  });
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+async function loadDefault() {
+  await ValcompConfig.load();
+  cfg = structuredClone(ValcompConfig.getConfig());
+  cfg.tipo = 'criteri-config-valcomp';
+  syncToForm();
+  showStatus('Configurazione caricata da <code>config/criteri-config-v1.0.json</code>.', 'success');
+}
+
+document.querySelectorAll('#cfg-tabs .nav-link').forEach(btn => {
+  btn.addEventListener('click', () => {
+    syncFromForm();
+    document.querySelectorAll('#cfg-tabs .nav-link').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.cfg-section').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('pane-' + btn.dataset.pane).classList.add('active');
+  });
+});
+
+document.getElementById('pesi-tbody').addEventListener('input', syncPesiFromForm);
+
+document.getElementById('reload-btn').addEventListener('click', () => loadDefault().catch(e => showStatus(e.message, 'danger')));
+document.getElementById('validate-btn').addEventListener('click', () => {
+  syncFromForm();
+  try {
+    ValcompConfig.validate(cfg);
+    showStatus('Configurazione valida.', 'success');
+  } catch (e) {
+    showStatus(e.message, 'danger');
+  }
+});
+
+document.getElementById('download-btn').addEventListener('click', () => {
+  syncFromForm();
+  try { ValcompConfig.validate(cfg); } catch (e) { showStatus(e.message, 'danger'); return; }
+  const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: (cfg.id || 'criteri-config') + '.json',
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showStatus('File scaricato. Sostituire <code>docs/config/criteri-config-v1.0.json</code> nel repository.', 'success');
+});
+
+document.getElementById('load-file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      cfg = ValcompConfig.validate(JSON.parse(ev.target.result));
+      syncToForm();
+      showStatus('File caricato.', 'success');
+    } catch (err) { showStatus(err.message, 'danger'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('apply-json-btn').addEventListener('click', () => {
+  try {
+    cfg = ValcompConfig.validate(JSON.parse(document.getElementById('json-editor').value));
+    syncToForm();
+    showStatus('JSON applicato.', 'success');
+  } catch (e) { showStatus(e.message, 'danger'); }
+});
+
+document.getElementById('add-tco-btn').addEventListener('click', () => {
+  syncFromForm();
+  cfg.tco_voci.push({ id: 'nuova_voce', label: 'Nuova voce', gruppo: 'ALTRO' });
+  renderTco();
+});
+
+document.getElementById('add-help-btn').addEventListener('click', () => {
+  syncFromForm();
+  const key = 'nuovo.campo';
+  cfg.field_help[key] = { help: 'Testo suggerimento…' };
+  renderHelp();
+});
+
+document.getElementById('add-link-btn').addEventListener('click', () => {
+  syncFromForm();
+  cfg.ref_links['nuovoLink'] = 'https://';
+  renderLinks();
+});
+
+loadDefault().catch(e => showStatus(e.message, 'danger'));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/js/bootstrap-italia.bundle.min.js"></script>
+</body>
+</html>

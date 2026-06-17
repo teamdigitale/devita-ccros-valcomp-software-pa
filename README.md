@@ -22,6 +22,40 @@ La **[Web App](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/)
 - Compilare tutti i criteri previsti dalla normativa (interoperabilità, privacy, sicurezza, accessibilità, TCO, ...)
 - Ottenere la classifica finale tramite algoritmo TOPSIS
 - Salvare e riprendere il lavoro tramite export/import JSON
+- Importare metadati delle soluzioni da `publiccode.yml`, dalla scheda nel [catalogo Developers Italia](https://developers.italia.it/it/software) o dal repository GitHub
+
+### Configurazione criteri (per maintainer)
+
+I criteri, i pesi TOPSIS, le voci TCO e i testi di aiuto sono definiti in un file JSON esterno, modificabile senza toccare la logica del wizard.
+
+| Risorsa | Percorso |
+|---------|----------|
+| File di configurazione attivo | [`docs/config/criteri-config-v1.0.json`](docs/config/criteri-config-v1.0.json) |
+| Editor web (uso locale) | [`docs/config-editor.html`](docs/config-editor.html) |
+| Logica caricamento / migrazione | [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js) |
+| Piano migrazione valutazioni | [`documentation/config-migration.md`](documentation/config-migration.md) |
+
+**Avvio locale** (necessario per il caricamento della config via `fetch`):
+
+```bash
+cd docs && python3 -m http.server 8765
+```
+
+Poi aprire `http://localhost:8765/config-editor.html` per modificare criteri e pesi, oppure `http://localhost:8765/` per il wizard.
+
+#### Rendere attiva una nuova configurazione
+
+1. **Modifica** il JSON con l'editor web o edit diretto; incrementa `versione` e, se serve, cambia `id` (es. `criteri-config-v1.1`).
+2. **Salva** il file in `docs/config/` (nuovo file o sostituzione del file esistente).
+3. **Punta il wizard al file attivo** aggiornando la costante `DEFAULT_URL` in [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js):
+
+   ```javascript
+   const DEFAULT_URL = 'config/criteri-config-v1.1.json';
+   ```
+
+4. **Aggiungi regole di migrazione** in `migrations` nel JSON se hai rinominato o rimosso criteri/voci TCO (vedi [`documentation/config-migration.md`](documentation/config-migration.md)).
+5. **Verifica**: ricarica il wizard, controlla criteri e pesi; importa una valutazione JSON esistente e leggi eventuali avvisi di migrazione.
+6. **Pubblica** il branch (es. GitHub Pages su `docs/`): al prossimo deploy tutti gli utenti useranno la nuova config; le valutazioni già esportate restano importabili grazie allo snapshot `config_criteri` nell'export e alla migrazione automatica.
 
 ## Fogli di calcolo
 
@@ -60,6 +94,22 @@ The **[Web App](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/
 - Fill in all criteria required by regulations (interoperability, privacy, security, accessibility, TCO, ...)
 - Obtain the final ranking via the TOPSIS algorithm
 - Save and resume work via JSON export/import
+- Import solution metadata from `publiccode.yml`, a [Developers Italia catalog](https://developers.italia.it/en/software) page, or a GitHub repository
+
+### Criteria configuration (for maintainers)
+
+Criteria, TOPSIS weights, TCO line items, and field help texts are defined in an external JSON file.
+
+| Resource | Path |
+|----------|------|
+| Active config file | [`docs/config/criteri-config-v1.0.json`](docs/config/criteri-config-v1.0.json) |
+| Local web editor | [`docs/config-editor.html`](docs/config-editor.html) |
+| Load / migration logic | [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js) |
+| Migration plan | [`documentation/config-migration.md`](documentation/config-migration.md) |
+
+Run locally with `cd docs && python3 -m http.server 8765`, then open `config-editor.html` or the wizard at `http://localhost:8765/`.
+
+To **activate a new config**: save the JSON under `docs/config/`, bump `versione`/`id`, update `DEFAULT_URL` in `docs/js/valcomp-config.js`, add `migrations` rules if needed, test import of an existing evaluation, and deploy.
 
 ## Spreadsheets
 
