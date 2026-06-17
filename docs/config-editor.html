@@ -10,9 +10,87 @@
     #json-editor { font-family: ui-monospace, monospace; font-size: .8125rem; min-height: 420px; }
     .cfg-section { display: none; }
     .cfg-section.active { display: block; }
-    .item-row { border-left: 3px solid #0066cc; padding-left: .75rem; margin-bottom: .75rem; }
-    .cri-card-header { border-bottom: 1px solid #dee2e6; padding-bottom: .75rem; margin-bottom: .75rem; }
-    .tipo-hint { font-size: .75rem; color: #6c757d; margin-top: .25rem; }
+    .tipo-hint { font-size: .75rem; color: #6c757d; margin-top: .25rem; line-height: 1.3; }
+
+    /* ── Gruppi criteri ── */
+    .cri-group-card {
+      border: 1px solid #dee2e6;
+      border-radius: .375rem;
+      margin-bottom: 1rem;
+      background: #fff;
+      overflow: hidden;
+    }
+    .cri-group-head {
+      display: grid;
+      grid-template-columns: 10rem minmax(12rem, 1fr) 13rem auto;
+      gap: .75rem 1rem;
+      align-items: start;
+      padding: .85rem 1rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .cri-group-head .field-label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 600;
+      color: #6c757d;
+      margin-bottom: .25rem;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+    .cri-group-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: .5rem;
+      min-width: 7.5rem;
+    }
+    .cri-group-body { padding: .5rem 1rem .85rem; }
+    .cri-items-table {
+      width: 100%;
+      margin-bottom: .5rem;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .cri-items-table th {
+      font-size: .72rem;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      padding: .4rem .5rem;
+      border-bottom: 1px solid #dee2e6;
+      white-space: nowrap;
+    }
+    .cri-items-table td {
+      padding: .35rem .5rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .cri-items-table tr:last-child td { border-bottom: none; }
+    .cri-items-table .col-id { width: 6.5rem; }
+    .cri-items-table .col-val { width: 4.5rem; }
+    .cri-items-table .col-obbl { width: 4.5rem; text-align: center; }
+    .cri-items-table .col-act { width: 5.5rem; text-align: right; white-space: nowrap; }
+    .cri-items-table input.form-control-sm { width: 100%; }
+    .cri-empty-msg { font-size: .875rem; color: #6c757d; margin: .25rem 0 .5rem; }
+
+    @media (max-width: 992px) {
+      .cri-group-head {
+        grid-template-columns: 1fr 1fr;
+      }
+      .cri-group-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+    }
+    @media (max-width: 576px) {
+      .cri-group-head { grid-template-columns: 1fr; }
+      .cri-items-table .col-act { width: auto; }
+    }
   </style>
 </head>
 <body>
@@ -390,83 +468,91 @@ function renderTipoOptions(selected) {
 
 function renderCriteriItems(key, def) {
   if (def.tipo === 'numero_dipendenze' || def.tipo === 'numero_pa') {
-    return `<p class="small text-muted mb-0">Nessuna voce da elencare — il wizard mostra campi numerici dedicati.</p>`;
+    return `<p class="cri-empty-msg mb-0">Nessuna voce da elencare — il wizard mostra campi numerici dedicati.</p>`;
   }
+
   if (def.tipo === 'vitalita') {
     const rows = (def.fields || []).map((f, j) => `
-      <div class="item-row">
-        <div class="row g-2 align-items-center">
-          <div class="col-md-3"><label class="small text-muted">ID campo</label>
-            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="id" value="${esc(f.id)}" /></div>
-          <div class="col-md-5"><label class="small text-muted">Etichetta</label>
-            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="label" value="${esc(f.label)}" /></div>
-          <div class="col-md-2"><label class="small text-muted">Peso</label>
-            <input class="form-control form-control-sm" data-vit data-j="${j}" data-k="weight" value="${esc(f.weight)}" /></div>
-          <div class="col-md-2 text-end">
-            <button type="button" class="btn btn-outline-danger btn-sm" data-action="del-vit-field" data-group="${esc(key)}" data-j="${j}">Elimina</button>
-          </div>
-        </div>
-      </div>`).join('');
-    return `<h3 class="h6 mt-2">Campi vitalità</h3>${rows}
-      <button type="button" class="btn btn-outline-secondary btn-sm mt-1" data-action="add-vit-field" data-group="${esc(key)}">+ Campo</button>`;
+      <tr>
+        <td class="col-id"><input class="form-control form-control-sm font-monospace" data-vit data-j="${j}" data-k="id" value="${esc(f.id)}" aria-label="ID campo" /></td>
+        <td><input class="form-control form-control-sm" data-vit data-j="${j}" data-k="label" value="${esc(f.label)}" aria-label="Etichetta campo" /></td>
+        <td class="col-val"><input class="form-control form-control-sm" data-vit data-j="${j}" data-k="weight" value="${esc(f.weight)}" aria-label="Peso" /></td>
+        <td class="col-act">
+          <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" data-action="del-vit-field" data-group="${esc(key)}" data-j="${j}" title="Elimina campo">Elimina</button>
+        </td>
+      </tr>`).join('');
+    return `
+      <table class="cri-items-table">
+        <thead><tr>
+          <th class="col-id">ID</th><th>Etichetta</th><th class="col-val">Peso</th><th class="col-act"></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-action="add-vit-field" data-group="${esc(key)}">+ Campo</button>`;
   }
 
   const isRadio = def.tipo === 'radio';
   const showObbl = def.tipo === 'sinon' || def.tipo === 'sinon_nonec';
   const rows = (def.items || []).map((item, j) => `
-    <div class="item-row">
-      <div class="row g-2 align-items-center">
-        <div class="col-md-2"><label class="small text-muted">ID</label>
-          <input class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="id" value="${esc(item.id)}" /></div>
-        <div class="col${isRadio ? '-md-6' : '-md-8'}"><label class="small text-muted">Testo</label>
-          <input class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="testo" value="${esc(item.testo || '')}" /></div>
-        ${isRadio ? `<div class="col-md-1"><label class="small text-muted">Val.</label>
-          <input type="number" class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="valore" value="${item.valore ?? 0}" /></div>` : ''}
-        ${showObbl ? `<div class="col-md-1"><div class="form-check mt-3">
-          <input type="checkbox" data-cri-item data-j="${j}" data-k="obbligatorio" ${item.obbligatorio ? 'checked' : ''} />
-          <label class="form-check-label small">Obbl.</label></div></div>` : ''}
-        <div class="col-md-2 text-end">
-          <button type="button" class="btn btn-outline-danger btn-sm" data-action="del-item" data-group="${esc(key)}" data-j="${j}">Elimina</button>
+    <tr>
+      <td class="col-id"><input class="form-control form-control-sm font-monospace" data-cri-item data-j="${j}" data-k="id" value="${esc(item.id)}" aria-label="ID voce" /></td>
+      <td><input class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="testo" value="${esc(item.testo || '')}" aria-label="Testo voce" /></td>
+      ${isRadio ? `<td class="col-val"><input type="number" class="form-control form-control-sm" data-cri-item data-j="${j}" data-k="valore" value="${item.valore ?? 0}" aria-label="Valore" /></td>` : ''}
+      ${showObbl ? `<td class="col-obbl">
+        <div class="form-check d-inline-flex justify-content-center mb-0">
+          <input type="checkbox" class="form-check-input" data-cri-item data-j="${j}" data-k="obbligatorio" ${item.obbligatorio ? 'checked' : ''} id="obbl-${esc(key)}-${j}" />
+          <label class="form-check-label visually-hidden" for="obbl-${esc(key)}-${j}">Obbligatorio</label>
         </div>
-      </div>
-    </div>`).join('');
+      </td>` : ''}
+      <td class="col-act">
+        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" data-action="del-item" data-group="${esc(key)}" data-j="${j}" title="Elimina voce">Elimina</button>
+      </td>
+    </tr>`).join('');
 
-  return `${rows}
-    <button type="button" class="btn btn-outline-secondary btn-sm mt-1" data-action="add-item" data-group="${esc(key)}">+ Voce</button>`;
+  const headCols = isRadio
+    ? `<th class="col-id">ID</th><th>Testo</th><th class="col-val">Val.</th><th class="col-act"></th>`
+    : showObbl
+      ? `<th class="col-id">ID</th><th>Testo</th><th class="col-obbl">Obbl.</th><th class="col-act"></th>`
+      : `<th class="col-id">ID</th><th>Testo</th><th class="col-act"></th>`;
+
+  return `
+    <table class="cri-items-table">
+      <thead><tr>${headCols}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <button type="button" class="btn btn-outline-secondary btn-sm" data-action="add-item" data-group="${esc(key)}">+ Voce</button>`;
 }
 
 function renderCriteri() {
   const root = document.getElementById('criteri-editor');
   root.innerHTML = Object.entries(cfg.criteri || {}).map(([key, def]) => `
-    <div class="card mb-3" data-group-key="${esc(key)}">
-      <div class="card-body">
-        <div class="cri-card-header">
-          <div class="row g-2 align-items-end">
-            <div class="col-md-3">
-              <label class="small">ID gruppo</label>
-              <input class="form-control form-control-sm font-monospace" data-k="groupId" value="${esc(key)}" />
-            </div>
-            <div class="col-md-4">
-              <label class="small">Etichetta</label>
-              <input class="form-control form-control-sm" data-k="label" value="${esc(def.label)}" />
-            </div>
-            <div class="col-md-3">
-              <label class="small">Tipo</label>
-              <select class="form-select form-select-sm" data-k="tipo">${renderTipoOptions(def.tipo)}</select>
-              <div class="tipo-hint">${esc(TIPO_HINT[def.tipo] || '')}</div>
-            </div>
-            <div class="col-md-2">
-              <div class="form-check mb-2">
-                <input type="checkbox" data-k="obbligatorio" ${def.obbligatorio ? 'checked' : ''} />
-                <label class="form-check-label small">Obbligatorio</label>
-              </div>
-              <button type="button" class="btn btn-outline-danger btn-sm w-100" data-action="del-group" data-group="${esc(key)}">Elimina gruppo</button>
-            </div>
-          </div>
+    <article class="cri-group-card" data-group-key="${esc(key)}">
+      <div class="cri-group-head">
+        <div>
+          <span class="field-label">ID gruppo</span>
+          <input class="form-control form-control-sm font-monospace" data-k="groupId" value="${esc(key)}" />
         </div>
+        <div>
+          <span class="field-label">Etichetta</span>
+          <input class="form-control form-control-sm" data-k="label" value="${esc(def.label)}" />
+        </div>
+        <div>
+          <span class="field-label">Tipo</span>
+          <select class="form-select form-select-sm" data-k="tipo">${renderTipoOptions(def.tipo)}</select>
+          <div class="tipo-hint">${esc(TIPO_HINT[def.tipo] || '')}</div>
+        </div>
+        <div class="cri-group-actions">
+          <div class="form-check mb-0">
+            <input type="checkbox" class="form-check-input" data-k="obbligatorio" ${def.obbligatorio ? 'checked' : ''} id="grp-obb-${esc(key)}" />
+            <label class="form-check-label small" for="grp-obb-${esc(key)}">Obbligatorio</label>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-sm" data-action="del-group" data-group="${esc(key)}">Elimina gruppo</button>
+        </div>
+      </div>
+      <div class="cri-group-body">
         ${renderCriteriItems(key, def)}
       </div>
-    </div>`).join('') || '<p class="text-muted small">Nessun gruppo criterio. Aggiungine uno con il pulsante sotto.</p>';
+    </article>`).join('') || '<p class="text-muted small">Nessun gruppo criterio. Aggiungine uno con il pulsante sotto.</p>';
 }
 
 function addCriterioGroup() {
