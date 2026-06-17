@@ -108,6 +108,12 @@
     .topsis-scatter-legend { display: flex; flex-wrap: wrap; gap: .75rem 1rem; }
     .topsis-scatter-legend span { display: inline-flex; align-items: center; gap: .35rem; font-size: .875rem; color: #17324d; }
     .topsis-scatter-dot { width: .8rem; height: .8rem; border-radius: 50%; display: inline-block; }
+    /* Help inline (stile OPNsense Full Help) */
+    .field-help { display: none; margin-top: .25rem; font-size: .8125rem; line-height: 1.4; }
+    .field-help-global .field-help,
+    #sw-modal-overlay.field-help-global .field-help { display: block; }
+    .field-help-toggle { vertical-align: baseline; line-height: 1; }
+    .field-help-toggle .icon { width: 1rem; height: 1rem; color: #0066cc; }
     .it-footer-small-prints,
     .it-footer-small-prints .it-footer-small-prints-list,
     .it-footer-small-prints .list-inline-item,
@@ -245,10 +251,14 @@
     <div class="d-flex flex-wrap align-items-center gap-2 py-2" style="font-size:.85rem">
       <svg class="icon icon-sm flex-shrink-0" aria-hidden="true" style="color:#0066cc"><use href="svg/sprites.svg#it-info-circle"></use></svg>
       <span>Valutazione comparativa ai sensi degli <strong>artt. 68-69 CAD</strong> — tutti i dati rimangono nel browser.</span>
-      <span class="ms-auto d-flex gap-3 flex-wrap">
+      <span class="ms-auto d-flex gap-3 flex-wrap align-items-center">
+        <div class="form-check form-check-inline mb-0">
+          <input class="form-check-input" type="checkbox" id="field-help-toggle" />
+          <label class="form-check-label small" for="field-help-toggle">Mostra suggerimenti</label>
+        </div>
         <a href="about.html" class="text-primary small">Come funziona il metodo</a>
         <a href="https://github.com/teamdigitale/devita-ccros-valcomp-software-pa" target="_blank" rel="noopener" class="text-primary small">GitHub</a>
-        <span class="text-muted small">v3.0 beta</span>
+        <span class="text-muted small">v3.1 next</span>
       </span>
     </div>
   </div>
@@ -397,19 +407,22 @@
       <div class="col-md-7">
         <div class="form-group">
           <label class="active" for="meta-pa">Pubblica Amministrazione compilatrice *</label>
-          <input type="text" class="form-control" id="meta-pa" placeholder="Es. Comune di Roma" />
+          <input type="text" class="form-control" id="meta-pa" placeholder="Es. Comune di Roma" aria-describedby="help-meta-pa" />
+          <div class="field-help text-muted small" id="help-meta-pa">Ente che redige la valutazione comparativa ai sensi degli artt. 68–69 CAD.</div>
         </div>
         <div class="form-group">
           <label class="active" for="meta-data">Data della valutazione *</label>
-          <input type="date" class="form-control" id="meta-data" />
+          <input type="date" class="form-control" id="meta-data" aria-describedby="help-meta-data" />
+          <div class="field-help text-muted small" id="help-meta-data">Data di riferimento del documento di valutazione comparativa.</div>
         </div>
         <div class="form-group">
           <label class="active" for="meta-oggetto">Oggetto della valutazione</label>
-          <input type="text" class="form-control" id="meta-oggetto" placeholder="Es. Sistema di gestione documentale" />
+          <input type="text" class="form-control" id="meta-oggetto" placeholder="Es. Sistema di gestione documentale" aria-describedby="help-meta-oggetto" />
+          <div class="field-help text-muted small" id="help-meta-oggetto">Breve descrizione del software o della categoria oggetto del confronto.</div>
         </div>
         <div class="form-group">
           <label class="active" for="meta-categoria">Categoria software</label>
-          <select class="form-select" id="meta-categoria">
+          <select class="form-select" id="meta-categoria" aria-describedby="help-meta-categoria">
             <option value="">— Seleziona —</option>
             <option value="gestione-progetti">Gestione progetti</option>
             <option value="comunicazione">Comunicazione</option>
@@ -422,6 +435,7 @@
             <option value="altro">Altro</option>
           </select>
           <small class="form-text text-muted">Usata per pre-impostare i pesi nello step TOPSIS.</small>
+          <div class="field-help text-muted small" id="help-meta-categoria">Corrisponde al foglio «Pesi criteri di valutazione» dello strumento AgID: applica un preset di pesi nello step TOPSIS.</div>
         </div>
       </div>
       <div class="col-md-5">
@@ -519,7 +533,7 @@
           <p class="mb-0 small">
             <a href="about.html" target="_blank" rel="noopener">Come funziona la valutazione →</a>
             ·
-            <a href="https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI) →</a>
+            <a href="https://www.agid.gov.it/it/argomenti/interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI) →</a>
             ·
             <a href="https://developers.italia.it/it/riuso/" target="_blank" rel="noopener">Sviluppo e riuso del software PA →</a>
           </p>
@@ -537,11 +551,13 @@
         <div class="col-md-4 d-flex gap-3 justify-content-end">
           <div class="form-group mb-0" style="min-width:100px">
             <label class="active" for="tco-durata" style="position:static;font-size:.75rem;display:block;margin-bottom:.25rem">Durata (anni)</label>
-            <input type="number" class="form-control form-control-sm" id="tco-durata" value="5" min="1" max="20" style="width:80px" />
+            <input type="number" class="form-control form-control-sm" id="tco-durata" value="5" min="1" max="20" style="width:80px" aria-describedby="help-tco-durata" />
+            <div class="field-help text-muted small" id="help-tco-durata">Anni di valutazione/amortamento del TCO (come nel foglio di calcolo AgID).</div>
           </div>
           <div class="form-group mb-0" style="min-width:100px">
             <label class="active" for="tco-npa" style="position:static;font-size:.75rem;display:block;margin-bottom:.25rem">N° PA</label>
-            <input type="number" class="form-control form-control-sm" id="tco-npa" value="1" min="1" style="width:80px" />
+            <input type="number" class="form-control form-control-sm" id="tco-npa" value="1" min="1" style="width:80px" aria-describedby="help-tco-npa" />
+            <div class="field-help text-muted small" id="help-tco-npa">Numero di PA che condividono i costi — parametro documentale nel foglio originale.</div>
           </div>
         </div>
       </div>
@@ -557,7 +573,7 @@
             ·
             <a href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68" target="_blank" rel="noopener">Art. 68 CAD →</a>
             ·
-            <a href="https://github.com/AgID/ccros-valcomp/blob/lab/documentation/manual.md#5-tco" target="_blank" rel="noopener">Guida originale AgID: TCO →</a>
+            <a href="https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/acquisizione-software/valutazione-comparativa.html" target="_blank" rel="noopener">Guida valutazione comparativa →</a>
           </p>
         </div>
       </div>
@@ -576,6 +592,13 @@
 
     <!-- Tab: Pesi -->
     <div class="inner-tab-pane active" id="topsis-pesi">
+      <div class="callout callout-note mb-3" id="topsis-pesi-hint">
+        <div class="callout-inner">
+          <div class="callout-title"><svg class="icon" aria-hidden="true"><use href="svg/sprites.svg#it-info-circle"></use></svg><span class="text">Classifica TOPSIS</span></div>
+          <p class="mb-0 small">Dopo aver impostato i pesi, clicca <strong>Calcola classifica TOPSIS</strong> oppure apri la tab <strong>Risultati</strong>. La classifica non compare in questa tab.</p>
+        </div>
+      </div>
+      <div id="topsis-validation-banner" class="d-none mb-3"></div>
       <p class="text-muted small">Inserire i pesi (0–1) per ciascun criterio. TCO è sempre 1 (obbligatorio per legge).</p>
       <div class="row mb-3">
         <div class="col-md-6">
@@ -699,7 +722,7 @@
             <h4>Normativa</h4>
             <div class="link-list-wrapper"><ul class="footer-list link-list clearfix">
               <li><a class="list-item" href="https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82" target="_blank" rel="noopener">Art. 68-69 CAD (Normattiva)</a></li>
-              <li><a class="list-item" href="https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI)</a></li>
+              <li><a class="list-item" href="https://www.agid.gov.it/it/argomenti/interoperabilita" target="_blank" rel="noopener">Modello di Interoperabilità (ModI)</a></li>
             </ul></div>
           </div>
           <div class="col-lg-4 col-sm-6 pb-3">
@@ -732,8 +755,9 @@
 
 // ── Costanti ────────────────────────────────────────────────
 const SW_MAX = 8;
-const SW_MIN = 2;   // usato solo per il warning all'avvio calcolo
+const SW_MIN = 2;
 const SW_DEL_MIN = 1; // minimo per la cancellazione (una sola soluzione è OK)
+const FIELD_HELP_STORAGE_KEY = 'valcomp-field-help-global';
 const SW_LETTERS = ['A','B','C','D','E','F','G','H'];
 const SW_COLORS  = ['#0066cc','#008055','#cc6600','#9900cc','#cc0055','#006666','#886600','#003388'];
 const MEDALS     = ['🥇','🥈','🥉','4°','5°','6°','7°','8°'];
@@ -776,13 +800,78 @@ const PESI_DEF = [
 
 const COST_CRITERIA = new Set(['tco','dipendenze']);
 
+/** Link di riferimento verificati (hub AgID + docs.italia) */
+const REF_LINKS = {
+  modi: 'https://www.agid.gov.it/it/argomenti/interoperabilita',
+  modiHub: 'https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita',
+  lgInterop: 'https://docs.italia.it/italia/pa-digitalizzazione/lg-interoperabilita-docs/it/last/',
+  schemaGov: 'https://schema.gov.it',
+  ccros: 'https://www.agid.gov.it/it/design-servizi/riuso-open-source/centro-competenza-riuso-open-source',
+  valComparativa: 'https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/acquisizione-software/valutazione-comparativa.html',
+  developersRiuso: 'https://developers.italia.it/it/riuso/',
+  accessibilita: 'https://www.agid.gov.it/it/design-servizi/accessibilita',
+  cad68: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68',
+};
+
+const FIELD_HELP = {
+  'sw.nome': { help: 'Nome commerciale o identificativo usato nel report e nella classifica TOPSIS.' },
+  'sw.titolarita': { help: 'Ente pubblico o titolare del software in riuso (come da catalogo o publiccode.yml).' },
+  'sw.maintainer': { help: 'Soggetto che cura manutenzione e supporto (ente, azienda, community).' },
+  'sw.sito': { help: 'Sito ufficiale del progetto — utile per la documentazione della valutazione.' },
+  'sw.repo': { help: 'Repository pubblico (GitHub/GitLab) per verificare vitalità e licenza open source.' },
+  'sw.publiccode': { help: 'URL del publiccode.yml per importare anagrafica e metadati.', link: REF_LINKS.developersRiuso, linkLabel: 'Riuso software PA' },
+  'sw.req.intro': { help: 'Indica quanto ogni requisito è coperto da questa soluzione. Il punteggio ponderato alimenta il criterio TOPSIS «Copertura requisiti».' },
+  'sw.req.copertura': { help: 'Percentuale 0–100. Solo i requisiti definiti nello step Requisiti vengono considerati.' },
+  'sw.req.note': { help: 'Note facoltative (moduli parziali, roadmap, limitazioni).' },
+  'criteri.interoperabilita': { help: 'Criteri obbligatori per legge. Verificare conformità al Modello di Interoperabilità (ModI).', link: REF_LINKS.modi, linkLabel: 'ModI AgID' },
+  'criteri.interoperabilita.i1': { help: 'Protocolli e pattern di interazione previsti dal ModI (API REST/SOAP).', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
+  'criteri.interoperabilita.i2': { help: 'Pubblicazione open data in formati aperti come da Linee guida interoperabilità.', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
+  'criteri.interoperabilita.i3': { help: 'Uso di ontologie e vocabolari controllati della PA.', link: REF_LINKS.schemaGov, linkLabel: 'schema.gov.it' },
+  'criteri.interoperabilita.i4': { help: 'Integrazione con ecosistemi PA rilevanti (SPID, PagoPA, anagrafe, protocollo, ecc.).' },
+  'criteri.protezione_dati': { help: 'Criteri obbligatori sulla protezione dei dati personali nel software.' },
+  'criteri.protezione_dati.p1': { help: 'Funzionalità di anonimizzazione o pseudonimizzazione dei dati.' },
+  'criteri.protezione_dati.p2': { help: 'Crittografia per archiviazione, trasferimento e elaborazione dei dati.' },
+  'criteri.protezione_dati.p3': { help: 'Possibilità di cancellazione definitiva dei dati a richiesta.' },
+  'criteri.sicurezza': { help: 'Criteri obbligatori su autenticazione, autorizzazione e sicurezza delle interazioni.', link: REF_LINKS.lgInterop, linkLabel: 'Pattern sicurezza ModI' },
+  'criteri.sicurezza.s1': { help: 'Protocolli ModI per autenticazione e autorizzazione (SPID, CIE, OAuth2, SAML).', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
+  'criteri.sicurezza.s2': { help: 'Protocolli ModI per integrità e confidenzialità dei dati scambiati.', link: REF_LINKS.lgInterop, linkLabel: 'Linee guida interoperabilità' },
+  'criteri.accessibilita': { help: 'Conformità alle Linee guida di accessibilità AgID (0 = non conforme, 2 = pienamente conforme).', link: REF_LINKS.accessibilita, linkLabel: 'Accessibilità AgID' },
+  'criteri.manutentore': { help: 'Disponibilità di soggetti in grado di manutenere il software.' },
+  'criteri.supporto': { help: 'Supporto per installazione, personalizzazione e assistenza. «Non nec.» = non necessario per questo software.' },
+  'criteri.supporto.su1': { help: 'Accordi con terzi per installazione e personalizzazione.' },
+  'criteri.supporto.su2': { help: 'Soggetti in grado di fornire supporto. «Non nec.» se il supporto non è richiesto.' },
+  'criteri.dipendenze': { help: 'Conteggio dipendenze proprietarie e open source. Formula: 2×proprietarie + open source — criterio costo (meno è meglio).' },
+  'criteri.competenze_pa': { help: 'Competenze interne della PA per gestire e personalizzare il software.' },
+  'criteri.numero_pa': { help: 'PA che già utilizzano o sono interessate alla soluzione — indicatore di maturità e riuso.' },
+  'criteri.vitalita': { help: 'Metriche dal repository. Se commit = 0 il punteggio vitalità è zero indipendentemente dagli altri valori.' },
+  'criteri.vitalita.giorni': { help: 'Giorni dall\'ultimo commit — bonus se ≤ 365 giorni (peso 0,30).' },
+  'criteri.vitalita.commit': { help: 'Commit negli ultimi 3 anni (peso 0,40 nel punteggio grezzo).' },
+  'criteri.vitalita.contributi': { help: 'Contributori attivi negli ultimi 3 anni (peso 0,15).' },
+  'criteri.vitalita.release': { help: 'Release negli ultimi 3 anni (peso 0,15).' },
+  'tco.intro': { help: 'Stima del Total Cost of Ownership per art. 68 CAD. Non è obbligatorio compilare tutte le voci.', link: REF_LINKS.valComparativa, linkLabel: 'Guida valutazione comparativa' },
+  'tco.durata': { help: 'Anni di valutazione/amortamento del TCO (come nel foglio di calcolo AgID).' },
+  'tco.npa': { help: 'Numero di PA che condividono i costi — parametro documentale nel foglio originale.' },
+  'tco.sviluppo': { help: 'Costi di sviluppo complessivi o personalizzazioni iniziali.' },
+  'tco.integrazione': { help: 'Costi per integrare il software con i sistemi esistenti della PA.' },
+  'tco.hardware': { help: 'Server, periferiche, apparati di rete necessari.' },
+  'tco.consegna': { help: 'Spese di consegna, trasporto e assicurazione.' },
+  'tco.adeguamento': { help: 'Adeguamento alle specifiche e verifica di conformità.' },
+  'tco.formazione': { help: 'Formazione del personale sulla nuova soluzione.' },
+  'tco.licenze': { help: 'Licenze software proprietarie, se presenti.' },
+  'tco.assistenza': { help: 'Assistenza tecnica e manutenzione evolutiva/correttiva.' },
+  'tco.cloud': { help: 'Hosting, cloud, connettività e servizi gestiti.' },
+  'tco.gestione': { help: 'Gestione operativa e supporto al day-by-day.' },
+  'tco.migrazione': { help: 'Migrazione dati e dismissione sistemi legacy.' },
+  'tco.sicurezza_c': { help: 'Costi per sicurezza, audit e compliance normativa.' },
+};
+
 const CRITERI_DEF = {
   interoperabilita: {
     label: 'Interoperabilità *', obbligatorio: true, tipo: 'sinon',
     items: [
-      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
-      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
-      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true, url:"https://schema.gov.it" },
+      { id:'i1', testo:"Utilizzo dei protocolli per l'interoperabilità del ModI *", obbligatorio:true },
+      { id:'i2', testo:"Esposizione Open Data nei formati aperti del ModI *", obbligatorio:true },
+      { id:'i3', testo:"Utilizzo della semantica e delle ontologie della PA", obbligatorio:true },
       { id:'i4', testo:"Interoperabilità con gli ecosistemi della PA di interesse", obbligatorio:false },
     ]
   },
@@ -797,8 +886,8 @@ const CRITERI_DEF = {
   sicurezza: {
     label: 'Sicurezza *', obbligatorio: true, tipo: 'sinon',
     items: [
-      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
-      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true, url:"https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita" },
+      { id:'s1', testo:"Utilizzo dei protocolli per autenticazione e autorizzazione del ModI *", obbligatorio:true },
+      { id:'s2', testo:"Utilizzo dei protocolli per integrità e confidenzialità del ModI *", obbligatorio:true },
     ]
   },
   accessibilita: {
@@ -1305,10 +1394,21 @@ function switchSwTab(btn, paneId) {
   syncUIState();
 }
 
+function fieldHelpHTML(key) {
+  const h = FIELD_HELP[key];
+  if (!h) return '';
+  const id = 'help-' + key.replace(/\./g, '-');
+  let body = escH(h.help);
+  if (h.link) {
+    body += ` <a href="${h.link}" target="_blank" rel="noopener" class="small">${escH(h.linkLabel || 'Approfondisci →')}</a>`;
+  }
+  return `<div class="field-help text-muted small" id="${id}">${body}</div>`;
+}
+
 function buildModalCriteriHTML(i) {
   let html = '';
   Object.entries(CRITERI_DEF).forEach(([key, def]) => {
-    html += `<div class="mb-3 pb-3 border-bottom"><h6 class="fw-semibold mb-2">${def.label}</h6>`;
+    html += `<div class="mb-3 pb-3 border-bottom"><h6 class="fw-semibold mb-1">${def.label}</h6>${fieldHelpHTML('criteri.' + key)}`;
     if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
       const opts = def.tipo === 'sinon_nonec'
         ? [['','—'],['si','sì'],['no','no'],['nonec','non nec.']]
@@ -1316,12 +1416,16 @@ function buildModalCriteriHTML(i) {
       def.items.forEach(item => {
         const v = (state.criteri[key].items[item.id] || [])[i] || '';
         const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
-        html += `<div class="d-flex align-items-center gap-2 mb-2">
-          <select class="form-select form-select-sm flex-shrink-0" style="max-width:130px${col?`;border-color:${col};color:${col};font-weight:600`:''}"
-            onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;const c=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.borderColor=c;this.style.color=c;this.style.fontWeight=c?'600':''">
-            ${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}
-          </select>
-          <span class="small ${item.obbligatorio?'fw-semibold':''}">${item.url?`<a href="${item.url}" target="_blank" rel="noopener">`:''}${escH(item.testo)}${item.url?'</a>':''}</span>
+        const helpKey = `criteri.${key}.${item.id}`;
+        html += `<div class="mb-2">
+          <div class="d-flex align-items-start gap-2">
+            <select class="form-select form-select-sm flex-shrink-0" style="max-width:130px${col?`;border-color:${col};color:${col};font-weight:600`:''}"
+              onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;const c=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.borderColor=c;this.style.color=c;this.style.fontWeight=c?'600':''">
+              ${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}
+            </select>
+            <span class="small ${item.obbligatorio?'fw-semibold':''}">${escH(item.testo)}</span>
+          </div>
+          ${fieldHelpHTML(helpKey)}
         </div>`;
       });
     } else if (def.tipo === 'radio') {
@@ -1329,7 +1433,7 @@ function buildModalCriteriHTML(i) {
       const opts = def.items.map(item =>
         `<option value="${item.valore}"${selVal===item.valore?' selected':''}>${escH(item.testo)}</option>`
       ).join('');
-      html += `<div class="d-flex align-items-center gap-2 mb-1">
+      html += `<div class="mb-1">
         <select class="form-select form-select-sm"
           onchange="state.criteri['${key}'].scelta[${i}]=+this.value"
           id="mcri-${key}-sel">
@@ -1346,8 +1450,7 @@ function buildModalCriteriHTML(i) {
           <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
             value="${state.criteri.dipendenze.opensource[i]||0}"
             oninput="state.criteri.dipendenze.opensource[${i}]=+this.value||0" /></div>
-      </div>
-      <small class="text-muted">2×proprietarie + open source — valori bassi = punteggio migliore.</small>`;
+      </div>`;
     } else if (def.tipo === 'numero_pa') {
       html += `<div class="d-flex gap-4 flex-wrap">
         <div><label class="small d-block mb-1">PA che <strong>utilizzano</strong></label>
@@ -1363,10 +1466,13 @@ function buildModalCriteriHTML(i) {
       const rows = [['giorni',"Giorni dall'ultimo commit",'0.30'],['commit','Commit (3 anni)','0.40'],['contributi','Contributori (3 anni)','0.15'],['release','Release (3 anni)','0.15']];
       html += `<div class="d-flex gap-3 flex-wrap">`;
       rows.forEach(([f,lbl,w]) => {
-        html += `<div><label class="small d-block mb-1">${lbl} <span class="text-muted">(w=${w})</span></label>
+        html += `<div>
+          <label class="small d-block mb-1">${lbl} <span class="text-muted">(w=${w})</span></label>
           <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
             value="${state.criteri.vitalita[f][i]||0}"
-            oninput="state.criteri.vitalita['${f}'][${i}]=+this.value||0" /></div>`;
+            oninput="state.criteri.vitalita['${f}'][${i}]=+this.value||0" />
+          ${fieldHelpHTML('criteri.vitalita.' + f)}
+        </div>`;
       });
       html += `</div>`;
     }
@@ -1377,7 +1483,8 @@ function buildModalCriteriHTML(i) {
 
 function buildModalTCOHTML(i) {
   const tot = TCO_VOCI.reduce((s,v)=>s+(+state.tco.voci[v.id]?.[i]||0),0);
-  let html = `<p class="small text-muted mb-2">Durata <strong>${state.tco.durata} anni</strong> · <strong>${state.tco.npa}</strong> PA — parametri modificabili nello step TCO.</p>`;
+  let html = fieldHelpHTML('tco.intro');
+  html += `<p class="small text-muted mb-2">Durata <strong>${state.tco.durata} anni</strong> · <strong>${state.tco.npa}</strong> PA — parametri modificabili nello step TCO.</p>`;
   let currentGruppo = '';
   TCO_VOCI.forEach(v => {
     if (v.gruppo !== currentGruppo) {
@@ -1385,13 +1492,16 @@ function buildModalTCOHTML(i) {
       html += `<p class="fw-semibold small mb-1 mt-3 text-muted">${v.gruppo}</p>`;
     }
     const val = state.tco.voci[v.id]?.[i] || 0;
-    html += `<div class="d-flex align-items-center gap-2 mb-2">
-      <label class="small flex-grow-1">${escH(v.label)}</label>
-      <div class="input-group input-group-sm" style="max-width:170px">
-        <span class="input-group-text">€</span>
-        <input type="number" class="form-control" min="0" step="100" value="${val}"
-          oninput="state.tco.voci['${v.id}'][${i}]=+this.value||0;updateTCOTotals();updateModalTCOTotal(${i})" />
+    html += `<div class="mb-2">
+      <div class="d-flex align-items-center gap-2">
+        <label class="small flex-grow-1">${escH(v.label)}</label>
+        <div class="input-group input-group-sm" style="max-width:170px">
+          <span class="input-group-text">€</span>
+          <input type="number" class="form-control" min="0" step="100" value="${val}"
+            oninput="state.tco.voci['${v.id}'][${i}]=+this.value||0;updateTCOTotals();updateModalTCOTotal(${i})" />
+        </div>
       </div>
+      ${fieldHelpHTML('tco.' + v.id)}
     </div>`;
   });
   html += `<div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
@@ -1409,7 +1519,8 @@ function buildModalReqHTML(i) {
   if (!state.requisiti.length) {
     return `<p class="text-muted small mb-0">Nessun requisito definito. Aggiungili nello step <strong>Requisiti</strong>.</p>`;
   }
-  return `<div class="table-scroll">
+  return `${fieldHelpHTML('sw.req.intro')}
+  <div class="table-scroll">
     <table class="table table-sm table-hover mb-0">
       <thead><tr>
         <th>ID</th><th>Tipo</th><th style="min-width:180px">Descrizione</th>
@@ -1420,15 +1531,21 @@ function buildModalReqHTML(i) {
         <td><span class="badge ${r.tipo==='fn'?'bg-primary':'bg-secondary'} small">${r.tipo==='fn'?'FN':'NFN'}</span></td>
         <td class="small">${escH(r.descrizione||'')}</td>
         <td class="small">${r.peso}%</td>
-        <td><input type="number" class="form-control form-control-sm" style="width:80px"
-          value="${r.copertura[i]||0}" min="0" max="100" step="1"
-          oninput="reqSetCop('${r.id}',${i},+this.value)" /></td>
-        <td><input type="text" class="form-control form-control-sm"
-          value="${escH(r.note_copertura?.[i]||'')}"
-          oninput="reqSetNoteCop('${r.id}',${i},this.value)" placeholder="Nota (opz.)" /></td>
+        <td>
+          <input type="number" class="form-control form-control-sm" style="width:80px"
+            value="${r.copertura[i]||0}" min="0" max="100" step="1"
+            oninput="reqSetCop('${r.id}',${i},+this.value)" aria-describedby="help-sw-req-copertura" />
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm"
+            value="${escH(r.note_copertura?.[i]||'')}"
+            oninput="reqSetNoteCop('${r.id}',${i},this.value)" placeholder="Nota (opz.)"
+            aria-describedby="help-sw-req-note" />
+        </td>
       </tr>`).join('')}</tbody>
     </table>
-  </div>`;
+  </div>
+  <div class="mt-2">${fieldHelpHTML('sw.req.copertura')}${fieldHelpHTML('sw.req.note')}</div>`;
 }
 
 function refreshModalReqSection(i) {
@@ -1465,17 +1582,20 @@ function openSwModal(i, initialPane) {
         ${p.publiccode ? `<span class="ms-2 small text-muted">Già inizializzato</span>` : ''}
       </div>
       <div id="pc-fetch-msg"></div>
-      ${[['nome','Nome software','text','Es. OpenCMS'],
-         ['titolarita','Titolarità (ente proprietario)','text','Es. Comune di Roma'],
-         ['maintainer','Maintainer','text','Es. Società SRL'],
-         ['sito','Sito di riferimento','url','https://'],
-         ['repo','Repository GitHub/GitLab','url','https://github.com/...']]
-        .map(([field,label,type,ph])=>`
+      ${fieldHelpHTML('sw.publiccode')}
+      ${[['nome','Nome software','text','Es. OpenCMS','sw.nome'],
+         ['titolarita','Titolarità (ente proprietario)','text','Es. Comune di Roma','sw.titolarita'],
+         ['maintainer','Maintainer','text','Es. Società SRL','sw.maintainer'],
+         ['sito','Sito di riferimento','url','https://','sw.sito'],
+         ['repo','Repository GitHub/GitLab','url','https://github.com/...','sw.repo']]
+        .map(([field,label,type,ph,helpKey])=>`
       <div class="form-group" style="position:relative;padding-top:1.25rem;margin-bottom:.75rem">
         <label class="active" for="swm-${field}" style="position:absolute;top:0;left:0;font-size:.72rem;color:${field==='nome'?swColor(i):''}">${label}</label>
         <input type="${type}" class="form-control form-control-sm" id="swm-${field}"
           value="${escH(p[field]||'')}" placeholder="${ph}"
+          aria-describedby="help-${helpKey.replace(/\./g,'-')}"
           oninput="state.prodotti[${i}]['${field}']=this.value;if('${field}'==='nome'){document.getElementById('sw-modal-title').innerHTML='<span class=\\'sw-tag me-2\\' style=\\'background:${swColor(i)}\\'>${swLetter(i)}</span> '+this.value;updateSwHeaders()}" />
+        ${fieldHelpHTML(helpKey)}
       </div>`).join('')}
     </div>
 
@@ -1493,6 +1613,8 @@ function openSwModal(i, initialPane) {
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
+  const helpOn = document.getElementById('field-help-toggle')?.checked;
+  overlay.classList.toggle('field-help-global', helpOn);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeSwModal(); }, { once: true });
   syncUIState();
 }
@@ -1857,7 +1979,7 @@ function renderCriteri() {
         <tbody>${def.items.map(item => {
           const cur = state.criteri[key].items[item.id] || Array(nSw()).fill('');
           return `<tr>
-            <td class="small">${item.obbligatorio?'<strong>':''}${item.url?`<a href="${item.url}" target="_blank" rel="noopener">`:''}${escH(item.testo)}${item.url?'</a>':''}${item.obbligatorio?'</strong>':''}</td>
+            <td class="small">${item.obbligatorio?'<strong>':''}${escH(item.testo)}${item.obbligatorio?'</strong>':''}</td>
             ${range().map(i => {
               const v = cur[i]||'';
               const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
@@ -2174,8 +2296,71 @@ function buildTopsisScatterHTML(ranking, dP, dM, ci) {
     </div>`;
 }
 
+function goToTopsisResultsTab() {
+  const btn = document.querySelector('#topsis-tab-bar .inner-tab-btn:last-child');
+  if (btn) switchTopsisTab(btn, 'topsis-risultati');
+}
+
+function validateBeforeTopsis() {
+  const errors = [];
+  const warnings = [];
+
+  if (nSw() < SW_MIN) {
+    errors.push(`Servono almeno ${SW_MIN} soluzioni software (attualmente ${nSw()}).`);
+  }
+
+  ['interoperabilita', 'protezione_dati', 'sicurezza'].forEach(key => {
+    CRITERI_DEF[key].items.filter(item => item.obbligatorio).forEach(item => {
+      range().forEach(i => {
+        const v = state.criteri[key].items[item.id]?.[i];
+        if (!v) warnings.push(`${swName(i)}: criterio obbligatorio non compilato (${item.testo.slice(0, 60)}…).`);
+      });
+    });
+  });
+
+  if (state.requisiti.length) {
+    const totPeso = state.requisiti.reduce((t, r) => t + (+r.peso || 0), 0);
+    if (Math.abs(totPeso - 100) > 0.05) {
+      warnings.push(`I pesi dei requisiti sommano ${totPeso.toFixed(1)}% (atteso 100%).`);
+    }
+    if ((state.pesi.copertura_req || 0) > 0 && state.requisiti.every(r => r.copertura.every(c => !+c))) {
+      warnings.push('Il peso «Copertura requisiti» è > 0 ma nessuna copertura è stata indicata.');
+    }
+  }
+
+  const scores = computeScores();
+  const allZero = PESI_DEF.every(p => scores[p.id].every(v => v === 0));
+  if (allZero) warnings.push('Tutti i punteggi grezzi sono zero: la classifica TOPSIS sarà priva di significato.');
+
+  return { errors, warnings };
+}
+
+function renderTopsisValidationBanner(v) {
+  const el = document.getElementById('topsis-validation-banner');
+  if (!el) return;
+  if (!v.errors.length && !v.warnings.length) {
+    el.innerHTML = '';
+    el.classList.add('d-none');
+    return;
+  }
+  el.classList.remove('d-none');
+  const parts = [];
+  if (v.errors.length) {
+    parts.push(`<div class="alert alert-danger py-2 mb-0 small"><strong>Impossibile calcolare:</strong> ${v.errors.map(e => escH(e)).join(' ')}</div>`);
+  }
+  if (v.warnings.length) {
+    const shown = v.warnings.slice(0, 4);
+    const extra = v.warnings.length > shown.length ? ` …e altri ${v.warnings.length - shown.length} avvisi.` : '';
+    parts.push(`<div class="alert alert-warning py-2 mb-0 small"><strong>Attenzione:</strong> ${shown.map(w => escH(w)).join(' ')}${extra}</div>`);
+  }
+  el.innerHTML = parts.join('');
+}
+
 // ── Render: Risultati ────────────────────────────────────────
 function computeAndRenderResults() {
+  const validation = validateBeforeTopsis();
+  renderTopsisValidationBanner(validation);
+  if (validation.errors.length) return false;
   const scores = computeScores();
   const t = computeTOPSIS(scores, state.pesi);
   const { ci, dP, dM, ids } = t;
@@ -2275,6 +2460,7 @@ function computeAndRenderResults() {
       <td colspan="2"></td>
     </tr>
   </tfoot>`;
+  return true;
 }
 
 // ── Export JSON ──────────────────────────────────────────────
@@ -2320,10 +2506,9 @@ function showWizard() {
 }
 function handleNextStep() {
   if (currentStep === TOTAL_STEPS - 2) {
-    computeAndRenderResults();
+    if (!computeAndRenderResults()) return;
     goToStep(currentStep + 1);
-    const btn = document.querySelector('#topsis-tab-bar .inner-tab-btn:last-child');
-    if (btn) switchTopsisTab(btn, 'topsis-risultati');
+    goToTopsisResultsTab();
     return;
   }
   goToStep(currentStep + 1);
@@ -2409,9 +2594,8 @@ function escH(s) {
 
 // ── Event listeners ──────────────────────────────────────────
 document.getElementById('calcola-btn').addEventListener('click', () => {
-  computeAndRenderResults();
-  const btn = document.querySelector('#topsis-tab-bar .inner-tab-btn:last-child');
-  if (btn) switchTopsisTab(btn, 'topsis-risultati');
+  if (!computeAndRenderResults()) return;
+  goToTopsisResultsTab();
 });
 
 document.getElementById('add-sw-btn').addEventListener('click', addSoftware);
@@ -2830,7 +3014,15 @@ document.getElementById('tco-npa').addEventListener('input',    e => { state.tco
 document.querySelectorAll('#steppers-list li').forEach((li, i) => {
   li.style.cursor = 'pointer';
   li.addEventListener('click', () => {
-    if (i === 3) computeAndRenderResults();
+    if (i === 3) {
+      if (!computeAndRenderResults()) {
+        goToStep(i);
+        return;
+      }
+      goToStep(i);
+      goToTopsisResultsTab();
+      return;
+    }
     goToStep(i);
   });
 });
@@ -2965,13 +3157,37 @@ function scheduleUISync() {
   }, 150);
 }
 
-// Salva automaticamente ad ogni input nel documento
+// Salva automaticamente ad ogni input nel documento e nella modale scheda
 document.getElementById('main-content').addEventListener('input', schedulePL);
+document.getElementById('sw-modal-overlay').addEventListener('input', schedulePL, true);
+document.getElementById('sw-modal-overlay').addEventListener('change', schedulePL, true);
 window.addEventListener('scroll', scheduleUISync, { passive: true });
 document.addEventListener('scroll', e => {
   if (e.target?.id === 'sw-modal-body') scheduleUISync();
 }, true);
-window.addEventListener('beforeunload', persistUIState);
+window.addEventListener('beforeunload', () => {
+  persistUIState();
+  persistBrowserSnapshot(state, currentStep, getUIState());
+});
+
+function setFieldHelpGlobal(on) {
+  document.getElementById('wizard-content')?.classList.toggle('field-help-global', on);
+  document.getElementById('sw-modal-overlay')?.classList.toggle('field-help-global', on);
+}
+
+function initFieldHelpToggle() {
+  const toggle = document.getElementById('field-help-toggle');
+  if (!toggle) return;
+  let enabled = false;
+  try { enabled = sessionStorage.getItem(FIELD_HELP_STORAGE_KEY) === '1'; } catch {}
+  toggle.checked = enabled;
+  setFieldHelpGlobal(enabled);
+  toggle.addEventListener('change', () => {
+    const on = toggle.checked;
+    setFieldHelpGlobal(on);
+    try { sessionStorage.setItem(FIELD_HELP_STORAGE_KEY, on ? '1' : '0'); } catch {}
+  });
+}
 
 // Copia URL corrente negli appunti
 document.getElementById('copy-permalink-btn').addEventListener('click', async () => {
@@ -3067,6 +3283,7 @@ function restoreUIState(ui) {
     document.getElementById('wizard-info-bar').style.display = '';
   }
   restoreUIState(restoredUI);
+  initFieldHelpToggle();
   persistBrowserSnapshot(state, currentStep, restoredUI || getUIState());
 })();
 </script>
