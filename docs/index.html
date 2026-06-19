@@ -337,7 +337,7 @@
           <h1>Valutazione Comparativa Tecnica ed Economica</h1>
           <p class="lead mb-3">Strumento per la valutazione comparativa di software a riuso o open source ai sensi degli <strong>artt. 68 e 69 del CAD</strong>. Guida la PA nella scelta tra soluzioni esistenti con un metodo strutturato e documentato.</p>
           <div class="d-flex flex-wrap gap-2">
-            <button class="btn btn-light fw-semibold" id="landing-start-btn" type="button" onclick="showWizard()">
+            <button class="btn btn-light fw-semibold" id="landing-start-btn" type="button" onclick="showWizard()" disabled>
               <svg class="icon icon-sm me-1" aria-hidden="true"><use href="svg/sprites.svg#it-arrow-right"></use></svg>
               Inizia nuova valutazione
             </button>
@@ -803,11 +803,11 @@ function applyPesiPreset(cat) {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
-const nSw = () => state.prodotti.length;
+const nSw = () => state?.prodotti?.length ?? 0;
 const range = () => Array.from({ length: nSw() }, (_, i) => i);
 const swColor = i => SW_COLORS[i % SW_COLORS.length];
 const swLetter = i => SW_LETTERS[i] || String(i+1);
-const swName = i => state.prodotti[i]?.nome || `Software ${swLetter(i)}`;
+const swName = i => state?.prodotti?.[i]?.nome || `Software ${swLetter(i)}`;
 const fmtEur = v => '€ ' + (Math.round(v)||0).toLocaleString('it-IT');
 
 function makeSwArr(def = '') { return Array.from({ length: nSw() }, () => def); }
@@ -818,7 +818,9 @@ function extendSwArr(arr, def = '') {
 function shrinkSwArr(arr, idx) { arr.splice(idx, 1); return arr; }
 
 // ── Stato ────────────────────────────────────────────────────
-let state = buildInitialState();
+let state = null;
+let currentStep = 0;
+let _appReady = false;
 
 function buildInitialState() {
   return normalizeState({
@@ -861,7 +863,7 @@ function normalizeState(s) {
 
   if (!s.tco) s.tco = { voci: {} };
   if (!s.tco.voci) s.tco.voci = {};
-  TCO_VOCI.forEach(v => {
+  (TCO_VOCI || []).forEach(v => {
     if (!s.tco.voci[v.id]) s.tco.voci[v.id] = Array(n).fill(0);
     while(s.tco.voci[v.id].length < n) s.tco.voci[v.id].push(0);
   });
@@ -869,7 +871,7 @@ function normalizeState(s) {
   s.tco.npa = s.tco.npa || 1;
 
   if (!s.pesi) s.pesi = {};
-  PESI_DEF.forEach(p => {
+  (PESI_DEF || []).forEach(p => {
     if (s.pesi[p.id] === undefined) s.pesi[p.id] = p.def;
   });
 
@@ -913,8 +915,6 @@ function rerenderAll() {
 }
 
 // ── Wizard ──────────────────────────────────────────────────
-let currentStep = 0;
-
 function goToStep(n) {
   if (n < 0 || n >= TOTAL_STEPS) return;
   for (let j = 0; j < TOTAL_STEPS; j++) {
@@ -2183,6 +2183,7 @@ function importValutazioneFromParsed(parsed) {
 
 // ── Landing page ─────────────────────────────────────────────
 function showWizard() {
+  if (!_appReady || !state) return;
   document.getElementById('landing-page').classList.add('d-none');
   document.getElementById('wizard-content').classList.add('d-block');
   document.getElementById('step-nav-bar').style.display = '';
@@ -2190,6 +2191,7 @@ function showWizard() {
   syncUIState();
 }
 function handleNextStep() {
+  if (!_appReady || !state) return;
   if (currentStep === TOTAL_STEPS - 2) {
     if (!computeAndRenderResults()) return;
     goToStep(currentStep + 1);
@@ -2200,6 +2202,7 @@ function handleNextStep() {
 }
 
 function handlePrevStep() {
+  if (!_appReady || !state) return;
   goToStep(currentStep - 1);
 }
 
@@ -2770,6 +2773,7 @@ async function decodeStateFromHash(hash) {
 }
 
 async function pushPermalink() {
+  if (!_appReady || !state) return;
   const ui = getUIState();
   persistUIState();
   persistBrowserSnapshot(state, currentStep, ui);
@@ -2907,8 +2911,12 @@ function restoreUIState(ui) {
     document.getElementById('tco-durata').value     = state.tco?.durata     || 5;
     document.getElementById('tco-npa').value        = state.tco?.npa        || 1;
   } else {
+    state = buildInitialState();
     document.getElementById('meta-data').value = state.meta.data;
   }
+  _appReady = true;
+  const startBtn = document.getElementById('landing-start-btn');
+  if (startBtn) startBtn.disabled = false;
   rerenderAll();
   renderPesi();
   if (currentStep === TOTAL_STEPS - 1) computeAndRenderResults();
