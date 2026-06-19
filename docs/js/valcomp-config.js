@@ -1,24 +1,36 @@
 'use strict';
 /**
- * Caricamento configurazione criteri, applicazione ai global del wizard
- * e migrazione delle valutazioni salvate quando la config cambia.
+ * Caricamento configurazione criteri v2, stato wizard e migrazione valutazioni.
  */
 const ValcompConfig = (function () {
-  const DEFAULT_URL = 'config/criteri-config-v1.0.json';
+  const DEFAULT_URL = 'config/criteri-config-v2.0.json';
+  const INPUT_TYPES_WITH_UI = new Set(['si_no', 'si_no_na', 'scelta_unica', 'campi_numerici', 'vitalita']);
   let _config = null;
+
+  function inputType(criterion) {
+    return criterion?.input?.type || '';
+  }
 
   function validate(cfg) {
     if (!cfg || cfg.tipo !== 'criteri-config-valcomp') {
       throw new Error('File di configurazione non valido: tipo atteso "criteri-config-valcomp".');
     }
-    if (!cfg.versione) throw new Error('Configurazione priva di "versione".');
-    if (!cfg.criteri || typeof cfg.criteri !== 'object') {
-      throw new Error('Configurazione priva di "criteri".');
+    if (!cfg.versione || !String(cfg.versione).startsWith('2')) {
+      throw new Error('Configurazione v2 richiesta (versione 2.x). Usare criteri-config-v2.0.json.');
     }
-    if (!Array.isArray(cfg.pesi_def) || !cfg.pesi_def.length) {
-      throw new Error('Configurazione priva di "pesi_def".');
+    if (!Array.isArray(cfg.criteri) || !cfg.criteri.length) {
+      throw new Error('Configurazione priva di array "criteri".');
     }
     if (!Array.isArray(cfg.tco_voci)) throw new Error('Configurazione priva di "tco_voci".');
+    const ids = new Set();
+    cfg.criteri.forEach((c, i) => {
+      if (!c.id) throw new Error(`Criterio #${i} privo di "id".`);
+      if (ids.has(c.id)) throw new Error(`ID criterio duplicato: ${c.id}`);
+      ids.add(c.id);
+      if (!c.input?.type) throw new Error(`Criterio "${c.id}" privo di input.type.`);
+      if (!c.score?.method) throw new Error(`Criterio "${c.id}" privo di score.method.`);
+      if (!c.direction) throw new Error(`Criterio "${c.id}" privo di direction.`);
+    });
     return cfg;
   }
 
@@ -34,17 +46,35 @@ const ValcompConfig = (function () {
     return out;
   }
 
+  function buildPesiDef(criteri) {
+    return criteri.map(c => ({
+      id: c.id,
+      label: c.label,
+      def: c.peso_default ?? 0,
+      note: c.note || '',
+      fixed: !!c.fixed,
+    }));
+  }
+
+  function buildCriteriById(criteri) {
+    const out = {};
+    criteri.forEach(c => { out[c.id] = c; });
+    return out;
+  }
+
   function applyToGlobals() {
     if (!_config) throw new Error('Config non caricata. Chiamare load() prima.');
     const refLinks = _config.ref_links || {};
+    const criteri = _config.criteri;
     window.REF_LINKS = refLinks;
     window.FIELD_HELP = resolveFieldHelp(_config.field_help, refLinks);
-    window.PESI_DEF = _config.pesi_def;
+    window.CRITERI_LIST = criteri;
+    window.CRITERI_BY_ID = buildCriteriById(criteri);
+    window.CRITERI_DEF = window.CRITERI_BY_ID;
+    window.PESI_DEF = buildPesiDef(criteri);
     window.PESI_PRESET = _config.pesi_preset || {};
-    window.CRITERI_DEF = _config.criteri;
     window.TCO_VOCI = _config.tco_voci;
-    window.COST_CRITERIA = new Set(_config.cost_criteria || ['tco', 'dipendenze']);
-    window.SCORING = _config.scoring || {};
+    window.COST_CRITERIA = new Set(criteri.filter(c => c.direction === 'cost').map(c => c.id));
     window.CONFIG_VERSION = _config.versione;
     window.CONFIG_ID = _config.id || `criteri-config-v${_config.versione}`;
     window.CATEGORIE_PRESET = _config.categorie_preset || Object.keys(window.PESI_PRESET).map(id => ({ id, label: id }));
@@ -58,56 +88,62 @@ const ValcompConfig = (function () {
   }
 
   function getConfig() { return _config; }
-  function getVersion() { return _config?.versione || '1.0'; }
+  function getVersion() { return _config?.versione || '2.0'; }
   function getConfigId() { return _config?.id || `criteri-config-v${getVersion()}`; }
 
+  function getCriteriWithUI() {
+    return (_config?.criteri || []).filter(c => INPUT_TYPES_WITH_UI.has(inputType(c)));
+  }
+
   function getVitalitaFields() {
-    return _config?.criteri?.vitalita?.fields || [
-      { id: 'giorni', label: "Giorni dall'ultimo commit", weight: '0.30' },
-      { id: 'commit', label: 'Commit (3 anni)', weight: '0.40' },
-      { id: 'contributi', label: 'Contributori (3 anni)', weight: '0.15' },
-      { id: 'release', label: 'Release (3 anni)', weight: '0.15' },
+    const vit = (_config?.criteri || []).find(c => c.id === 'vitalita');
+    return vit?.input?.fields || [
+      { id: 'giorni', label: "Giorni dall'ultimo commit" },
+      { id: 'commit', label: 'Commit (3 anni)' },
+      { id: 'contributi', label: 'Contributori (3 anni)' },
+      { id: 'release', label: 'Release (3 anni)' },
     ];
   }
 
-  function buildEmptyCriteriState(n) {
+  function initCriterionState(criterion, n) {
     const zeros = () => Array(n).fill(0);
     const empty = () => Array(n).fill('');
+    const type = inputType(criterion);
     const out = {};
-    Object.entries(CRITERI_DEF).forEach(([key, def]) => {
-      if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-        out[key] = { items: {} };
-        (def.items || []).forEach(item => { out[key].items[item.id] = empty(); });
-      } else if (def.tipo === 'radio') {
-        out[key] = { scelta: zeros() };
-      } else if (def.tipo === 'numero_dipendenze') {
-        out[key] = { proprietario: zeros(), opensource: zeros() };
-      } else if (def.tipo === 'numero_pa') {
-        out[key] = { utilizzano: zeros(), interessate: zeros() };
-      } else if (def.tipo === 'vitalita') {
-        out[key] = {};
-        getVitalitaFields().forEach(f => { out[key][f.id] = zeros(); });
-      }
+
+    if (type === 'si_no' || type === 'si_no_na') {
+      out.items = {};
+      (criterion.input.items || []).forEach(item => { out.items[item.id] = empty(); });
+    } else if (type === 'scelta_unica') {
+      out.scelta = zeros();
+    } else if (type === 'campi_numerici' || type === 'vitalita') {
+      (criterion.input.fields || []).forEach(f => { out[f.id] = zeros(); });
+    }
+    return out;
+  }
+
+  function buildEmptyCriteriState(n) {
+    const out = {};
+    (_config?.criteri || []).forEach(c => {
+      const type = inputType(c);
+      if (type === 'tco' || type === 'requisiti_percent') return;
+      out[c.id] = initCriterionState(c, n);
     });
     return out;
   }
 
   function extendStateForNewSolution(state) {
     const c = state.criteri;
-    Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    (_config?.criteri || []).forEach(criterion => {
+      const key = criterion.id;
       if (!c[key]) return;
-      if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const type = inputType(criterion);
+      if (type === 'si_no' || type === 'si_no_na') {
         Object.values(c[key].items || {}).forEach(a => a.push(''));
-      } else if (def.tipo === 'radio') {
+      } else if (type === 'scelta_unica') {
         c[key].scelta.push(0);
-      } else if (def.tipo === 'numero_dipendenze') {
-        c[key].proprietario.push(0);
-        c[key].opensource.push(0);
-      } else if (def.tipo === 'numero_pa') {
-        c[key].utilizzano.push(0);
-        c[key].interessate.push(0);
-      } else if (def.tipo === 'vitalita') {
-        getVitalitaFields().forEach(f => {
+      } else if (type === 'campi_numerici' || type === 'vitalita') {
+        (criterion.input.fields || []).forEach(f => {
           if (!c[key][f.id]) c[key][f.id] = [];
           c[key][f.id].push(0);
         });
@@ -125,20 +161,16 @@ const ValcompConfig = (function () {
 
   function shrinkStateForRemovedSolution(state, idx) {
     const c = state.criteri;
-    Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    (_config?.criteri || []).forEach(criterion => {
+      const key = criterion.id;
       if (!c[key]) return;
-      if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
+      const type = inputType(criterion);
+      if (type === 'si_no' || type === 'si_no_na') {
         Object.values(c[key].items || {}).forEach(a => a.splice(idx, 1));
-      } else if (def.tipo === 'radio') {
+      } else if (type === 'scelta_unica') {
         c[key].scelta.splice(idx, 1);
-      } else if (def.tipo === 'numero_dipendenze') {
-        c[key].proprietario.splice(idx, 1);
-        c[key].opensource.splice(idx, 1);
-      } else if (def.tipo === 'numero_pa') {
-        c[key].utilizzano.splice(idx, 1);
-        c[key].interessate.splice(idx, 1);
-      } else if (def.tipo === 'vitalita') {
-        getVitalitaFields().forEach(f => c[key][f.id]?.splice(idx, 1));
+      } else if (type === 'campi_numerici' || type === 'vitalita') {
+        (criterion.input.fields || []).forEach(f => c[key][f.id]?.splice(idx, 1));
       }
     });
     Object.values(state.tco.voci).forEach(a => a.splice(idx, 1));
@@ -153,7 +185,6 @@ const ValcompConfig = (function () {
     return JSON.parse(JSON.stringify(_config));
   }
 
-  /** Confronta snapshot config nell'export con config attualmente caricata */
   function compareConfigSnapshots(exported, current) {
     const out = { match: true, summary: [] };
     if (!exported) {
@@ -173,45 +204,45 @@ const ValcompConfig = (function () {
       push(`Identificativo config: ${exported.id || '?'} v${exported.versione || '?'} (export) → ${current.id} v${current.versione} (attuale).`);
     }
 
-    const diffKeys = (label, expKeys, curKeys) => {
-      const added = curKeys.filter(k => !expKeys.includes(k));
-      const removed = expKeys.filter(k => !curKeys.includes(k));
-      if (added.length) push(`${label} aggiunti in config attuale: ${added.join(', ')}.`);
-      if (removed.length) push(`${label} rimossi dalla config attuale: ${removed.join(', ')}.`);
-    };
+    const expIds = (exported.criteri || []).map(c => c.id);
+    const curIds = (current.criteri || []).map(c => c.id);
+    const added = curIds.filter(k => !expIds.includes(k));
+    const removed = expIds.filter(k => !curIds.includes(k));
+    if (added.length) push(`Criteri aggiunti in config attuale: ${added.join(', ')}.`);
+    if (removed.length) push(`Criteri rimossi dalla config attuale: ${removed.join(', ')}.`);
 
-    diffKeys('Criteri TOPSIS', (exported.pesi_def || []).map(p => p.id), (current.pesi_def || []).map(p => p.id));
-    diffKeys('Gruppi criteri', Object.keys(exported.criteri || {}), Object.keys(current.criteri || {}));
-    diffKeys('Voci TCO', (exported.tco_voci || []).map(v => v.id), (current.tco_voci || []).map(v => v.id));
-
-    Object.entries(exported.criteri || {}).forEach(([key, def]) => {
-      const cur = current.criteri?.[key];
-      if (!cur) return;
-      if ((def.items || []).length && (cur.items || []).length) {
-        const expIds = def.items.map(i => i.id);
-        const curIds = cur.items.map(i => i.id);
-        const added = curIds.filter(id => !expIds.includes(id));
-        const removed = expIds.filter(id => !curIds.includes(id));
-        if (added.length) push(`Voci "${key}" aggiunte: ${added.join(', ')}.`);
-        if (removed.length) push(`Voci "${key}" rimosse: ${removed.join(', ')}.`);
+    (exported.criteri || []).forEach(expC => {
+      const curC = (current.criteri || []).find(c => c.id === expC.id);
+      if (!curC) return;
+      const expItems = expC.input?.items || [];
+      const curItems = curC.input?.items || [];
+      if (expItems.length && curItems.length) {
+        const expItemIds = expItems.map(i => i.id);
+        const curItemIds = curItems.map(i => i.id);
+        const a = curItemIds.filter(id => !expItemIds.includes(id));
+        const r = expItemIds.filter(id => !curItemIds.includes(id));
+        if (a.length) push(`Voci "${expC.id}" aggiunte: ${a.join(', ')}.`);
+        if (r.length) push(`Voci "${expC.id}" rimosse: ${r.join(', ')}.`);
       }
-      if (def.tipo === 'vitalita' && cur.tipo === 'vitalita') {
-        const expF = (def.fields || []).map(f => f.id);
-        const curF = (cur.fields || []).map(f => f.id);
-        const added = curF.filter(id => !expF.includes(id));
-        const removed = expF.filter(id => !curF.includes(id));
-        if (added.length) push(`Campi vitalità aggiunti: ${added.join(', ')}.`);
-        if (removed.length) push(`Campi vitalità rimossi: ${removed.join(', ')}.`);
+      if (inputType(expC) === 'vitalita' && inputType(curC) === 'vitalita') {
+        const expF = (expC.input?.fields || []).map(f => f.id);
+        const curF = (curC.input?.fields || []).map(f => f.id);
+        const a = curF.filter(id => !expF.includes(id));
+        const r = expF.filter(id => !curF.includes(id));
+        if (a.length) push(`Campi vitalità aggiunti: ${a.join(', ')}.`);
+        if (r.length) push(`Campi vitalità rimossi: ${r.join(', ')}.`);
+      }
+      if (JSON.stringify(expC.score || {}) !== JSON.stringify(curC.score || {})) {
+        push(`Formula score "${expC.id}" diversa rispetto all'export.`);
       }
     });
 
-    if (JSON.stringify(exported.scoring || {}) !== JSON.stringify(current.scoring || {})) {
-      push('Formule di scoring (vitalità, dipendenze, …) diverse rispetto all\'export.');
-    }
-
-    if (JSON.stringify(exported.cost_criteria || []) !== JSON.stringify(current.cost_criteria || [])) {
-      push('Criteri costo TOPSIS modificati.');
-    }
+    const expTco = (exported.tco_voci || []).map(v => v.id);
+    const curTco = (current.tco_voci || []).map(v => v.id);
+    const tcoAdded = curTco.filter(k => !expTco.includes(k));
+    const tcoRemoved = expTco.filter(k => !curTco.includes(k));
+    if (tcoAdded.length) push(`Voci TCO aggiunte: ${tcoAdded.join(', ')}.`);
+    if (tcoRemoved.length) push(`Voci TCO rimosse: ${tcoRemoved.join(', ')}.`);
 
     if (out.match && out.summary.length === 0 && JSON.stringify(stripConfigForCompare(exported)) !== JSON.stringify(stripConfigForCompare(current))) {
       push('Testi o pesi default modificati rispetto all\'export (stesso id/versione).');
@@ -227,15 +258,28 @@ const ValcompConfig = (function () {
     return c;
   }
 
-  /**
-   * Prepara valutazione importata: meta config, confronto snapshot, migrazione dati.
-   * @param {object} envelope - file JSON completo o valutazione grezza
-   * @param {string[]} warnings - messaggi per l'utente
-   */
+  function rejectV1Import(envelope, warnings) {
+    const ver = envelope?.config_versione || envelope?.valutazione?.config_versione;
+    if (ver && !String(ver).startsWith('2')) {
+      warnings.push(`Export con config v${ver} non supportato. Richiesta config v2.0. Vedi documentation/config-migration.md.`);
+      return true;
+    }
+    return false;
+  }
+
   function prepareImportedValutazione(envelope, warnings) {
     const w = warnings || [];
     const isEnvelope = envelope?.tipo === 'valutazione-comparativa-software' && envelope.valutazione;
+
+    if (isEnvelope && rejectV1Import(envelope, w)) {
+      throw new Error('Import non supportato: export con configurazione v1. Aggiornare la valutazione manualmente o riesportare con config v2.');
+    }
+
     const imported = JSON.parse(JSON.stringify(isEnvelope ? envelope.valutazione : envelope));
+
+    if (!isEnvelope && imported.config_versione && !String(imported.config_versione).startsWith('2')) {
+      throw new Error('Import non supportato: valutazione con configurazione v1.');
+    }
 
     if (isEnvelope) {
       if (envelope.config_versione && !imported.config_versione) {
@@ -256,13 +300,12 @@ const ValcompConfig = (function () {
     return imported;
   }
 
-  /** Applica regole di migrazione config → valutazione importata */
   function migrateValutazione(valutazione, warnings) {
     const w = warnings || [];
     if (!valutazione || typeof valutazione !== 'object') return valutazione;
 
-    const fromVersion = valutazione.config_versione || '1.0';
-    const fromId = valutazione.config_id || 'criteri-config-v1.0';
+    const fromVersion = valutazione.config_versione || '2.0';
+    const fromId = valutazione.config_id || 'criteri-config-v2.0';
     const toVersion = getVersion();
     const toId = getConfigId();
 
@@ -276,9 +319,10 @@ const ValcompConfig = (function () {
     valutazione.tco.voci = valutazione.tco.voci || {};
     valutazione.pesi = valutazione.pesi || {};
 
-    // Criteri rimossi dalla config → archivio _legacy.criteri
+    const validIds = new Set((_config?.criteri || []).map(c => c.id));
+
     Object.keys(valutazione.criteri).forEach(key => {
-      if (!CRITERI_DEF[key]) {
+      if (!validIds.has(key)) {
         valutazione._legacy.criteri = valutazione._legacy.criteri || {};
         valutazione._legacy.criteri[key] = valutazione.criteri[key];
         delete valutazione.criteri[key];
@@ -286,14 +330,16 @@ const ValcompConfig = (function () {
       }
     });
 
-    // Sotto-chiavi rimosse (items si/no, campi vitalità, voci TCO)
-    Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+    (_config?.criteri || []).forEach(criterion => {
+      const key = criterion.id;
       const cur = valutazione.criteri[key];
       if (!cur) return;
-      if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-        const validIds = new Set((def.items || []).map(i => i.id));
+      const type = inputType(criterion);
+
+      if (type === 'si_no' || type === 'si_no_na') {
+        const validItemIds = new Set((criterion.input.items || []).map(i => i.id));
         Object.keys(cur.items || {}).forEach(itemId => {
-          if (!validIds.has(itemId)) {
+          if (!validItemIds.has(itemId)) {
             valutazione._legacy.criteri = valutazione._legacy.criteri || {};
             valutazione._legacy.criteri[key] = valutazione._legacy.criteri[key] || {};
             valutazione._legacy.criteri[key].items = valutazione._legacy.criteri[key].items || {};
@@ -303,9 +349,11 @@ const ValcompConfig = (function () {
           }
         });
       }
-      if (def.tipo === 'vitalita') {
-        const validFields = new Set(getVitalitaFields().map(f => f.id));
+
+      if (type === 'campi_numerici' || type === 'vitalita') {
+        const validFields = new Set((criterion.input.fields || []).map(f => f.id));
         Object.keys(cur).forEach(fieldId => {
+          if (fieldId === 'items' || fieldId === 'scelta') return;
           if (!validFields.has(fieldId)) {
             valutazione._legacy.criteri = valutazione._legacy.criteri || {};
             valutazione._legacy.criteri[key] = valutazione._legacy.criteri[key] || {};
@@ -316,7 +364,6 @@ const ValcompConfig = (function () {
       }
     });
 
-    // Voci TCO rimosse
     const validTco = new Set(TCO_VOCI.map(v => v.id));
     Object.keys(valutazione.tco.voci).forEach(vid => {
       if (!validTco.has(vid)) {
@@ -327,7 +374,6 @@ const ValcompConfig = (function () {
       }
     });
 
-    // Pesi TOPSIS per criteri rimossi
     Object.keys(valutazione.pesi).forEach(pid => {
       if (!PESI_DEF.find(p => p.id === pid)) {
         valutazione._legacy.pesi = valutazione._legacy.pesi || {};
@@ -337,7 +383,6 @@ const ValcompConfig = (function () {
       }
     });
 
-    // Migrazioni esplicite definite nel file config (rename, map)
     (_config.migrations || []).forEach(m => {
       if (m.from_version !== fromVersion || m.to_version !== toVersion) return;
       (m.rename_criteri || []).forEach(({ from, to }) => {
@@ -374,6 +419,22 @@ const ValcompConfig = (function () {
     };
   }
 
+  /** Opzioni select per input.type checklist */
+  function getChecklistOptions(inputTypeName) {
+    if (inputTypeName === 'si_no_na') {
+      return [['', '—'], ['si', 'sì'], ['no', 'no'], ['na', 'N/A']];
+    }
+    return [['', '—'], ['si', 'sì'], ['no', 'no']];
+  }
+
+  function getChecklistLabels() {
+    return { si: 'sì', no: 'no', na: 'N/A', '': '—' };
+  }
+
+  function getChecklistColors() {
+    return { si: '#008055', no: '#cc334d', na: '#995c00', '': '#aaa' };
+  }
+
   return {
     load,
     applyToGlobals,
@@ -385,12 +446,17 @@ const ValcompConfig = (function () {
     compareConfigSnapshots,
     prepareImportedValutazione,
     getVitalitaFields,
+    getCriteriWithUI,
     buildEmptyCriteriState,
     extendStateForNewSolution,
     shrinkStateForRemovedSolution,
     migrateValutazione,
     exportMetaPatch,
     exportEnvelopeConfigFields,
+    getChecklistOptions,
+    getChecklistLabels,
+    getChecklistColors,
+    inputType,
     DEFAULT_URL,
   };
 })();

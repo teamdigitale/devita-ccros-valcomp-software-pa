@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/teamdigitale/devita-ccros-valcomp-software-pa/main/docs/schema/criteri-config-v2.0.json",
+  "title": "Configurazione criteri Valcomp v2",
+  "description": "Schema per criteri-config-valcomp v2 — array ordinato criteri con input.type e score.method dichiarativi.",
+  "type": "object",
+  "required": ["tipo", "versione", "id", "criteri", "tco_voci"],
+  "properties": {
+    "tipo": { "type": "string", "const": "criteri-config-valcomp" },
+    "versione": { "type": "string", "pattern": "^2" },
+    "id": { "type": "string" },
+    "descrizione": { "type": "string" },
+    "ref_links": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "format": "uri" }
+    },
+    "criteri": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/criterio" }
+    },
+    "pesi_preset": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "categorie_preset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "tco_voci": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "gruppo"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "gruppo": { "type": "string" }
+        }
+      }
+    },
+    "field_help": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "help": { "type": "string" },
+          "link": { "type": "string" },
+          "linkLabel": { "type": "string" }
+        }
+      }
+    },
+    "migrations": { "type": "array" }
+  },
+  "$defs": {
+    "inputType": {
+      "type": "string",
+      "enum": ["si_no", "si_no_na", "scelta_unica", "campi_numerici", "vitalita", "tco", "requisiti_percent"]
+    },
+    "scoreMethod": {
+      "type": "string",
+      "enum": [
+        "sum_tco",
+        "count_value",
+        "count_value_with_override",
+        "selected_value",
+        "linear_combination",
+        "sum_fields",
+        "vitalita",
+        "weighted_average_percent"
+      ]
+    },
+    "criterio": {
+      "type": "object",
+      "required": ["id", "label", "direction", "input", "score"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "peso_default": { "type": "number", "minimum": 0, "maximum": 1 },
+        "note": { "type": "string" },
+        "fixed": { "type": "boolean" },
+        "obbligatorio": { "type": "boolean" },
+        "direction": { "type": "string", "enum": ["benefit", "cost"] },
+        "input": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "$ref": "#/$defs/inputType" },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "testo"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "testo": { "type": "string" },
+                  "obbligatorio": { "type": "boolean" },
+                  "valore": { "type": "number" }
+                }
+              }
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "label"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "label": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "score": {
+          "type": "object",
+          "required": ["method"],
+          "properties": {
+            "method": { "$ref": "#/$defs/scoreMethod" },
+            "value": { "type": "string" },
+            "if_any": {
+              "type": "object",
+              "properties": {
+                "value": { "type": "string" },
+                "then": { "type": "number" }
+              }
+            },
+            "terms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string" },
+                  "factor": { "type": "number" }
+                }
+              }
+            },
+            "weight_field": { "type": "string" },
+            "requires_nonzero": { "type": "string" },
+            "giorni_soglia": { "type": "number" },
+            "weights": {
+              "type": "object",
+              "additionalProperties": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

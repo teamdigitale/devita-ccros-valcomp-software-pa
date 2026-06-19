@@ -26,16 +26,20 @@ La **[Web App](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/)
 
 ### Configurazione criteri (per maintainer)
 
-I criteri, i pesi TOPSIS, le voci TCO e i testi di aiuto sono definiti in un file JSON esterno, modificabile senza toccare la logica del wizard.
+I criteri, i pesi TOPSIS, le voci TCO e i testi di aiuto sono definiti in un file JSON esterno v2 (`input` + `score` dichiarativi per ogni criterio TOPSIS), modificabile senza toccare la logica del wizard.
 
 **Editor web (GitHub Pages):** [config-editor.html](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config-editor.html) — stesso deploy del wizard, utilizzabile dal browser senza installazioni. Le modifiche si scaricano in JSON e vanno committate nel repository per diventare attive nel wizard.
 
 | Risorsa | Online | Sorgente nel repo |
 |---------|--------|-------------------|
 | Editor configurazione | [GitHub Pages](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config-editor.html) | [`docs/config-editor.html`](docs/config-editor.html) |
-| File di configurazione attivo | [JSON](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config/criteri-config-v1.0.json) | [`docs/config/criteri-config-v1.0.json`](docs/config/criteri-config-v1.0.json) |
+| File di configurazione attivo | [JSON](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config/criteri-config-v2.0.json) | [`docs/config/criteri-config-v2.0.json`](docs/config/criteri-config-v2.0.json) |
+| Schema config v2 | — | [`docs/schema/criteri-config-v2.0.json`](docs/schema/criteri-config-v2.0.json) |
+| Motore scoring | — | [`docs/js/valcomp-scoring.js`](docs/js/valcomp-scoring.js) |
 | Logica caricamento / migrazione | — | [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js) |
-| Piano migrazione valutazioni | — | [`documentation/config-migration.md`](documentation/config-migration.md) |
+| Piano migrazione (breaking v2) | — | [`documentation/config-migration.md`](documentation/config-migration.md) |
+
+**Modello v2 (maintainer):** ogni criterio in `criteri[]` ha `input.type` (`si_no`, `si_no_na`, `scelta_unica`, `campi_numerici`, `vitalita`, …) e `score.method` (`count_value`, `count_value_with_override`, `selected_value`, …). I requisiti restano in percentuale 0–100 nello step dedicato.
 
 **Avvio locale** (solo per sviluppo, stesso comportamento di GitHub Pages):
 
@@ -47,16 +51,17 @@ Poi aprire `http://localhost:8765/config-editor.html` o `http://localhost:8765/`
 
 #### Rendere attiva una nuova configurazione
 
-1. **Modifica** il JSON con l'editor web o edit diretto; incrementa `versione` e, se serve, cambia `id` (es. `criteri-config-v1.1`).
+1. **Modifica** il JSON con l'editor web o edit diretto; incrementa `versione` e, se serve, cambia `id` (es. `criteri-config-v2.1`).
 2. **Salva** il file in `docs/config/` (nuovo file o sostituzione del file esistente).
 3. **Punta il wizard al file attivo** aggiornando la costante `DEFAULT_URL` in [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js):
 
    ```javascript
-   const DEFAULT_URL = 'config/criteri-config-v1.1.json';
+   const DEFAULT_URL = 'config/criteri-config-v2.1.json';
    ```
 
 4. **Aggiungi regole di migrazione** in `migrations` nel JSON se hai rinominato o rimosso criteri/voci TCO (vedi [`documentation/config-migration.md`](documentation/config-migration.md)).
-5. **Verifica**: ricarica il wizard, controlla criteri e pesi; importa una valutazione JSON esistente e leggi eventuali avvisi di migrazione.
+5. **Verifica**: ricarica il wizard, controlla criteri e pesi; importa una valutazione JSON v2 e leggi eventuali avvisi.
+6. **Nota v2:** export con `config_versione: "1.0"` non sono più importabili — migrazione manuale richiesta.
 6. **Pubblica** il branch (es. GitHub Pages su `docs/`): al prossimo deploy tutti gli utenti useranno la nuova config; le valutazioni già esportate restano importabili grazie allo snapshot `config_criteri` nell'export e alla migrazione automatica.
 
 ## Fogli di calcolo
@@ -100,16 +105,20 @@ The **[Web App](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/
 
 ### Criteria configuration (for maintainers)
 
-Criteria, TOPSIS weights, TCO line items, and field help texts are defined in an external JSON file.
+Criteria, TOPSIS weights, TCO line items, and field help texts are defined in an external **v2 JSON** file (each TOPSIS criterion declares `input` + `score`).
 
 **Web editor (GitHub Pages):** [config-editor.html](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config-editor.html) — same deployment as the wizard; download the JSON and commit it to the repo to activate changes.
 
 | Resource | Online | Source in repo |
 |----------|--------|----------------|
 | Config editor | [GitHub Pages](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config-editor.html) | [`docs/config-editor.html`](docs/config-editor.html) |
-| Active config file | [JSON](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config/criteri-config-v1.0.json) | [`docs/config/criteri-config-v1.0.json`](docs/config/criteri-config-v1.0.json) |
+| Active config file | [JSON](https://teamdigitale.github.io/devita-ccros-valcomp-software-pa/config/criteri-config-v2.0.json) | [`docs/config/criteri-config-v2.0.json`](docs/config/criteri-config-v2.0.json) |
+| Config schema v2 | — | [`docs/schema/criteri-config-v2.0.json`](docs/schema/criteri-config-v2.0.json) |
+| Scoring engine | — | [`docs/js/valcomp-scoring.js`](docs/js/valcomp-scoring.js) |
 | Load / migration logic | — | [`docs/js/valcomp-config.js`](docs/js/valcomp-config.js) |
-| Migration plan | — | [`documentation/config-migration.md`](documentation/config-migration.md) |
+| Migration plan (v2 breaking) | — | [`documentation/config-migration.md`](documentation/config-migration.md) |
+
+**v2 model:** each entry in `criteri[]` has `input.type` (`si_no`, `si_no_na`, `scelta_unica`, …) and `score.method`. Requirements stay as 0–100% in their dedicated step.
 
 For local development: `cd docs && python3 -m http.server 8765`, then open `http://localhost:8765/config-editor.html` or the wizard.
 

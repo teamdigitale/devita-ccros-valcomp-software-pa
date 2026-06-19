@@ -85,15 +85,15 @@
           "properties": {
             "interoperabilita": {
               "type": "object",
-              "properties": { "items": { "type": "object", "description": "Chiavi i1-i4, array per soluzione con valori si/no/nonec" } }
+              "properties": { "items": { "type": "object", "description": "Chiavi i1-i4, array per soluzione con valori si/no" } }
             },
             "protezione_dati": {
               "type": "object",
-              "properties": { "items": { "type": "object", "description": "Chiavi p1-p3, array per soluzione con valori si/no/nonec" } }
+              "properties": { "items": { "type": "object", "description": "Chiavi p1-p3, array per soluzione con valori si/no" } }
             },
             "sicurezza": {
               "type": "object",
-              "properties": { "items": { "type": "object", "description": "Chiavi s1-s2, array per soluzione con valori si/no/nonec" } }
+              "properties": { "items": { "type": "object", "description": "Chiavi s1-s2, array per soluzione con valori si/no" } }
             },
             "accessibilita": {
               "type": "object",
@@ -105,7 +105,7 @@
             },
             "supporto": {
               "type": "object",
-              "properties": { "items": { "type": "object", "description": "Chiavi su1-su2, array per soluzione con valori si/no/nonec" } }
+              "properties": { "items": { "type": "object", "description": "Chiavi su1-su2, array per soluzione con valori si/no/na (N/A)" } }
             },
             "dipendenze": {
               "type": "object",

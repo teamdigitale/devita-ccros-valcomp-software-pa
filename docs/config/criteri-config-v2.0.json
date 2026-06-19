@@ -1,0 +1,294 @@
+{
+  "tipo": "criteri-config-valcomp",
+  "versione": "2.0",
+  "id": "criteri-config-v2.0",
+  "descrizione": "Configurazione criteri v2 — input e score dichiarativi per CCROS Valutazione Comparativa",
+  "ref_links": {
+    "modi": "https://www.agid.gov.it/it/argomenti/interoperabilita",
+    "modiHub": "https://www.agid.gov.it/it/infrastrutture/sistema-pubblico-connettivita/il-nuovo-modello-di-interoperabilita",
+    "lgInterop": "https://docs.italia.it/italia/pa-digitalizzazione/lg-interoperabilita-docs/it/last/",
+    "schemaGov": "https://schema.gov.it",
+    "ccros": "https://www.agid.gov.it/it/design-servizi/riuso-open-source/centro-competenza-riuso-open-source",
+    "valComparativa": "https://docs.italia.it/italia/developers-italia/lg-acquisizione-e-riuso-software-per-pa-docs/it/stabile/acquisizione-software/valutazione-comparativa.html",
+    "developersRiuso": "https://developers.italia.it/it/riuso/",
+    "accessibilita": "https://www.agid.gov.it/it/design-servizi/accessibilita",
+    "cad68": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2005-03-07;82!vig=2024-01-01~art68"
+  },
+  "criteri": [
+    {
+      "id": "tco",
+      "label": "TCO",
+      "peso_default": 1,
+      "note": "Obbligatorio — Art. 68 CAD",
+      "fixed": true,
+      "direction": "cost",
+      "input": { "type": "tco" },
+      "score": { "method": "sum_tco" }
+    },
+    {
+      "id": "interoperabilita",
+      "label": "Interoperabilità",
+      "peso_default": 0.7,
+      "obbligatorio": true,
+      "direction": "benefit",
+      "input": {
+        "type": "si_no",
+        "items": [
+          { "id": "i1", "testo": "Utilizzo dei protocolli per l'interoperabilità del ModI", "obbligatorio": true },
+          { "id": "i2", "testo": "Esposizione Open Data nei formati aperti del ModI", "obbligatorio": true },
+          { "id": "i3", "testo": "Utilizzo della semantica e delle ontologie della PA", "obbligatorio": true },
+          { "id": "i4", "testo": "Interoperabilità con gli ecosistemi della PA di interesse", "obbligatorio": false }
+        ]
+      },
+      "score": { "method": "count_value", "value": "si" }
+    },
+    {
+      "id": "protezione_dati",
+      "label": "Protezione dati personali",
+      "peso_default": 0.6,
+      "obbligatorio": true,
+      "direction": "benefit",
+      "input": {
+        "type": "si_no",
+        "items": [
+          { "id": "p1", "testo": "Utilizzo di tecniche di anonimizzazione/pseudonimizzazione", "obbligatorio": true },
+          { "id": "p2", "testo": "Utilizzo di crittografia per immagazzinamento, trasferimento e processamento dei dati", "obbligatorio": true },
+          { "id": "p3", "testo": "Possibilità di cancellazione definitiva dei dati", "obbligatorio": true }
+        ]
+      },
+      "score": { "method": "count_value", "value": "si" }
+    },
+    {
+      "id": "sicurezza",
+      "label": "Sicurezza",
+      "peso_default": 0.8,
+      "obbligatorio": true,
+      "direction": "benefit",
+      "input": {
+        "type": "si_no",
+        "items": [
+          { "id": "s1", "testo": "Utilizzo dei protocolli per autenticazione e autorizzazione del ModI", "obbligatorio": true },
+          { "id": "s2", "testo": "Utilizzo dei protocolli per integrità e confidenzialità del ModI", "obbligatorio": true }
+        ]
+      },
+      "score": { "method": "count_value", "value": "si" }
+    },
+    {
+      "id": "accessibilita",
+      "label": "Accessibilità",
+      "peso_default": 0,
+      "obbligatorio": true,
+      "direction": "benefit",
+      "input": {
+        "type": "scelta_unica",
+        "items": [
+          { "id": "a0", "testo": "Il software NON è conforme alle Linee guida sull'accessibilità", "valore": 0 },
+          { "id": "a1", "testo": "Il software è PARZIALMENTE conforme alle Linee guida sull'accessibilità", "valore": 1 },
+          { "id": "a2", "testo": "Il software è DEL TUTTO conforme alle Linee guida sull'accessibilità", "valore": 2 }
+        ]
+      },
+      "score": { "method": "selected_value" }
+    },
+    {
+      "id": "copertura_req",
+      "label": "Copertura requisiti",
+      "peso_default": 0,
+      "note": "Compilare lo step Requisiti",
+      "direction": "benefit",
+      "input": { "type": "requisiti_percent" },
+      "score": { "method": "weighted_average_percent", "weight_field": "peso" }
+    },
+    {
+      "id": "manutentore",
+      "label": "Manutentore",
+      "peso_default": 0,
+      "direction": "benefit",
+      "input": {
+        "type": "scelta_unica",
+        "items": [
+          { "id": "m0", "testo": "Assenza di manutentori esterni", "valore": 0 },
+          { "id": "m1", "testo": "Presenza di manutentori esterni nel mercato", "valore": 1 },
+          { "id": "m2", "testo": "Presenza di manutentori esterni in-house o nella PA", "valore": 2 }
+        ]
+      },
+      "score": { "method": "selected_value" }
+    },
+    {
+      "id": "supporto",
+      "label": "Supporto",
+      "peso_default": 0,
+      "direction": "benefit",
+      "input": {
+        "type": "si_no_na",
+        "items": [
+          { "id": "su1", "testo": "Presenza di accordi con terzi per supporto di installazione/personalizzazione" },
+          { "id": "su2", "testo": "Presenza di soggetti in grado di fornire supporto (N/A = non applicabile)" }
+        ]
+      },
+      "score": {
+        "method": "count_value_with_override",
+        "value": "si",
+        "if_any": { "value": "na", "then": 3 }
+      }
+    },
+    {
+      "id": "dipendenze",
+      "label": "Dipendenze",
+      "peso_default": 0,
+      "note": "Criterio costo (meno = meglio)",
+      "direction": "cost",
+      "input": {
+        "type": "campi_numerici",
+        "fields": [
+          { "id": "proprietario", "label": "Dipendenze proprietarie" },
+          { "id": "opensource", "label": "Dipendenze open source" }
+        ]
+      },
+      "score": {
+        "method": "linear_combination",
+        "terms": [
+          { "field": "proprietario", "factor": 2 },
+          { "field": "opensource", "factor": 1 }
+        ]
+      }
+    },
+    {
+      "id": "competenze_pa",
+      "label": "Competenze PA",
+      "peso_default": 0,
+      "direction": "benefit",
+      "input": {
+        "type": "scelta_unica",
+        "items": [
+          { "id": "c0", "testo": "Le risorse PA NON hanno alcuna competenza", "valore": 0 },
+          { "id": "c1", "testo": "Le risorse PA hanno competenza LIMITATA", "valore": 1 },
+          { "id": "c2", "testo": "Le risorse PA hanno competenza ECCELLENTE", "valore": 2 }
+        ]
+      },
+      "score": { "method": "selected_value" }
+    },
+    {
+      "id": "numero_pa",
+      "label": "Numero PA",
+      "peso_default": 0,
+      "direction": "benefit",
+      "input": {
+        "type": "campi_numerici",
+        "fields": [
+          { "id": "utilizzano", "label": "PA che utilizzano" },
+          { "id": "interessate", "label": "PA interessate" }
+        ]
+      },
+      "score": { "method": "sum_fields" }
+    },
+    {
+      "id": "vitalita",
+      "label": "Vitalità",
+      "peso_default": 0.8,
+      "direction": "benefit",
+      "input": {
+        "type": "vitalita",
+        "fields": [
+          { "id": "giorni", "label": "Giorni dall'ultimo commit" },
+          { "id": "commit", "label": "Commit (3 anni)" },
+          { "id": "contributi", "label": "Contributori (3 anni)" },
+          { "id": "release", "label": "Release (3 anni)" }
+        ]
+      },
+      "score": {
+        "method": "vitalita",
+        "requires_nonzero": "commit",
+        "giorni_soglia": 365,
+        "weights": { "commit": 0.4, "contributi": 0.15, "release": 0.15, "giorni_bonus": 0.3 }
+      }
+    }
+  ],
+  "pesi_preset": {
+    "gestione-progetti": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.7, "copertura_req": 0, "manutentore": 0.5, "supporto": 0.7, "dipendenze": 0.6, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "comunicazione": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.5, "copertura_req": 0, "manutentore": 0.6, "supporto": 0, "dipendenze": 0, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "ufficio-contabilita": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.8, "copertura_req": 0, "manutentore": 0.5, "supporto": 0.8, "dipendenze": 0.6, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "sviluppo-software": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0, "copertura_req": 0, "manutentore": 0.6, "supporto": 0, "dipendenze": 0, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "scientifico-ingegneria": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.7, "copertura_req": 0, "manutentore": 1, "supporto": 0.6, "dipendenze": 0, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "multimedia": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.7, "copertura_req": 0, "manutentore": 0.5, "supporto": 0.7, "dipendenze": 0.6, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "sicurezza": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.8, "copertura_req": 0, "manutentore": 0.7, "supporto": 0.8, "dipendenze": 0.6, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "ludicizzazione": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.5, "copertura_req": 0, "manutentore": 0.6, "supporto": 0, "dipendenze": 0, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 },
+    "altro": { "tco": 1, "interoperabilita": 1, "protezione_dati": 1, "sicurezza": 1, "accessibilita": 0.7, "copertura_req": 0, "manutentore": 0.6, "supporto": 0, "dipendenze": 0, "competenze_pa": 0, "numero_pa": 0, "vitalita": 0.8 }
+  },
+  "categorie_preset": [
+    { "id": "gestione-progetti", "label": "Gestione progetti" },
+    { "id": "comunicazione", "label": "Comunicazione" },
+    { "id": "ufficio-contabilita", "label": "Ufficio e contabilità" },
+    { "id": "sviluppo-software", "label": "Sviluppo software" },
+    { "id": "scientifico-ingegneria", "label": "Applicazioni scientifiche e di ingegneria" },
+    { "id": "multimedia", "label": "Multimedia" },
+    { "id": "sicurezza", "label": "Sicurezza" },
+    { "id": "ludicizzazione", "label": "Ludicizzazione" },
+    { "id": "altro", "label": "Altro" }
+  ],
+  "tco_voci": [
+    { "id": "sviluppo", "label": "Costi di sviluppo dell'intero software", "gruppo": "CAPEX" },
+    { "id": "integrazione", "label": "Integrazione con i propri sistemi", "gruppo": "CAPEX" },
+    { "id": "hardware", "label": "Hardware (server, periferiche, apparati rete)", "gruppo": "CAPEX" },
+    { "id": "consegna", "label": "Costi di consegna e assicurazione", "gruppo": "CAPEX" },
+    { "id": "adeguamento", "label": "Adeguamento alle specifiche e verifica conformità", "gruppo": "CAPEX" },
+    { "id": "formazione", "label": "Formazione del personale", "gruppo": "OPEX" },
+    { "id": "licenze", "label": "Licenze software (se presenti)", "gruppo": "OPEX" },
+    { "id": "assistenza", "label": "Assistenza tecnica e manutenzione", "gruppo": "OPEX" },
+    { "id": "cloud", "label": "Servizi cloud / hosting / connettività", "gruppo": "OPEX" },
+    { "id": "gestione", "label": "Gestione e supporto operativo", "gruppo": "OPEX" },
+    { "id": "migrazione", "label": "Migrazione dati e dismissione sistemi legacy", "gruppo": "ALTRO" },
+    { "id": "sicurezza_c", "label": "Costi di sicurezza e compliance", "gruppo": "ALTRO" }
+  ],
+  "field_help": {
+    "sw.nome": { "help": "Nome commerciale o identificativo usato nel report e nella classifica TOPSIS." },
+    "sw.titolarita": { "help": "Ente pubblico o titolare del software in riuso (come da catalogo o publiccode.yml)." },
+    "sw.maintainer": { "help": "Soggetto che cura manutenzione e supporto (ente, azienda, community)." },
+    "sw.sito": { "help": "Sito ufficiale del progetto — utile per la documentazione della valutazione." },
+    "sw.repo": { "help": "Repository pubblico (GitHub/GitLab) per verificare vitalità e licenza open source." },
+    "sw.publiccode": { "help": "Riferimento usato per l'import metadati: URL publiccode.yml, scheda catalogo Developers Italia o repository GitHub.", "link": "developersRiuso", "linkLabel": "Riuso software PA" },
+    "sw.req.intro": { "help": "Indica quanto ogni requisito è coperto da questa soluzione. Il punteggio ponderato alimenta il criterio TOPSIS «Copertura requisiti»." },
+    "sw.req.copertura": { "help": "Percentuale 0–100. Solo i requisiti definiti nello step Requisiti vengono considerati." },
+    "sw.req.note": { "help": "Note facoltative (moduli parziali, roadmap, limitazioni)." },
+    "criteri.interoperabilita": { "help": "Criteri obbligatori per legge. Verificare conformità al Modello di Interoperabilità (ModI).", "link": "modi", "linkLabel": "ModI AgID" },
+    "criteri.interoperabilita.i1": { "help": "Protocolli e pattern di interazione previsti dal ModI (API REST/SOAP).", "link": "lgInterop", "linkLabel": "Linee guida interoperabilità" },
+    "criteri.interoperabilita.i2": { "help": "Pubblicazione open data in formati aperti come da Linee guida interoperabilità.", "link": "lgInterop", "linkLabel": "Linee guida interoperabilità" },
+    "criteri.interoperabilita.i3": { "help": "Uso di ontologie e vocabolari controllati della PA.", "link": "schemaGov", "linkLabel": "schema.gov.it" },
+    "criteri.interoperabilita.i4": { "help": "Integrazione con ecosistemi PA rilevanti (SPID, PagoPA, anagrafe, protocollo, ecc.)." },
+    "criteri.protezione_dati": { "help": "Criteri obbligatori sulla protezione dei dati personali nel software." },
+    "criteri.protezione_dati.p1": { "help": "Funzionalità di anonimizzazione o pseudonimizzazione dei dati." },
+    "criteri.protezione_dati.p2": { "help": "Crittografia per archiviazione, trasferimento e elaborazione dei dati." },
+    "criteri.protezione_dati.p3": { "help": "Possibilità di cancellazione definitiva dei dati a richiesta." },
+    "criteri.sicurezza": { "help": "Criteri obbligatori su autenticazione, autorizzazione e sicurezza delle interazioni.", "link": "lgInterop", "linkLabel": "Pattern sicurezza ModI" },
+    "criteri.sicurezza.s1": { "help": "Protocolli ModI per autenticazione e autorizzazione (SPID, CIE, OAuth2, SAML).", "link": "lgInterop", "linkLabel": "Linee guida interoperabilità" },
+    "criteri.sicurezza.s2": { "help": "Protocolli ModI per integrità e confidenzialità dei dati scambiati.", "link": "lgInterop", "linkLabel": "Linee guida interoperabilità" },
+    "criteri.accessibilita": { "help": "Conformità alle Linee guida di accessibilità AgID (0 = non conforme, 2 = pienamente conforme).", "link": "accessibilita", "linkLabel": "Accessibilità AgID" },
+    "criteri.manutentore": { "help": "Disponibilità di soggetti in grado di manutenere il software." },
+    "criteri.supporto": { "help": "Supporto per installazione, personalizzazione e assistenza. N/A = non applicabile per questo software." },
+    "criteri.supporto.su1": { "help": "Accordi con terzi per installazione e personalizzazione." },
+    "criteri.supporto.su2": { "help": "Soggetti in grado di fornire supporto. N/A se il supporto non è richiesto." },
+    "criteri.dipendenze": { "help": "Conteggio dipendenze proprietarie e open source. Formula: 2×proprietarie + open source — criterio costo (meno è meglio)." },
+    "criteri.competenze_pa": { "help": "Competenze interne della PA per gestire e personalizzare il software." },
+    "criteri.numero_pa": { "help": "PA che già utilizzano o sono interessate alla soluzione — indicatore di maturità e riuso." },
+    "criteri.vitalita": { "help": "Metriche dal repository. Se commit = 0 il punteggio vitalità è zero indipendentemente dagli altri valori." },
+    "criteri.vitalita.giorni": { "help": "Giorni dall'ultimo commit — bonus se ≤ 365 giorni." },
+    "criteri.vitalita.commit": { "help": "Commit negli ultimi 3 anni." },
+    "criteri.vitalita.contributi": { "help": "Contributori attivi negli ultimi 3 anni." },
+    "criteri.vitalita.release": { "help": "Release negli ultimi 3 anni." },
+    "tco.intro": { "help": "Stima del Total Cost of Ownership per art. 68 CAD. Non è obbligatorio compilare tutte le voci.", "link": "valComparativa", "linkLabel": "Guida valutazione comparativa" },
+    "tco.durata": { "help": "Anni di valutazione/amortamento del TCO (come nel foglio di calcolo AgID)." },
+    "tco.npa": { "help": "Numero di PA che condividono i costi — parametro documentale nel foglio originale." },
+    "tco.sviluppo": { "help": "Costi di sviluppo complessivi o personalizzazioni iniziali." },
+    "tco.integrazione": { "help": "Costi per integrare il software con i sistemi esistenti della PA." },
+    "tco.hardware": { "help": "Server, periferiche, apparati di rete necessari." },
+    "tco.consegna": { "help": "Spese di consegna, trasporto e assicurazione." },
+    "tco.adeguamento": { "help": "Adeguamento alle specifiche e verifica di conformità." },
+    "tco.formazione": { "help": "Formazione del personale sulla nuova soluzione." },
+    "tco.licenze": { "help": "Licenze software proprietarie, se presenti." },
+    "tco.assistenza": { "help": "Assistenza tecnica e manutenzione evolutiva/correttiva." },
+    "tco.cloud": { "help": "Hosting, cloud, connettività e servizi gestiti." },
+    "tco.gestione": { "help": "Gestione operativa e supporto al day-by-day." },
+    "tco.migrazione": { "help": "Migrazione dati e dismissione sistemi legacy." },
+    "tco.sicurezza_c": { "help": "Costi per sicurezza, audit e compliance normativa." }
+  },
+  "migrations": []
+}

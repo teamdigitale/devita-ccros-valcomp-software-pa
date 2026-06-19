@@ -176,7 +176,7 @@
       .pr-table td.pr-right,  .pr-table th.pr-right  { text-align: right; }
       .pr-val-si   { color: #006633; font-weight: 700; }
       .pr-val-no   { color: #aa0000; font-weight: 700; }
-      .pr-val-nonec{ color: #775500; }
+      .pr-val-na{ color: #775500; }
       .pr-best     { font-weight: 700; }
 
       /* ── Appendice intestazione sezione ── */
@@ -763,6 +763,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.18.0/dist/js/bootstrap-italia.bundle.min.js"></script>
 <script src="js/valcomp-config.js"></script>
+<script src="js/valcomp-scoring.js"></script>
+<script src="js/valcomp-render.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════════════════════════
@@ -788,11 +790,17 @@ const STEP_LABELS = [
 ];
 const TOTAL_STEPS = 4;
 
-// Config caricata da config/criteri-config-v1.0.json (vedi js/valcomp-config.js)
-let PESI_PRESET, PESI_DEF, CRITERI_DEF, TCO_VOCI, FIELD_HELP, REF_LINKS, SCORING, CATEGORIE_PRESET;
+// Config caricata da config/criteri-config-v2.0.json (vedi js/valcomp-config.js)
+let PESI_PRESET, PESI_DEF, CRITERI_LIST, CRITERI_DEF, CRITERI_BY_ID, TCO_VOCI, FIELD_HELP, REF_LINKS, CATEGORIE_PRESET;
 let COST_CRITERIA = new Set(['tco', 'dipendenze']);
-let CONFIG_VERSION = '1.0';
-let CONFIG_ID = 'criteri-config-v1.0';
+let CONFIG_VERSION = '2.0';
+let CONFIG_ID = 'criteri-config-v2.0';
+
+function applyPesiPreset(cat) {
+  const preset = PESI_PRESET[cat];
+  if (!preset || typeof preset !== 'object' || Array.isArray(preset)) return;
+  Object.entries(preset).forEach(([id, v]) => { state.pesi[id] = v; });
+}
 
 // ── Helpers ──────────────────────────────────────────────────
 const nSw = () => state.prodotti.length;
@@ -1063,53 +1071,12 @@ function renderRivediRequisiti() {
 // ── Rivedi Criteri (read-only) ─────────────────────────────────
 function renderRivediCriteri() {
   const c = document.getElementById('rv-cri-container');
-  const hdrs = range().map(i => `<th class="text-center" style="color:${swColor(i)};min-width:110px" data-sw-header="${i}">${swName(i)}</th>`).join('');
   let html = '';
-  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
-    let rows = '';
-    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-      const lbl = {si:'sì',no:'no',nonec:'non nec.','':'—'};
-      const colMap = {si:'#008055',no:'#cc334d',nonec:'#995c00','':'#aaa'};
-      rows = def.items.map(item => {
-        const cells = range().map(i => {
-          const v = (state.criteri[key].items[item.id]||[])[i]||'';
-          return `<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca per modificare">
-            <span class="rv-cell-val fw-semibold" style="color:${colMap[v]||'#aaa'}">${(lbl[v] ?? v) || '—'}</span></td>`;
-        }).join('');
-        return `<tr><td class="small ${item.obbligatorio?'fw-semibold':''}">${escH(item.testo)}</td>${cells}</tr>`;
-      }).join('');
-    } else if (def.tipo === 'radio') {
-      rows = def.items.map(item => {
-        const cells = range().map(i => {
-          const sel = state.criteri[key].scelta[i] === item.valore;
-          return `<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca per modificare">
-            ${sel?`<span class="fw-bold" style="color:#0066cc">✓</span>`:'<span class="text-muted">·</span>'}</td>`;
-        }).join('');
-        return `<tr><td class="small">${escH(item.testo)}</td>${cells}</tr>`;
-      }).join('');
-    } else if (def.tipo === 'numero_dipendenze') {
-      const cellsProp = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.dipendenze.proprietario[i]||0}</span></td>`).join('');
-      const cellsOpen = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.dipendenze.opensource[i]||0}</span></td>`).join('');
-      rows = `<tr><td class="small">Dipendenze <strong>proprietarie</strong></td>${cellsProp}</tr>
-              <tr><td class="small">Dipendenze <strong>open source</strong></td>${cellsOpen}</tr>`;
-    } else if (def.tipo === 'numero_pa') {
-      const cellsU = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.numero_pa.utilizzano[i]||0}</span></td>`).join('');
-      const cellsI = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.numero_pa.interessate[i]||0}</span></td>`).join('');
-      rows = `<tr><td class="small">PA che <strong>utilizzano</strong></td>${cellsU}</tr>
-              <tr><td class="small">PA <strong>interessate</strong></td>${cellsI}</tr>`;
-    } else if (def.tipo === 'vitalita') {
-      const vrows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label]);
-      rows = vrows.map(([f,lbl])=>{
-        const cells = range().map(i=>`<td class="text-center rv-cell" onclick="openSwModal(${i},'swm-cri')" title="Clicca"><span class="rv-cell-val">${state.criteri.vitalita[f][i]||0}</span></td>`).join('');
-        return `<tr><td class="small">${lbl}</td>${cells}</tr>`;
-      }).join('');
-    }
+  ValcompConfig.getCriteriWithUI().forEach(def => {
+    const key = def.id;
     html += `<div class="criteria-group mb-3">
       <h3 class="h6 fw-semibold mb-2">${def.label}</h3>
-      <div class="table-scroll"><table class="table table-sm table-hover mb-0">
-        <thead><tr><th style="min-width:260px;width:50%">Criterio</th>${hdrs}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
+      ${ValcompRender.renderCriterionBlock(key, def, 'review')}
     </div>`;
   });
   c.innerHTML = html;
@@ -1213,75 +1180,10 @@ function fieldHelpHTML(key) {
 
 function buildModalCriteriHTML(i) {
   let html = '';
-  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+  ValcompConfig.getCriteriWithUI().forEach(def => {
+    const key = def.id;
     html += `<div class="mb-3 pb-3 border-bottom"><h6 class="fw-semibold mb-1">${def.label}</h6>${fieldHelpHTML('criteri.' + key)}`;
-    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-      const opts = def.tipo === 'sinon_nonec'
-        ? [['','—'],['si','sì'],['no','no'],['nonec','non nec.']]
-        : [['','—'],['si','sì'],['no','no']];
-      def.items.forEach(item => {
-        const v = (state.criteri[key].items[item.id] || [])[i] || '';
-        const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
-        const helpKey = `criteri.${key}.${item.id}`;
-        html += `<div class="mb-2">
-          <div class="d-flex align-items-start gap-2">
-            <select class="form-select form-select-sm flex-shrink-0" style="max-width:130px${col?`;border-color:${col};color:${col};font-weight:600`:''}"
-              onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;const c=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.borderColor=c;this.style.color=c;this.style.fontWeight=c?'600':''">
-              ${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}
-            </select>
-            <span class="small ${item.obbligatorio?'fw-semibold':''}">${escH(item.testo)}</span>
-          </div>
-          ${fieldHelpHTML(helpKey)}
-        </div>`;
-      });
-    } else if (def.tipo === 'radio') {
-      const selVal = state.criteri[key].scelta[i];
-      const opts = def.items.map(item =>
-        `<option value="${item.valore}"${selVal===item.valore?' selected':''}>${escH(item.testo)}</option>`
-      ).join('');
-      html += `<div class="mb-1">
-        <select class="form-select form-select-sm"
-          onchange="state.criteri['${key}'].scelta[${i}]=+this.value"
-          id="mcri-${key}-sel">
-          ${opts}
-        </select>
-      </div>`;
-    } else if (def.tipo === 'numero_dipendenze') {
-      html += `<div class="d-flex gap-4 flex-wrap mb-1">
-        <div><label class="small d-block mb-1">Dipendenze <strong>proprietarie</strong></label>
-          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
-            value="${state.criteri.dipendenze.proprietario[i]||0}"
-            oninput="state.criteri.dipendenze.proprietario[${i}]=+this.value||0" /></div>
-        <div><label class="small d-block mb-1">Dipendenze <strong>open source</strong></label>
-          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
-            value="${state.criteri.dipendenze.opensource[i]||0}"
-            oninput="state.criteri.dipendenze.opensource[${i}]=+this.value||0" /></div>
-      </div>`;
-    } else if (def.tipo === 'numero_pa') {
-      html += `<div class="d-flex gap-4 flex-wrap">
-        <div><label class="small d-block mb-1">PA che <strong>utilizzano</strong></label>
-          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
-            value="${state.criteri.numero_pa.utilizzano[i]||0}"
-            oninput="state.criteri.numero_pa.utilizzano[${i}]=+this.value||0" /></div>
-        <div><label class="small d-block mb-1">PA <strong>interessate</strong></label>
-          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
-            value="${state.criteri.numero_pa.interessate[i]||0}"
-            oninput="state.criteri.numero_pa.interessate[${i}]=+this.value||0" /></div>
-      </div>`;
-    } else if (def.tipo === 'vitalita') {
-      const rows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label, f.weight]);
-      html += `<div class="d-flex gap-3 flex-wrap">`;
-      rows.forEach(([f,lbl,w]) => {
-        html += `<div>
-          <label class="small d-block mb-1">${lbl} <span class="text-muted">(w=${w})</span></label>
-          <input type="number" class="form-control form-control-sm" style="width:100px" min="0"
-            value="${state.criteri.vitalita[f][i]||0}"
-            oninput="state.criteri.vitalita['${f}'][${i}]=+this.value||0" />
-          ${fieldHelpHTML('criteri.vitalita.' + f)}
-        </div>`;
-      });
-      html += `</div>`;
-    }
+    html += ValcompRender.renderCriterionBlock(key, def, 'modal');
     html += `</div>`;
   });
   return html;
@@ -1857,95 +1759,9 @@ function renderCriteri() {
   const container = document.getElementById('criteri-container');
   if (!container) return;
   container.innerHTML = '';
-
-  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
-    let inner = '';
-
-    if (def.tipo === 'sinon' || def.tipo === 'sinon_nonec') {
-      const opts = def.tipo === 'sinon_nonec'
-        ? [['','—'],['si','sì'],['no','no'],['nonec','non necessario']]
-        : [['','—'],['si','sì'],['no','no']];
-
-      inner = `<div class="table-scroll"><table class="table table-sm table-hover">
-        <thead><tr>
-          <th scope="col" style="min-width:300px;width:55%">Criterio</th>
-          ${range().map(i=>`<th scope="col" class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}
-        </tr></thead>
-        <tbody>${def.items.map(item => {
-          const cur = state.criteri[key].items[item.id] || Array(nSw()).fill('');
-          return `<tr>
-            <td class="small">${item.obbligatorio?'<strong>':''}${escH(item.testo)}${item.obbligatorio?'</strong>':''}</td>
-            ${range().map(i => {
-              const v = cur[i]||'';
-              const col = v==='si'?'#008055':v==='no'?'#cc334d':'';
-              return `<td><select class="form-select form-select-sm" style="${col?`border-color:${col};color:${col};font-weight:600`:''}"
-                onchange="state.criteri['${key}'].items['${item.id}'][${i}]=this.value;this.style.borderColor=this.value==='si'?'#008055':this.value==='no'?'#cc334d':'';this.style.color=this.style.borderColor;this.style.fontWeight=this.value?'600':''"
-              >${opts.map(([val,lab])=>`<option value="${val}"${v===val?' selected':''}>${lab}</option>`).join('')}</select></td>`;
-            }).join('')}
-          </tr>`;
-        }).join('')}</tbody>
-      </table></div>`;
-
-    } else if (def.tipo === 'radio') {
-      inner = `<div class="table-scroll"><table class="table table-sm">
-        <thead><tr>
-          <th scope="col" style="min-width:300px;width:55%">Opzione</th>
-          ${range().map(i=>`<th scope="col" class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}
-        </tr></thead>
-        <tbody>${def.items.map(item => `<tr>
-          <td class="small">${escH(item.testo)}</td>
-          ${range().map(i=>`<td class="text-center">
-            <input type="radio" name="${key}-sw${i}" value="${item.valore}"
-              ${state.criteri[key].scelta[i]===item.valore?'checked':''}
-              onchange="state.criteri['${key}'].scelta[${i}]=+this.value"
-              aria-label="${escH(item.testo)} — ${swName(i)}" /></td>`).join('')}
-        </tr>`).join('')}</tbody>
-      </table></div>`;
-
-    } else if (def.tipo === 'numero_dipendenze') {
-      inner = `<div class="table-scroll"><table class="table table-sm">
-        <thead><tr><th style="min-width:300px;width:55%">Tipo</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
-        <tbody>
-          <tr><td class="small">Dipendenze da software <strong>proprietario</strong></td>
-            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
-              value="${state.criteri.dipendenze.proprietario[i]||0}"
-              oninput="state.criteri.dipendenze.proprietario[${i}]=+this.value||0" /></td>`).join('')}</tr>
-          <tr><td class="small">Dipendenze da software <strong>open source</strong></td>
-            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
-              value="${state.criteri.dipendenze.opensource[i]||0}"
-              oninput="state.criteri.dipendenze.opensource[${i}]=+this.value||0" /></td>`).join('')}</tr>
-        </tbody>
-      </table></div>
-      <small class="text-muted">Punteggio: 2×proprietario + opensource. Valori più bassi = punteggio migliore.</small>`;
-
-    } else if (def.tipo === 'numero_pa') {
-      inner = `<div class="table-scroll"><table class="table table-sm">
-        <thead><tr><th style="min-width:300px;width:55%">Voce</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
-        <tbody>
-          <tr><td class="small">PA che <strong>utilizzano</strong> il software</td>
-            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
-              value="${state.criteri.numero_pa.utilizzano[i]||0}"
-              oninput="state.criteri.numero_pa.utilizzano[${i}]=+this.value||0" /></td>`).join('')}</tr>
-          <tr><td class="small">PA <strong>interessate</strong> al software</td>
-            ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
-              value="${state.criteri.numero_pa.interessate[i]||0}"
-              oninput="state.criteri.numero_pa.interessate[${i}]=+this.value||0" /></td>`).join('')}</tr>
-        </tbody>
-      </table></div>`;
-
-    } else if (def.tipo === 'vitalita') {
-      const rows = ValcompConfig.getVitalitaFields().map(f => [f.id, f.label, f.weight]);
-      inner = `<div class="table-scroll"><table class="table table-sm">
-        <thead><tr><th style="min-width:240px;width:45%">Metrica (da GitHub/GitLab)</th><th style="width:60px">Peso</th>${range().map(i=>`<th class="text-center" data-sw-header="${i}" style="color:${swColor(i)};min-width:110px">${swName(i)}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(([field,label,peso]) => `<tr>
-          <td class="small">${label}</td><td><small>${peso}</small></td>
-          ${range().map(i=>`<td><input type="number" class="form-control form-control-sm" style="width:90px" min="0"
-            value="${state.criteri.vitalita[field][i]||0}"
-            oninput="state.criteri.vitalita['${field}'][${i}]=+this.value||0" /></td>`).join('')}
-        </tr>`).join('')}</tbody>
-      </table></div>`;
-    }
-
+  ValcompConfig.getCriteriWithUI().forEach(def => {
+    const key = def.id;
+    const inner = ValcompRender.renderCriterionBlock(key, def, 'edit');
     container.innerHTML += `<div class="criteria-group mb-4">
       <h3 class="h5">${def.label}</h3>${inner}
     </div>`;
@@ -2017,68 +1833,7 @@ function renderPesi() {
 
 // ── Scoring ──────────────────────────────────────────────────
 function computeScores() {
-  const n = nSw();
-  const s = Object.fromEntries(PESI_DEF.map(p => [p.id, Array(n).fill(0)]));
-
-  // TCO
-  range().forEach(i => { s.tco[i] = TCO_VOCI.reduce((t,v)=>t+(+state.tco.voci[v.id]?.[i]||0),0); });
-
-  // Interoperabilità, protezione_dati, sicurezza — COUNTIF("si") solo
-  (SCORING.count_si_groups || ['interoperabilita','protezione_dati','sicurezza']).forEach(k => {
-    if (!state.criteri[k]?.items) return;
-    range().forEach(i => {
-      s[k][i] = Object.values(state.criteri[k].items).filter(a=>a[i]==='si').length;
-    });
-  });
-
-  // Accessibilità, manutentore, competenze_pa — radio 0/1/2
-  (SCORING.radio_groups || ['accessibilita','manutentore','competenze_pa']).forEach(k => {
-    range().forEach(i => { s[k][i] = state.criteri[k]?.scelta?.[i]||0; });
-  });
-
-  // Copertura requisiti — media pesata
-  if (state.requisiti.length) {
-    const totPeso = state.requisiti.reduce((t,r)=>t+(+r.peso||0),0);
-    if (totPeso>0) range().forEach(i => {
-      s.copertura_req[i] = state.requisiti.reduce((t,r)=>t+(+r.peso||0)*(+r.copertura[i]||0)/100,0)/totPeso;
-    });
-  }
-
-  // Supporto — COUNTIF("si") + IF(nonec → score config)
-  const nonecScore = SCORING.supporto_nonec_score ?? 3;
-  range().forEach(i => {
-    const items = Object.values(state.criteri.supporto.items);
-    if (items.some(a=>a[i]==='nonec')) { s.supporto[i]=nonecScore; return; }
-    s.supporto[i] = items.filter(a=>a[i]==='si').length;
-  });
-
-  // Dipendenze — criterio costo
-  const dep = SCORING.dipendenze || { proprietario_factor: 2, opensource_factor: 1 };
-  range().forEach(i => {
-    s.dipendenze[i] = (dep.proprietario_factor||2)*(state.criteri.dipendenze.proprietario[i]||0)
-                    + (dep.opensource_factor||1)*(state.criteri.dipendenze.opensource[i]||0);
-  });
-
-  // Numero PA
-  range().forEach(i => {
-    s.numero_pa[i] = (state.criteri.numero_pa.utilizzano[i]||0)
-                   + (state.criteri.numero_pa.interessate[i]||0);
-  });
-
-  // Vitalità
-  const vit = SCORING.vitalita || { requires_commit: true, giorni_soglia: 365, weights: { commit: 0.4, contributi: 0.15, release: 0.15, giorni_bonus: 0.3 } };
-  const vw = vit.weights || {};
-  range().forEach(i => {
-    const g=state.criteri.vitalita.giorni[i]||0, c=state.criteri.vitalita.commit[i]||0,
-          co=state.criteri.vitalita.contributi[i]||0, r=state.criteri.vitalita.release[i]||0;
-    if (vit.requires_commit && !c) { s.vitalita[i]=0; return; }
-    const base = c*(vw.commit||0.4) + co*(vw.contributi||0.15) + r*(vw.release||0.15);
-    s.vitalita[i] = g <= (vit.giorni_soglia || 365)
-      ? base + ((vit.giorni_soglia || 365) - g) * (vw.giorni_bonus || 0.3)
-      : base;
-  });
-
-  return s;
+  return ValcompScoring.computeAllScores(CRITERI_LIST, state, nSw(), TCO_VOCI);
 }
 
 // ── TOPSIS ──────────────────────────────────────────────────
@@ -2206,11 +1961,13 @@ function validateBeforeTopsis() {
     errors.push(`Servono almeno ${SW_MIN} soluzioni software (attualmente ${nSw()}).`);
   }
 
-  ['interoperabilita', 'protezione_dati', 'sicurezza'].forEach(key => {
-    if (!CRITERI_DEF[key]?.items) return;
-    CRITERI_DEF[key].items.filter(item => item.obbligatorio).forEach(item => {
+  ValcompConfig.getCriteriWithUI().forEach(def => {
+    const key = def.id;
+    const type = ValcompConfig.inputType(def);
+    if (type !== 'si_no' && type !== 'si_no_na') return;
+    (def.input?.items || []).filter(item => item.obbligatorio || def.obbligatorio).forEach(item => {
       range().forEach(i => {
-        const v = state.criteri[key].items[item.id]?.[i];
+        const v = state.criteri[key]?.items?.[item.id]?.[i];
         if (!v) warnings.push(`${swName(i)}: criterio obbligatorio non compilato (${item.testo.slice(0, 60)}…).`);
       });
     });
@@ -2514,7 +2271,7 @@ document.getElementById('applica-pesi-preset').addEventListener('click', () => {
   state.meta.categoria = cat;
   const metaCategoria = document.getElementById('meta-categoria');
   if (metaCategoria) metaCategoria.value = cat;
-  PESI_PRESET[cat].forEach((v,i) => { state.pesi[PESI_DEF[i].id] = v; });
+  applyPesiPreset(cat);
   renderPesi();
 });
 
@@ -2762,32 +2519,11 @@ function buildPrintAppendix() {
   }
 
   // ── App. C — Criteri tecnici ──
-  const valLabel = {si:'Sì', no:'No', nonec:'Non nec.','':'—'};
-  const valClass = {si:'pr-val-si', no:'pr-val-no', nonec:'pr-val-nonec','':''};
   let cRows = '';
-  Object.entries(CRITERI_DEF).forEach(([key, def]) => {
+  ValcompConfig.getCriteriWithUI().forEach(def => {
+    const key = def.id;
     cRows += `<tr class="pr-group-row"><td colspan="${2+n}"><strong>${def.label}</strong></td></tr>`;
-    if (def.tipo==='sinon'||def.tipo==='sinon_nonec') {
-      def.items.forEach(item => {
-        const cur = state.criteri[key].items[item.id]||sw.map(()=>'');
-        cRows += `<tr><td></td><td style="font-size:.75rem">${escH(item.testo)}</td>
-          ${sw.map(i=>{const v=cur[i]||'';return`<td class="pr-center ${valClass[v]||''}">${valLabel[v]??v}</td>`;}).join('')}</tr>`;
-      });
-    } else if (def.tipo==='radio') {
-      cRows += `<tr><td></td><td style="font-size:.75rem">Opzione scelta</td>
-        ${sw.map(i=>{const c=def.items.find(it=>it.valore===state.criteri[key].scelta[i]);
-          return`<td class="pr-center" style="font-size:.73rem">${c?escH(c.testo):'—'}</td>`;}).join('')}</tr>`;
-    } else if (def.tipo==='numero_dipendenze') {
-      cRows += `<tr><td></td><td style="font-size:.75rem">Dipendenze proprietarie</td>${sw.map(i=>`<td class="pr-center">${state.criteri.dipendenze.proprietario[i]||0}</td>`).join('')}</tr>`;
-      cRows += `<tr><td></td><td style="font-size:.75rem">Dipendenze open source</td>${sw.map(i=>`<td class="pr-center">${state.criteri.dipendenze.opensource[i]||0}</td>`).join('')}</tr>`;
-    } else if (def.tipo==='numero_pa') {
-      cRows += `<tr><td></td><td style="font-size:.75rem">PA che utilizzano</td>${sw.map(i=>`<td class="pr-center">${state.criteri.numero_pa.utilizzano[i]||0}</td>`).join('')}</tr>`;
-      cRows += `<tr><td></td><td style="font-size:.75rem">PA interessate</td>${sw.map(i=>`<td class="pr-center">${state.criteri.numero_pa.interessate[i]||0}</td>`).join('')}</tr>`;
-    } else if (def.tipo==='vitalita') {
-      [['giorni',"Giorni dall'ultimo commit"],['commit','Commit (3 anni)'],['contributi','Contributori (3 anni)'],['release','Release (3 anni)']].forEach(([f,lbl])=>{
-        cRows += `<tr><td></td><td style="font-size:.75rem">${lbl}</td>${sw.map(i=>`<td class="pr-center">${state.criteri.vitalita[f][i]||0}</td>`).join('')}</tr>`;
-      });
-    }
+    cRows += ValcompRender.buildPrintRows(key, def, sw);
   });
   const appC = `
   <div class="pr-appendice pr-page">
@@ -2898,7 +2634,7 @@ document.getElementById('meta-categoria').addEventListener('change', e => {
   syncMacroCategoriaPreset();
   // pre-popola il preset pesi se la categoria corrisponde
   if (PESI_PRESET[e.target.value]) {
-    PESI_PRESET[e.target.value].forEach((v,i) => { state.pesi[PESI_DEF[i].id] = v; });
+    applyPesiPreset(e.target.value);
     renderPesi();
   }
 });
