@@ -796,6 +796,22 @@ let COST_CRITERIA = new Set(['tco', 'dipendenze']);
 let CONFIG_VERSION = '2.0';
 let CONFIG_ID = 'criteri-config-v2.0';
 
+/** Copia i globali impostati da ValcompConfig.applyToGlobals() nelle variabili di modulo. */
+function syncConfigGlobals() {
+  PESI_PRESET = window.PESI_PRESET;
+  PESI_DEF = window.PESI_DEF;
+  CRITERI_LIST = window.CRITERI_LIST;
+  CRITERI_DEF = window.CRITERI_DEF;
+  CRITERI_BY_ID = window.CRITERI_BY_ID;
+  TCO_VOCI = window.TCO_VOCI;
+  FIELD_HELP = window.FIELD_HELP;
+  REF_LINKS = window.REF_LINKS;
+  CATEGORIE_PRESET = window.CATEGORIE_PRESET;
+  COST_CRITERIA = window.COST_CRITERIA;
+  CONFIG_VERSION = window.CONFIG_VERSION;
+  CONFIG_ID = window.CONFIG_ID;
+}
+
 function applyPesiPreset(cat) {
   const preset = PESI_PRESET[cat];
   if (!preset || typeof preset !== 'object' || Array.isArray(preset)) return;
@@ -2890,6 +2906,7 @@ function restoreUIState(ui) {
   try {
     await ValcompConfig.load();
     ValcompConfig.applyToGlobals();
+    syncConfigGlobals();
   } catch (e) {
     alert('Impossibile caricare la configurazione criteri.\n' + e.message + '\n\nServire l\'app da un web server (es. python3 -m http.server nella cartella docs).');
     return;
